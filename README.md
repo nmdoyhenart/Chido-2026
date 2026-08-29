@@ -4,7 +4,9 @@
   <img width="300" alt="logo" src="https://github.com/user-attachments/assets/7aaa525a-d1e8-42e6-8abd-d13b044b31ae" />
 </p>
 
+<p align="center">
 Trabajo Final Integrador — Aplicación de gestión de restaurante (mobile)
+</p>
 
 ## Integrantes
 
@@ -12,8 +14,8 @@ Trabajo Final Integrador — Aplicación de gestión de restaurante (mobile)
 |---|---|---|---|---|---|
 | Doyhenart, Nicolás | **Líder** | Cliente registrado y Cliente anónimo: registro, aprobación, QR de ingreso/mesa, menú, chat con mozo, carrito, estado de pedido | | |nico |
 | Gauto Morales, Silvina | Integrante | Dueño y Supervisor: alta de empleado, alta de mesa, gestión de mesas, aprobación/rechazo de clientes, mails automáticos | | |silvina |
-| Antuñez, Juan Ignacio | Integrante | Cocinero y Cantinero: alta de plato, alta de bebida, cartas, vistas de cocina y bar (Kanban) | | |juan |
-| Martín, Emmanuel David | Integrante | Metre y Mozo: lista de espera, asignación de mesas, chat con clientes, confirmación/rechazo de pedidos | | |emma |
+| Martín, Emmanuel David | Integrante | Cocinero y Cantinero: alta de plato, alta de bebida, cartas, vistas de cocina y bar (Kanban) | | |juan |
+| Antuñez, Juan Ignacio | Integrante | Metre y Mozo: lista de espera, asignación de mesas, chat con clientes, confirmación/rechazo de pedidos | | |emma |
 
 ## Descripción del proyecto
 
@@ -75,6 +77,9 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 - Consulta de resultados de encuestas mediante el QR de ingreso/lista de espera.
 
 ## Pantallas de la aplicación
+
+### Splash
+| <img width="240" alt="Splash screen" src="https://github.com/user-attachments/assets/1e2be373-be36-498c-88f7-5f908a73f44f" /> |
 
 ### Dueño
 

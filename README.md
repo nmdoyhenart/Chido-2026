@@ -15,7 +15,7 @@ Trabajo Final Integrador — Aplicación de gestión de restaurante (mobile)
 | Doyhenart, Nicolás | **Líder** | Cliente registrado y Cliente anónimo: registro, aprobación, QR de ingreso/mesa, menú, chat con mozo, carrito, estado de pedido | | |nico |
 | Gauto Morales, Silvina | Integrante | Dueño y Supervisor: alta de empleado, alta de mesa, gestión de mesas, aprobación/rechazo de clientes, mails automáticos | | |silvina |
 | Martín, Emmanuel David | Integrante | Cocinero y Cantinero: alta de plato, alta de bebida, cartas, vistas de cocina y bar (Kanban) | | |emma |
-| Antuñez, Juan Ignacio | Integrante | Metre y Mozo: lista de espera, asignación de mesas, chat con clientes, confirmación/rechazo de pedidos | |juan | |
+| Antuñez, Juan Ignacio | Integrante | Metre y Mozo: lista de espera, asignación de mesas, chat con clientes, confirmación/rechazo de pedidos | | |juan |
 
 ## Descripción del proyecto
 

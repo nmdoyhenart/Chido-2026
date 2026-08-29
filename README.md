@@ -40,7 +40,6 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 - Gestión de mesas (listado y disponibilidad)
 - Listado de clientes pendientes de aprobación
 - Aceptación / rechazo de clientes (con envío automático de mail)
-- Notificaciones de pago solicitado y pago confirmado para dueño y supervisor.
 
 ### Cocinero / Cantinero (Emmanuel)
 - Alta de plato / Alta de bebida (con 3 fotos cada uno)

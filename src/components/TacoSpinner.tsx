@@ -1,65 +1,81 @@
 import React, { useEffect } from 'react';
 import { View, Text } from 'react-native';
+
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withRepeat,
   withTiming,
   Easing,
+  cancelAnimation,
 } from 'react-native-reanimated';
 
 export default function TacoSpinner() {
-  // Valor compartido que irá de 0 a 360 grados
   const rotacion = useSharedValue(0);
+  const escala = useSharedValue(1);
 
   useEffect(() => {
-    // Iniciamos la animación lineal infinita al montar el componente
+    // Giro infinito
     rotacion.value = withRepeat(
-      withTiming(360, { duration: 2500, easing: Easing.linear }),
-      -1, // -1 significa infinito
-      false // false significa que no va en reversa, siempre gira al mismo lado
+      withTiming(360, {
+        duration: 1400,
+        easing: Easing.linear,
+      }),
+      -1,
+      false
     );
+
+    // Pequeño efecto de respiración
+    escala.value = withRepeat(
+      withTiming(1.15, {
+        duration: 700,
+        easing: Easing.inOut(Easing.ease),
+      }),
+      -1,
+      true
+    );
+
+    return () => {
+      cancelAnimation(rotacion);
+      cancelAnimation(escala);
+    };
   }, []);
 
-  const estiloAnimado = useAnimatedStyle(() => {
-    return {
-      transform: [{ rotate: `${rotacion.value}deg` }],
-    };
-  });
-
-  // Array para generar los 8 "rayos" del spinner
-  const rayos = Array.from({ length: 8 });
-  // Colores temáticos mexicanos para los rayos
-  const colores = ['#fde047', '#f97316', '#ef4444', '#84cc16']; 
+  const estiloTaco = useAnimatedStyle(() => ({
+    transform: [
+      {
+        rotate: `${rotacion.value}deg`,
+      },
+      {
+        scale: escala.value,
+      },
+    ],
+  }));
 
   return (
-    <View className="items-center justify-center w-24 h-24">
-      {/* Círculo exterior con rayos giratorios */}
-      <Animated.View 
-        style={[estiloAnimado, { position: 'absolute', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }]}
-      >
-        {rayos.map((_, i) => (
-          <View
-            key={i}
-            style={{
-              position: 'absolute',
-              width: 4,
-              height: 12,
-              backgroundColor: colores[i % colores.length],
-              borderRadius: 2,
-              transform: [
-                { rotate: `${i * 45}deg` }, // Rota cada rayo 45 grados respecto al centro
-                { translateY: -28 } // Empuja el rayo hacia afuera
-              ]
-            }}
-          />
-        ))}
-      </Animated.View>
+    <View className="items-center justify-center">
 
-      {/* Círculo central estático con el taco */}
-      <View className="w-14 h-14 bg-yellow-200/90 rounded-full items-center justify-center border-[3px] border-yellow-600 shadow-xl">
-        <Text className="text-2xl">🌮</Text>
+      <View
+        className="
+          w-16 h-16
+          rounded-full
+          bg-yellow-200/90
+          border-[3px]
+          border-yellow-500
+          items-center
+          justify-center
+          shadow-xl
+        "
+      >
+        <Animated.View style={estiloTaco}>
+          <Text className="text-3xl">🌮</Text>
+        </Animated.View>
       </View>
+
+      <Text className="mt-3 text-yellow-100 text-xs font-bold tracking-[0.2em]">
+        CARGANDO...
+      </Text>
+
     </View>
   );
 }

@@ -62,7 +62,7 @@ export default function SplashScreenAnimado() {
             <Text className="text-white text-lg font-medium shadow-sm">Nicolás Doyhenart</Text>
           </View>
 
-          <TacoSpinner/>
+          <TacoSpinner />
         </Animated.View>
 
       </SafeAreaView>

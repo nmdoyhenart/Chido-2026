@@ -14,8 +14,8 @@ Trabajo Final Integrador — Aplicación de gestión de restaurante (mobile)
 |---|---|---|---|---|---|
 | Doyhenart, Nicolás | **Líder** | Cliente registrado y Cliente anónimo: registro, aprobación, QR de ingreso/mesa, menú, chat con mozo, carrito, estado de pedido | | |nico |
 | Gauto Morales, Silvina | Integrante | Dueño y Supervisor: alta de empleado, alta de mesa, gestión de mesas, aprobación/rechazo de clientes, mails automáticos | | |silvina |
-| Martín, Emmanuel David | Integrante | Cocinero y Cantinero: alta de plato, alta de bebida, cartas, vistas de cocina y bar (Kanban) | | |juan |
-| Antuñez, Juan Ignacio | Integrante | Metre y Mozo: lista de espera, asignación de mesas, chat con clientes, confirmación/rechazo de pedidos | | |emma |
+| Martín, Emmanuel David | Integrante | Cocinero y Cantinero: alta de plato, alta de bebida, cartas, vistas de cocina y bar (Kanban) | | |emma |
+| Antuñez, Juan Ignacio | Integrante | Metre y Mozo: lista de espera, asignación de mesas, chat con clientes, confirmación/rechazo de pedidos | |juan | |
 
 ## Descripción del proyecto
 
@@ -42,7 +42,7 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 - Aceptación / rechazo de clientes (con envío automático de mail)
 - Notificaciones de pago solicitado y pago confirmado para dueño y supervisor.
 
-### Cocinero / Cantinero (Juan)
+### Cocinero / Cantinero (Emmanuel)
 - Alta de plato / Alta de bebida (con 3 fotos cada uno)
 - Carta de platos / Carta de bebidas
 - Vista de cocina y vista de bar (pedidos: Pendientes / En preparación / Finalizados)
@@ -50,7 +50,7 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 - Actualización de estado de elaboración: pendiente, en preparación y finalizado.
 - Aviso de pedido listo al mozo cuando ambos sectores intervinientes hayan finalizado.
 
-### Metre / Mozo (Emmanuel)
+### Metre / Mozo (Juan)
 - Lista de espera (con eliminación de clientes)
 - Disponibilidad del salón y asignación de mesas
 - Bandeja de consultas y chat con clientes
@@ -79,6 +79,9 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 ## Pantallas de la aplicación
 
 ### Splash
+
+| Pantalla de Splash |
+| :---: |
 | <img width="240" alt="Splash screen" src="https://github.com/user-attachments/assets/1e2be373-be36-498c-88f7-5f908a73f44f" /> |
 
 ### Dueño

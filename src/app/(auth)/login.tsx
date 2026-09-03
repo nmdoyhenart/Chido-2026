@@ -1,13 +1,306 @@
-import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
 
-export default function PantallaLogin() {
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  Image,
+  ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Alert,
+} from 'react-native';
+
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+
+import { authService } from '../../services/auth.service';
+
+export default function LoginScreen() {
+  const router = useRouter();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [mostrarPassword, setMostrarPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const iniciarSesion = async () => {
+    const emailLimpio = email.trim();
+
+    if (!emailLimpio || !password) {
+      Alert.alert(
+        'Campos incompletos',
+        'Ingresá tu correo electrónico y contraseña.'
+      );
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const data = await authService.login(
+        emailLimpio,
+        password
+      );
+
+      console.log('Usuario autenticado:', data.user?.email);
+
+      router.replace('/(app)/home');
+    } catch (error: any) {
+      console.log('Error de login:', error);
+
+      let mensaje =
+        'No pudimos iniciar sesión. Revisá tus datos e intentá nuevamente.';
+
+      if (
+        error?.message?.toLowerCase().includes('invalid login credentials')
+      ) {
+        mensaje = 'Correo electrónico o contraseña incorrectos.';
+      }
+
+      Alert.alert('No se pudo iniciar sesión', mensaje);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <View className="flex-1 items-center justify-center bg-zinc-900 p-6">
-      
-      <Text className="text-zinc-400 text-center mb-8">
-        Login/registro screen en proceso 😁
-      </Text>
-    </View>
+    <ImageBackground
+      source={require('../../../assets/images/fondo.jpeg')}
+      resizeMode="cover"
+      blurRadius={2}
+      className="flex-1"
+    >
+      {/* Capa para diferenciar el login del splash */}
+      <View className="absolute inset-0 bg-orange-800/35" />
+
+      <SafeAreaView className="flex-1">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          className="flex-1"
+        >
+          <ScrollView
+            contentContainerStyle={{
+              flexGrow: 1,
+              justifyContent: 'center',
+            }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View className="px-7 py-8">
+
+              {/* LOGO */}
+              <View className="items-center mb-7">
+                <Image
+                  source={require('../../../assets/images/logo.png')}
+                  resizeMode="contain"
+                  style={{
+                    width: 210,
+                    height: 210,
+                  }}
+                />
+
+                <Text className="text-yellow-100 text-xl text-center mt-2 font-medium">
+                  Deja de buscar, la mejor comida mexicana está acá
+                </Text>
+              </View>
+
+              {/* EMAIL */}
+              <View className="mb-5">
+                <Text className="text-yellow-50 text-lg font-bold mb-2">
+                  Correo electrónico
+                </Text>
+
+                <TextInput
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="Escribe tu correo"
+                  placeholderTextColor="#F4C9AD"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!loading}
+                  className="
+                    h-16
+                    px-5
+                    rounded-2xl
+                    border-2
+                    border-orange-100/70
+                    bg-orange-950/55
+                    text-yellow-50
+                    text-xl
+                    font-semibold
+                  "
+                />
+              </View>
+
+              {/* CONTRASEÑA */}
+              <View className="mb-7">
+                <View className="flex-row items-center justify-between mb-2">
+                  <Text className="text-yellow-50 text-lg font-bold">
+                    Contraseña
+                  </Text>
+
+                  <Pressable
+                    disabled={loading}
+                    onPress={() => {
+                      // A desarrollar
+                      console.log('Recuperar contraseña');
+                    }}
+                  >
+                    <Text className="text-yellow-50 text-base font-bold underline">
+                      ¿Olvidaste tu contraseña?
+                    </Text>
+                  </Pressable>
+                </View>
+
+                <View
+                  className="
+                    h-16
+                    flex-row
+                    items-center
+                    rounded-2xl
+                    border-2
+                    border-orange-100/70
+                    bg-orange-950/55
+                  "
+                >
+                  <TextInput
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder="Escribe tu contraseña"
+                    placeholderTextColor="#F4C9AD"
+                    secureTextEntry={!mostrarPassword}
+                    autoCapitalize="none"
+                    editable={!loading}
+                    className="
+                      flex-1
+                      h-full
+                      px-5
+                      text-yellow-50
+                      text-xl
+                      font-semibold
+                    "
+                  />
+
+                  <Pressable
+                    onPress={() => setMostrarPassword((prev) => !prev)}
+                    disabled={loading}
+                    className="px-5 h-full items-center justify-center"
+                  >
+                    <Ionicons
+                      name={
+                        mostrarPassword
+                          ? 'eye-outline'
+                          : 'eye-off-outline'
+                      }
+                      size={28}
+                      color="#FFE4C7"
+                    />
+                  </Pressable>
+                </View>
+              </View>
+
+              {/* LOGIN */}
+              <Pressable
+                onPress={iniciarSesion}
+                disabled={loading}
+                className={`
+                  h-16
+                  rounded-2xl
+                  items-center
+                  justify-center
+                  bg-red-900
+                  shadow-lg
+                  ${loading ? 'opacity-60' : 'opacity-100'}
+                `}
+              >
+                <Text className="text-white text-xl font-extrabold">
+                  {loading ? 'Ingresando...' : 'Iniciar sesión'}
+                </Text>
+              </Pressable>
+
+              {/* SEPARADOR */}
+              <View className="flex-row items-center my-7">
+                <View className="flex-1 h-[1px] bg-yellow-100/50" />
+
+                <Text className="mx-4 text-yellow-50 text-lg font-bold">
+                  o
+                </Text>
+
+                <View className="flex-1 h-[1px] bg-yellow-100/50" />
+              </View>
+
+              {/* REGISTRO */}
+              <Pressable
+                disabled={loading}
+                onPress={() => router.push('/(auth)/register')}
+                className="
+                  h-16
+                  rounded-2xl
+                  border-2
+                  border-orange-100/40
+                  bg-red-900/70
+                  items-center
+                  justify-center
+                  mb-4
+                "
+              >
+                <Text className="text-white text-xl font-bold">
+                  Registrarse
+                </Text>
+              </Pressable>
+
+              {/* INVITADO */}
+              <Pressable
+                disabled={loading}
+                onPress={() => {
+                  router.replace('/(app)/home');
+                }}
+                className="
+                  h-16
+                  rounded-2xl
+                  border-2
+                  border-orange-100/40
+                  bg-red-900/70
+                  items-center
+                  justify-center
+                  mb-4
+                "
+              >
+                <Text className="text-white text-xl font-bold">
+                  Ingresar como invitado
+                </Text>
+              </Pressable>
+
+              {/* ACCESO RÁPIDO */}
+              <Pressable
+                disabled={loading}
+                onPress={() => {
+                  console.log('Acceso rápido');
+                }}
+                className="
+                  h-16
+                  rounded-2xl
+                  border-2
+                  border-orange-100/40
+                  bg-red-900/70
+                  items-center
+                  justify-center
+                "
+              >
+                <Text className="text-white text-xl font-bold">
+                  Acceso rápido
+                </Text>
+              </Pressable>
+
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }

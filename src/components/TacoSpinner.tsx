@@ -15,7 +15,7 @@ export default function TacoSpinner() {
   const escala = useSharedValue(1);
 
   useEffect(() => {
-    // Giro infinito
+    // Loop giro
     rotacion.value = withRepeat(
       withTiming(360, {
         duration: 1400,

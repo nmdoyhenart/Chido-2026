@@ -6,6 +6,7 @@ import {
   Image,
   Modal,
   Pressable,
+  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -117,7 +118,7 @@ export function QRScanner({
         ) : (
           <View className="flex-1 overflow-hidden rounded-3xl border-4 border-[#fed7aa]">
             <CameraView
-              className="flex-1"
+              style={StyleSheet.absoluteFill}
               facing="back"
               barcodeScannerSettings={{
                 barcodeTypes: proposito === "dni" ? ["pdf417"] : ["qr"],

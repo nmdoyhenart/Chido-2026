@@ -3,11 +3,11 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": [
-        "./src/*"
+      "@/": [
+        "./src/"
       ],
-      "@/assets/*": [
-        "./assets/*"
+      "@/assets/": [
+        "./assets/"
       ]
     }
   },
@@ -19,3 +19,4 @@
     "expo-env.d.ts"
   ]
 }
+

@@ -23,7 +23,7 @@ export default function SplashScreenAnimado() {
     player.play();
 
     const timer = setTimeout(() => {
-      router.replace('/(auth)/login');
+      router.replace('../(auth)/login');
     }, 4500);
 
     return () => {

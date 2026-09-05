@@ -34,6 +34,12 @@
         }
       ],
       "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permití que Chido use la cámara para fotografiar mesas y leer códigos QR."
+        }
+      ],
       "expo-image",
       "expo-web-browser",
       "expo-status-bar",

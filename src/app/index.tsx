@@ -55,7 +55,7 @@ export default function PantallaDePrueba() {
           <Text className="text-white text-center font-bold text-lg">Ir a Agregar Empleado (Punto 1)</Text>
         </TouchableOpacity>
       </Link>
-       <Link href="/productos/alta" asChild>
+      <Link href="/productos/alta" asChild>
         <TouchableOpacity className="bg-orange-600 px-6 py-4 rounded-xl w-full mt-4">
           <Text className="text-white text-center font-bold text-lg">Ir a Alta de Plato (Punto 2)</Text>
         </TouchableOpacity>

@@ -18,7 +18,7 @@ type AppSessionContextType = {
 
 const AppSessionContext = createContext<AppSessionContextType | undefined>(
     undefined
-); 
+);
 
 export function AppSessionProvider({
     children,

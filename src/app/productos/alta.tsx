@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { View, Text, TextInput, Pressable, ActivityIndicator, ScrollView, Image, Modal } from 'react-native';
 import { crearProducto, TipoProducto, subirFotos, existeProducto } from '../../../lib/productos';
-import { Header } from '@/components/Header';
+import { Header } from '../../components/Header';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Input } from '@/components/ui/Input';
+import { Input } from '../../components/ui/Input';
 import * as ImagePicker from 'expo-image-picker';
 
 

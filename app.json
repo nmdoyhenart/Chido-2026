@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "Chido",
+    "slug": "chido-2026",
+    "scheme": "chido",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+
+    "plugins": [
+      "expo-font",
+      "expo-image",
+      "expo-router",
+      "expo-web-browser",
+      "expo-splash-screen",
+      "expo-status-bar",
+      "expo-audio",
+      "expo-asset"
+    ]
+  }
+}

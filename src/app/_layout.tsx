@@ -1,13 +1,17 @@
-import "../../global.css";
+import '../../global.css';
 
-import { Stack } from "expo-router";
+import { Stack } from 'expo-router';
+
+import { AppSessionProvider } from '../contexts/AppSessionContext';
 
 export default function RootLayout() {
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-      }}
-    />
+    <AppSessionProvider>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+        }}
+      />
+    </AppSessionProvider>
   );
 }

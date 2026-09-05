@@ -8,8 +8,11 @@ export const authService = {
     });
 
     if (error) {
+      console.log('SUPABASE LOGIN ERROR:', error);
       throw error;
     }
+
+    console.log('SUPABASE LOGIN OK:', data.user?.email);
 
     return data;
   },
@@ -22,6 +25,30 @@ export const authService = {
     }
   },
 
+  async register(
+  nombre: string,
+  email: string,
+  password: string
+  ) {
+    
+  const { data, error } = await supabase.auth.signUp({
+    email: email.trim().toLowerCase(),
+    password,
+    options: {
+      data: {
+        nombre: nombre.trim(),
+        role: 'cliente',
+      },
+    },
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+  },
+
   async getSession() {
     const { data, error } = await supabase.auth.getSession();
 
@@ -30,18 +57,5 @@ export const authService = {
     }
 
     return data.session;
-  },
-
-  async getUser() {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
-
-    if (error) {
-      throw error;
-    }
-
-    return user;
   },
 };

@@ -2,54 +2,34 @@ import React, { useEffect } from 'react';
 import { View, Text, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Audio } from 'expo-av';
+import { useAudioPlayer } from 'expo-audio';
 
 import Animated, {
   BounceIn,
   FadeInDown,
 } from 'react-native-reanimated';
 
-import TacoSpinner from '../components/TacoSpinner';
+import TacoSpinner from '../components/ui/TacoSpinner';
 
 export default function SplashScreenAnimado() {
   const router = useRouter();
 
+  const player = useAudioPlayer(
+    require('../../assets/sounds/splash.mp3')
+  );
+
   useEffect(() => {
-    let sound: Audio.Sound | null = null;
+  player.volume = 0.25;
+  player.play();
 
-    const reproducirSonido = async () => {
-      try {
-        const { sound: nuevoSonido } =
-          await Audio.Sound.createAsync(
-            require('../../assets/sounds/splash.mp3'),
-            {
-              shouldPlay: true,
+  const timer = setTimeout(() => {
+    router.replace('/(auth)/login');
+  }, 4500);
 
-              // Volumen bajo para que no moleste
-              volume: 0.25,
-            }
-          );
-
-        sound = nuevoSonido;
-      } catch (error) {
-        console.log('No se pudo reproducir el sonido del splash:', error);
-      }
-    };
-
-    reproducirSonido();
-
-    const timer = setTimeout(() => {
-      router.replace('/(auth)/login');
-    }, 4500);
-
-    return () => {
-      clearTimeout(timer);
-
-      if (sound) {
-        sound.unloadAsync();
-      }
-    };
-  }, [router]);
+  return () => {
+    clearTimeout(timer);
+  };
+  }, [player, router]);
 
   return (
     <ImageBackground
@@ -93,9 +73,15 @@ export default function SplashScreenAnimado() {
                 font-extrabold
                 italic
                 tracking-widest
-                shadow-lg
-                shadow-black/50
               "
+              style={{
+                textShadowColor: 'rgba(0,0,0,0.35)',
+                textShadowOffset: {
+                  width: 0,
+                  height: 2,
+                },
+                textShadowRadius: 4,
+              }}
             >
               Chido
             </Text>

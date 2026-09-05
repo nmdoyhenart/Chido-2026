@@ -18,6 +18,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import { authService } from '../../services/auth.service';
+import AccesoRapidoModal from '../../components/auth/AccesoRapidoModal'
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -26,6 +27,9 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Controla si el modal de acceso rápido está abierto o cerrado
+  const [accesoRapidoVisible, setAccesoRapidoVisible] = useState(false);
 
   const iniciarSesion = async () => {
     const emailLimpio = email.trim();
@@ -46,9 +50,13 @@ export default function LoginScreen() {
         password
       );
 
-      console.log('Usuario autenticado:', data.user?.email);
+      console.log(
+        'Usuario autenticado:',
+        data.user?.email
+      );
 
       router.replace('/(app)/home');
+
     } catch (error: any) {
       console.log('Error de login:', error);
 
@@ -56,12 +64,19 @@ export default function LoginScreen() {
         'No pudimos iniciar sesión. Revisá tus datos e intentá nuevamente.';
 
       if (
-        error?.message?.toLowerCase().includes('invalid login credentials')
+        error?.message
+          ?.toLowerCase()
+          .includes('invalid login credentials')
       ) {
-        mensaje = 'Correo electrónico o contraseña incorrectos.';
+        mensaje =
+          'Correo electrónico o contraseña incorrectos.';
       }
 
-      Alert.alert('No se pudo iniciar sesión', mensaje);
+      Alert.alert(
+        'No se pudo iniciar sesión',
+        mensaje
+      );
+
     } finally {
       setLoading(false);
     }
@@ -78,10 +93,16 @@ export default function LoginScreen() {
       <View className="absolute inset-0 bg-orange-800/35" />
 
       <SafeAreaView className="flex-1">
+
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={
+            Platform.OS === 'ios'
+              ? 'padding'
+              : undefined
+          }
           className="flex-1"
         >
+
           <ScrollView
             contentContainerStyle={{
               flexGrow: 1,
@@ -90,10 +111,12 @@ export default function LoginScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
+
             <View className="px-7 py-8">
 
               {/* LOGO */}
               <View className="items-center mb-7">
+
                 <Image
                   source={require('../../../assets/images/logo.png')}
                   resizeMode="contain"
@@ -106,10 +129,12 @@ export default function LoginScreen() {
                 <Text className="text-yellow-100 text-xl text-center mt-2 font-medium">
                   Deja de buscar, la mejor comida mexicana está acá
                 </Text>
+
               </View>
 
               {/* EMAIL */}
               <View className="mb-5">
+
                 <Text className="text-yellow-50 text-lg font-bold mb-2">
                   Correo electrónico
                 </Text>
@@ -135,26 +160,33 @@ export default function LoginScreen() {
                     font-semibold
                   "
                 />
+
               </View>
 
               {/* CONTRASEÑA */}
               <View className="mb-7">
+
                 <View className="flex-row items-center justify-between mb-2">
+
                   <Text className="text-yellow-50 text-lg font-bold">
                     Contraseña
                   </Text>
 
                   <Pressable
                     disabled={loading}
-                    onPress={() => {
-                      // A desarrollar
-                      console.log('Recuperar contraseña');
-                    }}
+                    onPress={() =>
+                      router.push(
+                        '/(auth)/recuperar-contraseña'
+                      )
+                    }
                   >
+
                     <Text className="text-yellow-50 text-base font-bold underline">
                       ¿Olvidaste tu contraseña?
                     </Text>
+
                   </Pressable>
+
                 </View>
 
                 <View
@@ -168,6 +200,7 @@ export default function LoginScreen() {
                     bg-orange-950/55
                   "
                 >
+
                   <TextInput
                     value={password}
                     onChangeText={setPassword}
@@ -187,10 +220,20 @@ export default function LoginScreen() {
                   />
 
                   <Pressable
-                    onPress={() => setMostrarPassword((prev) => !prev)}
+                    onPress={() =>
+                      setMostrarPassword(
+                        (prev) => !prev
+                      )
+                    }
                     disabled={loading}
-                    className="px-5 h-full items-center justify-center"
+                    className="
+                      px-5
+                      h-full
+                      items-center
+                      justify-center
+                    "
                   >
+
                     <Ionicons
                       name={
                         mostrarPassword
@@ -200,8 +243,11 @@ export default function LoginScreen() {
                       size={28}
                       color="#FFE4C7"
                     />
+
                   </Pressable>
+
                 </View>
+
               </View>
 
               {/* LOGIN */}
@@ -215,16 +261,27 @@ export default function LoginScreen() {
                   justify-center
                   bg-red-900
                   shadow-lg
-                  ${loading ? 'opacity-60' : 'opacity-100'}
+                  ${
+                    loading
+                      ? 'opacity-60'
+                      : 'opacity-100'
+                  }
                 `}
               >
+
                 <Text className="text-white text-xl font-extrabold">
-                  {loading ? 'Ingresando...' : 'Iniciar sesión'}
+                  {
+                    loading
+                      ? 'Ingresando...'
+                      : 'Iniciar sesión'
+                  }
                 </Text>
+
               </Pressable>
 
               {/* SEPARADOR */}
               <View className="flex-row items-center my-7">
+
                 <View className="flex-1 h-[1px] bg-yellow-100/50" />
 
                 <Text className="mx-4 text-yellow-50 text-lg font-bold">
@@ -232,12 +289,15 @@ export default function LoginScreen() {
                 </Text>
 
                 <View className="flex-1 h-[1px] bg-yellow-100/50" />
+
               </View>
 
               {/* REGISTRO */}
               <Pressable
                 disabled={loading}
-                onPress={() => router.push('/(auth)/register')}
+                onPress={() =>
+                  router.push('/(auth)/registro')
+                }
                 className="
                   h-16
                   rounded-2xl
@@ -249,9 +309,11 @@ export default function LoginScreen() {
                   mb-4
                 "
               >
+
                 <Text className="text-white text-xl font-bold">
                   Registrarse
                 </Text>
+
               </Pressable>
 
               {/* INVITADO */}
@@ -271,17 +333,19 @@ export default function LoginScreen() {
                   mb-4
                 "
               >
+
                 <Text className="text-white text-xl font-bold">
                   Ingresar como invitado
                 </Text>
+
               </Pressable>
 
               {/* ACCESO RÁPIDO */}
               <Pressable
                 disabled={loading}
-                onPress={() => {
-                  console.log('Acceso rápido');
-                }}
+                onPress={() =>
+                  setAccesoRapidoVisible(true)
+                }
                 className="
                   h-16
                   rounded-2xl
@@ -292,15 +356,29 @@ export default function LoginScreen() {
                   justify-center
                 "
               >
+
                 <Text className="text-white text-xl font-bold">
                   Acceso rápido
                 </Text>
+
               </Pressable>
 
             </View>
+
           </ScrollView>
+
         </KeyboardAvoidingView>
+
       </SafeAreaView>
+
+      {/* MODAL DE ACCESO RÁPIDO */}
+      <AccesoRapidoModal
+        visible={accesoRapidoVisible}
+        onClose={() =>
+          setAccesoRapidoVisible(false)
+        }
+      />
+
     </ImageBackground>
   );
 }

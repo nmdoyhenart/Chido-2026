@@ -15,5 +15,7 @@
     "**/*.ts",
     "**/*.tsx",
     "nativewind-env.d.ts"
-  ]
+  ],
+
 }
+

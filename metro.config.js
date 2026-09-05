@@ -6,3 +6,5 @@ const config = getDefaultConfig(__dirname);
 module.exports = withNativeWind(config, {
   input: "./global.css",
 });
+module.exports = withNativeWind(config, { input: "./global.css" });
+

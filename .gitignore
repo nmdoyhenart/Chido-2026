@@ -3,6 +3,7 @@
 # dependencies
 node_modules/
 
+
 # Expo
 .expo/
 dist/
@@ -40,4 +41,8 @@ example
 
 # generated native folders
 /ios
+<<<<<<< HEAD
 /android
+=======
+/android
+>>>>>>> silvina

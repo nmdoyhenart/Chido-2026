@@ -1,15 +1,15 @@
-import React, { useEffect } from 'react';
-import { View, Text, ImageBackground } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, ImageBackground, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAudioPlayer } from 'expo-audio';
-
+import { Link } from 'expo-router';
+import { supabase } from '../../lib/supabase';
+import TacoSpinner from '../components/ui/TacoSpinner';
 import Animated, {
   BounceIn,
   FadeInDown,
 } from 'react-native-reanimated';
-
-import TacoSpinner from '../components/ui/TacoSpinner';
 
 export default function SplashScreenAnimado() {
   const router = useRouter();
@@ -19,16 +19,16 @@ export default function SplashScreenAnimado() {
   );
 
   useEffect(() => {
-  player.volume = 0.25;
-  player.play();
+    player.volume = 0.25;
+    player.play();
 
-  const timer = setTimeout(() => {
-    router.replace('/(auth)/login');
-  }, 4500);
+    const timer = setTimeout(() => {
+      router.replace('/(auth)/login');
+    }, 4500);
 
-  return () => {
-    clearTimeout(timer);
-  };
+    return () => {
+      clearTimeout(timer);
+    };
   }, [player, router]);
 
   return (

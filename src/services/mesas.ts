@@ -1,6 +1,132 @@
 import { supabase } from "../../lib/supabase";
 import type { MesaQr } from "../types/qr";
 import { parseQrPayload } from "../utils/qr";
+import type {
+  DisponibilidadMesa,
+  Mesa,
+  NuevaMesa,
+} from "../types/mesa";
+import { eliminarFotoMesa, subirFotoMesa } from "./storage";
+
+const CAMPOS_MESA =
+  "id, numero, cantidad_comensales, tipo, disponibilidad, foto, cliente_id, qr_confirmado_at";
+
+export async function obtenerMesas(): Promise<Mesa[]> {
+  const { data, error } = await supabase
+    .from("mesas")
+    .select(CAMPOS_MESA)
+    .order("numero", { ascending: true });
+
+  if (error) throw new Error("No se pudo obtener el listado de mesas.");
+
+  return (data ?? []) as Mesa[];
+}
+
+export async function crearMesa(datos: NuevaMesa): Promise<Mesa> {
+  const { data: existente, error: errorExistente } = await supabase
+    .from("mesas")
+    .select("id")
+    .eq("numero", datos.numero)
+    .maybeSingle();
+
+  if (errorExistente) {
+    throw new Error("No se pudo verificar el número de mesa.");
+  }
+  if (existente) {
+    throw new Error("Ya existe una mesa con ese número.");
+  }
+
+  const fotoUrl = await subirFotoMesa(datos.fotoBase64);
+  const { data, error } = await supabase
+    .from("mesas")
+    .insert({
+      numero: datos.numero,
+      cantidad_comensales: datos.cantidadComensales,
+      tipo: datos.tipo,
+      disponibilidad: "vacía",
+      foto: fotoUrl,
+    })
+    .select(CAMPOS_MESA)
+    .single();
+
+  if (error) {
+    await eliminarFotoMesa(fotoUrl);
+    if (error.code === "23505") {
+      throw new Error("Ya existe una mesa con ese número.");
+    }
+    throw new Error("No se pudo guardar la nueva mesa.");
+  }
+
+  return data as Mesa;
+}
+
+export async function actualizarDisponibilidadMesa(
+  mesaId: string,
+  disponibilidad: DisponibilidadMesa,
+): Promise<Mesa> {
+  const { data, error } = await supabase
+    .from("mesas")
+    .update({ disponibilidad })
+    .eq("id", mesaId)
+    .select(CAMPOS_MESA)
+    .single();
+
+  if (error) throw new Error("No se pudo actualizar la disponibilidad de la mesa.");
+
+  return data as Mesa;
+}
+
+export async function asignarClienteAMesa(
+  mesaId: string,
+  clienteId: string,
+): Promise<Mesa> {
+  const { data, error } = await supabase
+    .from("mesas")
+    .update({
+      cliente_id: clienteId,
+      disponibilidad: "ocupada",
+      qr_confirmado_at: null,
+    })
+    .eq("id", mesaId)
+    .eq("disponibilidad", "vacía")
+    .is("cliente_id", null)
+    .select(CAMPOS_MESA)
+    .maybeSingle();
+
+  if (error?.code === "23505") {
+    throw new Error("El cliente ya tiene otra mesa asignada.");
+  }
+  if (error) throw new Error("No se pudo asignar el cliente a la mesa.");
+  if (!data) throw new Error("La mesa ya no está disponible.");
+
+  const { error: errorListaEspera } = await supabase
+    .from("lista_espera")
+    .delete()
+    .eq("usuario_id", clienteId);
+
+  if (errorListaEspera) {
+    throw new Error("La mesa fue asignada, pero no se pudo quitar al cliente de la lista de espera.");
+  }
+
+  return data as Mesa;
+}
+
+export async function liberarMesa(mesaId: string): Promise<Mesa> {
+  const { data, error } = await supabase
+    .from("mesas")
+    .update({
+      cliente_id: null,
+      disponibilidad: "vacía",
+      qr_confirmado_at: null,
+    })
+    .eq("id", mesaId)
+    .select(CAMPOS_MESA)
+    .single();
+
+  if (error) throw new Error("No se pudo liberar la mesa.");
+
+  return data as Mesa;
+}
 
 async function obtenerMesaAsignada(usuarioId: string): Promise<MesaQr | null> {
   const { data, error } = await supabase

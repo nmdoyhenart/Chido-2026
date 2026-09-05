@@ -50,7 +50,7 @@ export default function PantallaDePrueba() {
         )}
       </View>
 
-      <Link href="/agregar-empleado" asChild>
+      <Link href={"/agregar-empleado" as any} asChild>
         <TouchableOpacity className="bg-blue-600 px-6 py-4 rounded-xl w-full">
           <Text className="text-white text-center font-bold text-lg">Ir a Agregar Empleado (Punto 1)</Text>
         </TouchableOpacity>
@@ -59,6 +59,18 @@ export default function PantallaDePrueba() {
       <Link href={"/qr-prueba" as any} asChild>
         <TouchableOpacity className="bg-orange-600 px-6 py-4 rounded-xl w-full mt-4">
           <Text className="text-white text-center font-bold text-lg">Probar lógica QR</Text>
+        </TouchableOpacity>
+      </Link>
+
+      <Link href={"/mesas/alta" as any} asChild>
+        <TouchableOpacity className="bg-orange-600 px-6 py-4 rounded-xl w-full mt-4">
+          <Text className="text-white text-center font-bold text-lg">Gestionar mesas</Text>
+        </TouchableOpacity>
+      </Link>
+
+      <Link href={"/mesas/gestion" as any} asChild>
+        <TouchableOpacity className="bg-orange-600 px-6 py-4 rounded-xl w-full mt-4">
+          <Text className="text-white text-center font-bold text-lg">Ver mesas registradas</Text>
         </TouchableOpacity>
       </Link>
     </View>

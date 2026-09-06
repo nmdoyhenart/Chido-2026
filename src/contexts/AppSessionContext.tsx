@@ -35,7 +35,7 @@ export function AppSessionProvider({
 
     const enterGuest = () => {
         setMode('guest');
-        setRole('cliente');
+        setRole('cliente anónimo');
     };
 
     const clearSession = () => {

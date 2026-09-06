@@ -11,11 +11,12 @@ import { eliminarFotoMesa, subirFotoMesa } from "./storage";
 const CAMPOS_MESA =
   "id, numero, cantidad_comensales, tipo, disponibilidad, foto, cliente_id, qr_confirmado_at";
 
-export async function obtenerMesas(): Promise<Mesa[]> {
-  const { data, error } = await supabase
+export async function obtenerMesas(signal?: AbortSignal): Promise<Mesa[]> {
+  const consulta = supabase
     .from("mesas")
     .select(CAMPOS_MESA)
     .order("numero", { ascending: true });
+  const { data, error } = await (signal ? consulta.abortSignal(signal) : consulta);
 
   if (error) throw new Error("No se pudo obtener el listado de mesas.");
 

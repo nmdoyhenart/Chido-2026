@@ -10,32 +10,47 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
+  ActivityIndicator,
+  Modal,
 } from 'react-native';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 
 import { authService } from '../../services/auth.service';
 import AccesoRapidoModal from '../../components/auth/AccesoRapidoModal'
+import { useAppSession } from '../../contexts/AppSessionContext';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { clearSession, enterGuest } = useAppSession();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [aviso, setAviso] = useState<{
+    titulo: string;
+    mensaje: string;
+  } | null>(null);
 
   // Controla si el modal de acceso rápido está abierto o cerrado
   const [accesoRapidoVisible, setAccesoRapidoVisible] = useState(false);
+
+  const mostrarAvisoError = (titulo: string, mensaje: string) => {
+    setAviso({ titulo, mensaje });
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(
+      () => undefined
+    );
+  };
 
   const iniciarSesion = async () => {
     const emailLimpio = email.trim();
 
     if (!emailLimpio || !password) {
-      Alert.alert(
+      mostrarAvisoError(
         'Campos incompletos',
         'Ingresá tu correo electrónico y contraseña.'
       );
@@ -50,6 +65,8 @@ export default function LoginScreen() {
         password
       );
 
+      clearSession();
+
       console.log(
         'Usuario autenticado:',
         data.user?.email
@@ -57,14 +74,15 @@ export default function LoginScreen() {
 
       router.replace('/(app)/home');
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.log('Error de login:', error);
 
       let mensaje =
         'No pudimos iniciar sesión. Revisá tus datos e intentá nuevamente.';
 
       if (
-        error?.message
+        error instanceof Error &&
+        error.message
           ?.toLowerCase()
           .includes('invalid login credentials')
       ) {
@@ -72,7 +90,7 @@ export default function LoginScreen() {
           'Correo electrónico o contraseña incorrectos.';
       }
 
-      Alert.alert(
+      mostrarAvisoError(
         'No se pudo iniciar sesión',
         mensaje
       );
@@ -320,6 +338,7 @@ export default function LoginScreen() {
               <Pressable
                 disabled={loading}
                 onPress={() => {
+                  enterGuest();
                   router.replace('/(app)/home');
                 }}
                 className="
@@ -378,6 +397,61 @@ export default function LoginScreen() {
           setAccesoRapidoVisible(false)
         }
       />
+
+      <Modal
+        visible={aviso !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setAviso(null)}
+      >
+        <View className="flex-1 items-center justify-center bg-orange-800/70 px-7">
+          <View className="w-full rounded-2xl border-2 border-orange-100/70 bg-red-900 px-6 py-7">
+            <Text className="text-center text-xl font-extrabold text-yellow-50">
+              {aviso?.titulo}
+            </Text>
+
+            <Text className="mt-4 text-center text-lg font-medium text-yellow-100">
+              {aviso?.mensaje}
+            </Text>
+
+            <Pressable
+              onPress={() => setAviso(null)}
+              className="mt-7 h-14 items-center justify-center rounded-2xl border-2 border-orange-100/40 bg-red-900/70"
+            >
+              <Text className="text-lg font-bold text-yellow-50">
+                Entendido
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={loading}
+        transparent
+        animationType="fade"
+        onRequestClose={() => undefined}
+      >
+        <View className="flex-1 items-center justify-center bg-orange-800/70 px-7">
+          <View className="w-full items-center rounded-2xl border-2 border-orange-100/70 bg-red-900 px-6 py-7">
+            <Image
+              source={require('../../../assets/images/logo.png')}
+              resizeMode="contain"
+              style={{ width: 120, height: 120 }}
+            />
+
+            <ActivityIndicator
+              size="large"
+              color="#FFE4C7"
+              className="mt-4"
+            />
+
+            <Text className="mt-5 text-center text-lg font-bold text-yellow-50">
+              Iniciando sesión...
+            </Text>
+          </View>
+        </View>
+      </Modal>
 
     </ImageBackground>
   );

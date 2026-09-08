@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
+import { Link } from 'expo-router';
 
 import { useAppSession } from '../../contexts/AppSessionContext';
 
@@ -28,6 +29,22 @@ export default function HomeScreen() {
       <Text className="text-white text-3xl font-extrabold mt-2 capitalize">
         {role ?? 'sin rol'}
       </Text>
+
+      {role === 'cocina' && (
+        <View className="w-full mt-10 gap-4">
+          <Link href="/productos/alta" asChild>
+            <Pressable className="bg-orange-950 p-4 rounded-2xl items-center">
+              <Text className="text-white font-bold text-lg">Alta de plato</Text>
+            </Pressable>
+          </Link>
+
+          <Link href="/productos/alta-bebida" asChild>
+            <Pressable className="bg-orange-950 p-4 rounded-2xl items-center">
+              <Text className="text-white font-bold text-lg">Alta de bebida</Text>
+            </Pressable>
+          </Link>
+        </View>
+      )}
 
     </View>
   );

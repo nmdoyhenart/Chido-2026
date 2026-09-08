@@ -6,6 +6,7 @@ import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Input } from '../../components/ui/Input';
 import * as ImagePicker from 'expo-image-picker';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 
 
 export default function AltaPlato() {
@@ -68,13 +69,44 @@ export default function AltaPlato() {
         }
     }
 
-    async function elegirDeGaleria (index:number) {
-        const permiso = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    async function elegirDeGaleria(index: number) {
+    const permiso = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permiso.granted) {
+        return;
+    }
+
+    const resultado = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.5,
+    });
+
+    if (resultado.canceled) {
+        return;
+    }
+
+    const uri = resultado.assets[0].uri;
+
+    const contexto = ImageManipulator.manipulate(uri);
+    const imagenRenderizada = await contexto.renderAsync();
+    const convertida = await imagenRenderizada.saveAsync({
+        compress: 0.5,
+        format: SaveFormat.JPEG,
+    });
+
+    setFotos((fotosAnteriores) => {
+        const nuevasFotos = [...fotosAnteriores];
+        nuevasFotos[index] = convertida.uri;
+        return nuevasFotos;
+    });
+}
+
+    async function tomarFoto(index: number) {
+        const permiso = await ImagePicker.requestCameraPermissionsAsync();
         if (!permiso.granted) {
             return;
         }
 
-        const resultado = await ImagePicker.launchImageLibraryAsync({
+        const resultado = await ImagePicker.launchCameraAsync({
             mediaTypes: ['images'],
             quality: 0.5,
         });
@@ -85,35 +117,18 @@ export default function AltaPlato() {
 
         const uri = resultado.assets[0].uri;
 
-        setFotos((fotosAnteriores) => {
-            const nuevasFotos = [...fotosAnteriores];
-            nuevasFotos[index] = uri;
-            return nuevasFotos;
-        })
-    }
-
-    async function tomarFoto(index:number) {
-        const permiso = await ImagePicker.requestCameraPermissionsAsync();
-        if (!permiso.granted) {
-            return;
-        }
-
-        const resultado = await ImagePicker.launchCameraAsync({
-            mediaTypes: ['images'],
-            quality: 0.5,
-        })
-
-        if (resultado.canceled) {
-            return;
-        }
-
-        const uri = resultado.assets[0].uri;
+        const contexto = ImageManipulator.manipulate(uri);
+        const imagenRenderizada = await contexto.renderAsync();
+        const convertida = await imagenRenderizada.saveAsync({
+            compress: 0.5,
+            format: SaveFormat.JPEG,
+        });
 
         setFotos((fotosAnteriores) => {
             const nuevasFotos = [...fotosAnteriores];
-            nuevasFotos[index] = uri;
+            nuevasFotos[index] = convertida.uri;
             return nuevasFotos;
-        })
+        });
     }
 
     function abrirSelector(index:number) {

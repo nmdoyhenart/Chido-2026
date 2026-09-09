@@ -69,7 +69,14 @@ export default function AccesoRapidoModal({
 
     onClose();
 
-    router.replace('/(app)/home');
+    switch (rol) {
+      case "encargado":
+        router.replace('../supervisor/home');
+        break;
+      default:
+        router.replace('/(app)/home');
+        break;
+    }
   };
 
   return (

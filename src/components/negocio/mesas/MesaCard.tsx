@@ -17,37 +17,37 @@ export function MesaCard({ mesa, actualizando, onCambiarDisponibilidad, onVerQr 
 
   const botonQr = (
     <Pressable
-      className="min-h-14 items-center justify-center rounded-2xl border-2 border-orange-100/40 bg-red-900 px-3 py-3"
+      className="min-h-20 min-w-20 items-center justify-center rounded-3xl border-2 border-[#e6b18c] bg-[#9c5120] px-3 py-3"
       onPress={() => onVerQr(mesa)}
       accessibilityRole="button"
       accessibilityLabel={`Ver código QR de la mesa ${mesa.numero}`}
     >
-      <Ionicons name="qr-code-outline" size={28} color="#FFE4C7" />
-      {!compacta ? <Text className="mt-1 text-center font-bold text-yellow-50">Ver código QR</Text> : null}
+      <Ionicons name="qr-code-outline" size={28} color="#fff4ea" />
+      {!compacta ? <Text className="mt-1 text-center font-bold text-[#fff4ea]">Ver código QR</Text> : null}
     </Pressable>
   );
 
   return (
-    <View className="rounded-3xl border-2 border-orange-100/40 bg-red-900/70 p-3">
-      <View className="flex-row items-center gap-3">
-        <View className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-orange-100/40 bg-orange-950/55">
+    <View className="rounded-3xl border-2 border-[#e6b18c] bg-[#b35e25] p-5">
+      <View className="flex-row items-center gap-4">
+        <View className="h-24 w-24 shrink-0 overflow-hidden rounded-3xl bg-[#9c5120]">
           {fotoValida ? <Image source={{ uri: mesa.foto }} className="h-full w-full" resizeMode="cover" /> : (
-            <View className="flex-1 items-center justify-center"><Ionicons name="restaurant-outline" size={30} color="#FFE4C7" /></View>
+            <View className="flex-1 items-center justify-center"><Ionicons name="grid-outline" size={42} color="#fff4ea" /></View>
           )}
         </View>
         <View className="min-w-0 flex-1">
-          <Text className="text-2xl font-bold text-yellow-50" accessibilityRole="header">Mesa {mesa.numero}</Text>
-          <Text className="mt-1 text-base text-yellow-100">{mesa.tipo === "VIP" ? "Preferencial" : mesa.tipo === "estándar" ? "Estándar" : "Movilidad reducida"} · {mesa.cantidad_comensales} comensales</Text>
+          <Text className="text-3xl font-bold text-[#fff4ea]" accessibilityRole="header">Mesa {mesa.numero}</Text>
+          <Text className="mt-1 text-lg text-[#f2c4a8]">{mesa.tipo === "VIP" ? "Preferencial" : mesa.tipo === "estándar" ? "Estándar" : "Movilidad reducida"} · {mesa.cantidad_comensales} comensales</Text>
           <Pressable
-            className="mt-2 min-h-12 self-start flex-row items-center gap-2 rounded-full border border-orange-100/40 bg-red-900 px-3 py-2"
+            className={`mt-3 min-h-11 self-start flex-row items-center gap-2 rounded-full px-3 py-2 ${estaVacia ? "bg-[#ad7938]" : "bg-[#d35c3b]"}`}
             onPress={() => onCambiarDisponibilidad(mesa)}
             disabled={actualizando}
             accessibilityRole="button"
             accessibilityLabel={`Mesa ${mesa.numero} ${estaVacia ? "vacía" : "ocupada"}. Marcar como ${estaVacia ? "ocupada" : "vacía"}`}
             accessibilityState={{ disabled: actualizando }}
           >
-            <Ionicons name={estaVacia ? "checkmark-circle-outline" : "people-outline"} size={20} color="#FFE4C7" />
-            <Text className="shrink text-base font-bold text-yellow-50">{estaVacia ? "Vacía" : "Ocupada"}</Text>
+            <View className={`h-3 w-3 rounded-full ${estaVacia ? "bg-[#8ee36b]" : "bg-[#ff6b5c]"}`} />
+            <Text className="shrink text-lg font-bold text-[#fff4ea]">{estaVacia ? "Vacía" : "Ocupada"}</Text>
           </Pressable>
         </View>
         {compacta ? botonQr : null}

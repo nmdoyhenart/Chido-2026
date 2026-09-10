@@ -6,6 +6,7 @@ import { ActivityIndicator, Image, ImageBackground, Modal, Pressable, ScrollView
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ListadoMesas } from "../../components/negocio/mesas/ListadoMesas";
 import { CerrarSesionButton } from "../../components/auth/CerrarSesionButton";
+import { Header } from "../../components/Header";
 import { QRDisplay } from "../../components/ui/QRDisplay";
 import { useMesas } from "../../hooks/useMesas";
 import type { Mesa } from "../../types/mesa";
@@ -108,27 +109,24 @@ export default function GestionMesas() {
   }
 
   return (
-    <ImageBackground source={require("../../../assets/images/fondo.jpeg")} resizeMode="cover" blurRadius={2} className="flex-1">
+    <View className="flex-1 bg-[#d97736]">
       <Stack.Screen options={{ headerShown: false, title: "Mesas" }} />
-      <View className="absolute inset-0 bg-orange-800/35" />
-      <SafeAreaView className="flex-1">
+      <Header userName="Administración" role="Mesas" />
+      <SafeAreaView edges={["left", "right", "bottom"]} className="flex-1">
         <View className="w-full max-w-2xl flex-1 self-center">
-          <View className="gap-2 px-5 pt-2 pb-1">
-            <View className="flex-row items-center gap-3">
-              <Pressable className="min-h-12 flex-1 flex-row items-center gap-2 rounded-2xl border-2 border-orange-100/40 bg-red-900/70 px-3 py-2" accessibilityRole="button" onPress={volverAlInicio}>
-                <Ionicons name="arrow-back" size={24} color="#FFE4C7" />
-                <Text className="flex-1 text-center text-base font-bold text-yellow-50">Volver al inicio</Text>
+          <View className="gap-3 px-5 pt-5 pb-2">
+            <View className="relative flex-row items-center">
+              <Pressable className="absolute left-0 z-10 h-10 w-10 items-center justify-center rounded-xl bg-[#b35e25]" accessibilityRole="button" accessibilityLabel="Volver al inicio" onPress={volverAlInicio}>
+                <Ionicons name="arrow-back" size={20} color="#fff" />
               </Pressable>
-              <Image source={require("../../../assets/images/logo.png")} style={{ width: 48, height: 48 }} resizeMode="contain" accessibilityLabel="Chido" />
-              <Pressable className="h-12 w-12 items-center justify-center rounded-2xl border-2 border-orange-100/40 bg-red-900/70" accessibilityRole="button" accessibilityLabel="Actualizar listado de mesas" disabled={cargando || actualizando} onPress={() => void cargarMesas()}>
-                <Ionicons name="refresh-outline" size={24} color="#FFE4C7" />
+              <Text accessibilityRole="header" className="flex-1 text-center text-2xl font-bold text-white">Gestión de mesas</Text>
+              <Pressable className="absolute right-0 z-10 h-10 w-10 items-center justify-center rounded-xl bg-[#b35e25]" accessibilityRole="button" accessibilityLabel="Actualizar listado de mesas" disabled={cargando || actualizando} onPress={() => void cargarMesas()}>
+                <Ionicons name="refresh-outline" size={20} color="#fff" />
               </Pressable>
             </View>
-            <CerrarSesionButton className="w-full" />
-            <Text accessibilityRole="header" className="text-center text-2xl font-extrabold text-yellow-50">Gestión de mesas</Text>
-            <Text className="text-center text-base text-yellow-100">{mesas.length} mesas · {mesas.filter((mesa) => mesa.disponibilidad === "vacía").length} disponibles</Text>
-            <Pressable className="min-h-12 flex-row items-center justify-center gap-2 rounded-2xl bg-red-900 px-3 py-2" accessibilityRole="button" disabled={actualizando} onPress={() => router.push("/mesas/alta")}>
-              <Ionicons name="add-circle-outline" size={24} color="#FFE4C7" />
+            <Text className="text-center text-base text-white">{mesas.length} mesas · {mesas.filter((mesa) => mesa.disponibilidad === "vacía").length} disponibles</Text>
+            <Pressable className="min-h-14 flex-row items-center justify-center gap-2 rounded-2xl bg-[#b35e25] px-3 py-3" accessibilityRole="button" disabled={actualizando} onPress={() => router.push("/mesas/alta")}>
+              <Ionicons name="add-circle-outline" size={24} color="#fff" />
               <Text className="shrink text-center text-lg font-bold text-white">Agregar mesa</Text>
             </Pressable>
           </View>
@@ -139,10 +137,10 @@ export default function GestionMesas() {
               <ListadoMesas mesas={mesas} onCambiarDisponibilidad={cambiarDisponibilidad} onVerQr={setMesaQr} />
             ) : !cargando ? (
               <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}>
-                <View className="m-5 rounded-3xl border-2 border-orange-100/40 bg-red-900/70 p-5">
-                  <Text className="text-center text-xl font-bold text-yellow-50">{errorCarga ? "No se pudo consultar el listado." : "Todavía no hay mesas registradas."}</Text>
-                  <Text className="mt-2 text-center text-base text-yellow-100">{errorCarga ? "Revisá la conexión y volvé a intentarlo." : "Agregá la primera mesa para ver sus datos y su código QR."}</Text>
-                  {errorCarga ? <Pressable accessibilityRole="button" className="mt-4 rounded-2xl bg-red-900 p-4" onPress={() => void cargarMesas()}><Text className="text-center font-bold text-yellow-50">Reintentar</Text></Pressable> : null}
+                <View className="m-5 rounded-3xl border-2 border-[#e6b18c] bg-[#b35e25] p-5">
+                  <Text className="text-center text-xl font-bold text-[#fff4ea]">{errorCarga ? "No se pudo consultar el listado." : "Todavía no hay mesas registradas."}</Text>
+                  <Text className="mt-2 text-center text-base text-[#f2c4a8]">{errorCarga ? "Revisá la conexión y volvé a intentarlo." : "Agregá la primera mesa para ver sus datos y su código QR."}</Text>
+                  {errorCarga ? <Pressable accessibilityRole="button" className="mt-4 rounded-xl bg-[#9c5120] p-4" onPress={() => void cargarMesas()}><Text className="text-center font-bold text-white">Reintentar</Text></Pressable> : null}
                 </View>
               </ScrollView>
             ) : null}
@@ -165,36 +163,34 @@ export default function GestionMesas() {
       </SafeAreaView>
 
       <Modal visible={mesaQr !== null} animationType="slide" onRequestClose={() => setMesaQr(null)}>
-        <ImageBackground source={require("../../../assets/images/fondo.jpeg")} resizeMode="cover" blurRadius={2} className="flex-1">
-          <View className="absolute inset-0 bg-orange-800/35" />
+        <View className="flex-1 bg-[#d97736]">
           <SafeAreaView className="flex-1">
-            <Pressable accessibilityRole="button" className="mx-5 mt-2 min-h-12 justify-center rounded-2xl bg-red-900 p-3" onPress={() => setMesaQr(null)}><Text className="text-center text-lg font-bold text-white">Volver a mesas</Text></Pressable>
+            <Pressable accessibilityRole="button" className="mx-5 mt-2 min-h-12 justify-center rounded-xl bg-[#9c5120] p-3" onPress={() => setMesaQr(null)}><Text className="text-center text-lg font-bold text-white">Volver a mesas</Text></Pressable>
             <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}>
               <View className="w-full max-w-lg self-center items-center gap-5 p-5">
                 <Image source={require("../../../assets/images/logo.png")} style={{ width: 96, height: 96 }} resizeMode="contain" />
-                {mesaQr ? <QRDisplay etiqueta={`Código QR de la mesa ${mesaQr.numero}`} payload={createMesaQr(mesaQr.id)} size={Math.min(240, Math.max(100, width - 120))} className="items-center rounded-3xl border-2 border-orange-100/40 bg-red-900/70 p-5" /> : null}
-                <Text className="text-center text-base text-yellow-100">Este código identifica la mesa. La asignación del cliente se verifica por separado.</Text>
+                {mesaQr ? <QRDisplay etiqueta={`Código QR de la mesa ${mesaQr.numero}`} payload={createMesaQr(mesaQr.id)} size={Math.min(240, Math.max(100, width - 120))} className="items-center rounded-3xl border-2 border-[#e6b18c] bg-[#b35e25] p-5" /> : null}
+                <Text className="text-center text-base text-[#f2c4a8]">Este código identifica la mesa. La asignación del cliente se verifica por separado.</Text>
               </View>
             </ScrollView>
           </SafeAreaView>
-        </ImageBackground>
+        </View>
       </Modal>
 
       <Modal visible={aviso !== null} animationType="fade" onRequestClose={() => setAviso(null)}>
-        <ImageBackground source={require("../../../assets/images/fondo.jpeg")} resizeMode="cover" blurRadius={2} className="flex-1">
-          <View className="absolute inset-0 bg-orange-800/35" />
+        <View className="flex-1 bg-[#d97736]">
           <SafeAreaView className="flex-1">
-            <Pressable accessibilityRole="button" className="mx-5 mt-2 rounded-2xl bg-red-900 p-3" onPress={volverAlInicio}><Text className="text-center text-lg font-bold text-yellow-50">Volver al inicio</Text></Pressable>
+            <Pressable accessibilityRole="button" className="mx-5 mt-2 rounded-xl bg-[#9c5120] p-3" onPress={volverAlInicio}><Text className="text-center text-lg font-bold text-white">Volver al inicio</Text></Pressable>
             <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}>
-              <View className="m-5 rounded-3xl border-2 border-orange-100/40 bg-red-900/70 p-5">
-                <Text className="text-center text-xl font-bold text-yellow-50">Atención</Text>
-                <Text className="mt-3 text-center text-base text-yellow-100">{aviso}</Text>
-                <Pressable accessibilityRole="button" className="mt-5 rounded-2xl bg-red-900 p-4" onPress={() => setAviso(null)}><Text className="text-center text-lg font-bold text-white">Entendido</Text></Pressable>
+              <View className="m-5 rounded-3xl border-2 border-[#e6b18c] bg-[#b35e25] p-5">
+                <Text className="text-center text-xl font-bold text-[#fff4ea]">Atención</Text>
+                <Text className="mt-3 text-center text-base text-[#f2c4a8]">{aviso}</Text>
+                <Pressable accessibilityRole="button" className="mt-5 rounded-xl bg-[#9c5120] p-4" onPress={() => setAviso(null)}><Text className="text-center text-lg font-bold text-white">Entendido</Text></Pressable>
               </View>
             </ScrollView>
           </SafeAreaView>
-        </ImageBackground>
+        </View>
       </Modal>
-    </ImageBackground>
+    </View>
   );
 }

@@ -21,6 +21,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { QRDisplay } from "../../components/ui/QRDisplay";
 import { CerrarSesionButton } from "../../components/auth/CerrarSesionButton";
+import { Header } from "../../components/Header";
 import { crearMesa } from "../../services/mesas";
 import type { Mesa, TipoMesa } from "../../types/mesa";
 import { TIPOS_MESA } from "../../types/mesa";
@@ -198,7 +199,7 @@ export default function AgregarMesa() {
   const tiposEnFila = anchoUtil >= 280 && fontScale <= 1.3;
   const salida = (
     <Pressable className="min-h-12 flex-row items-center self-start rounded-2xl border-2 border-orange-100/40 bg-red-900/70 px-3 py-2" onPress={volver} accessibilityRole="button">
-      <Ionicons name="arrow-back" size={22} color="#fefce8" />
+      <Ionicons name="arrow-back" size={20} color="#fff" />
       <Text className="ml-2 shrink text-base font-bold text-yellow-50">Volver a mesas</Text>
     </Pressable>
   );
@@ -238,63 +239,64 @@ export default function AgregarMesa() {
   }
 
   return (
-    <ImageBackground source={require("../../../assets/images/fondo.jpeg")} resizeMode="cover" blurRadius={2} className="flex-1">
-      <View className="absolute inset-0 bg-orange-800/35" />
+    <View className="flex-1 bg-[#d97736]">
       <Stack.Screen options={{ headerShown: false }} />
-      <SafeAreaView className="flex-1">
-          <View className="w-full max-w-xl self-center px-4 py-2">
-           {salida}
-           <CerrarSesionButton className="mt-2 w-full" />
-          <View className="mt-1 flex-row items-center justify-center gap-2">
-            <Image source={require("../../../assets/images/logo.png")} className="h-12 w-12" resizeMode="contain" accessibilityLabel="Chido" />
-            <Text className="shrink text-center text-2xl font-bold text-yellow-50" accessibilityRole="header">Alta de mesa</Text>
-          </View>
-        </View>
+      <Header userName="Administración" role="Mesas" />
+      <SafeAreaView edges={["left", "right", "bottom"]} className="flex-1">
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
-          <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" accessibilityElementsHidden={ocupada} importantForAccessibility={ocupada ? "no-hide-descendants" : "auto"}>
-            <View className="w-full max-w-xl self-center gap-4 px-4 pb-4 pt-2" style={{ flexGrow: 1, justifyContent: "space-between" }}>
-              <Pressable className="items-center" onPress={abrirCamara} disabled={ocupada} accessibilityRole="button" accessibilityLabel={foto ? "Volver a tomar la foto de la mesa" : "Tomar foto de la mesa"} accessibilityState={{ disabled: ocupada }}>
-                <View className="h-24 w-24 overflow-hidden rounded-3xl border-2 border-dashed border-orange-100/70 bg-orange-950/55">
-                  {foto ? <Image source={{ uri: foto.uri }} className="h-full w-full" resizeMode="contain" /> : <View className="flex-1 items-center justify-center"><Ionicons name="restaurant-outline" size={40} color="#fefce8" /></View>}
+          <ScrollView className="flex-1 p-5" contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" accessibilityElementsHidden={ocupada} importantForAccessibility={ocupada ? "no-hide-descendants" : "auto"}>
+            <View className="w-full max-w-xl self-center">
+              <View className="relative mb-8 flex-row items-center">
+                <Pressable className="absolute left-0 z-10 h-10 w-10 items-center justify-center rounded-xl bg-[#b35e25]" onPress={volver} accessibilityRole="button" accessibilityLabel="Volver a mesas">
+                  <Ionicons name="arrow-back" size={20} color="#fff" />
+                </Pressable>
+                <Text className="flex-1 text-center text-2xl font-bold text-white" accessibilityRole="header">Alta de mesa</Text>
+              </View>
+              <Pressable className="mb-6 items-center" onPress={abrirCamara} disabled={ocupada} accessibilityRole="button" accessibilityLabel={foto ? "Volver a tomar la foto de la mesa" : "Tomar foto de la mesa"} accessibilityState={{ disabled: ocupada }}>
+                <View className="h-32 w-32 overflow-hidden rounded-3xl border-2 border-dashed border-[#e6b18c] bg-[#b35e25]">
+                  {foto ? <Image source={{ uri: foto.uri }} className="h-full w-full" resizeMode="cover" /> : <View className="flex-1 items-center justify-center"><Ionicons name="grid-outline" size={40} color="#fff" /></View>}
                 </View>
-                <View className="mt-2 min-h-12 flex-row items-center justify-center rounded-2xl border-2 border-orange-100/40 bg-red-900/70 px-4 py-2">
-                  <Ionicons name="camera-outline" size={24} color="#fefce8" />
-                  <Text className="ml-2 shrink text-center text-base font-bold text-yellow-50">{foto ? "Volver a tomar la foto" : "Tomar foto con la cámara"}</Text>
+                <View className="mt-3 min-h-12 flex-row items-center justify-center rounded-2xl border-2 border-[#e6b18c] bg-[#b35e25] px-5 py-2">
+                  <Ionicons name="camera-outline" size={22} color="#fff" />
+                  <Text className="ml-2 text-base font-bold text-white">{foto ? "Volver a tomar la foto" : "Tomar foto con la cámara"}</Text>
                 </View>
               </Pressable>
 
-              <View className={`gap-4 ${camposEnFila ? "flex-row" : "flex-col"}`}>
+              <View className={`mb-4 gap-4 ${camposEnFila ? "flex-row" : "flex-col"}`}>
                 <View className={camposEnFila ? "flex-1" : "w-full"}>
-                  <Text className="mb-2 text-base font-bold text-yellow-50">Número de mesa</Text>
-                  <TextInput value={numero} onChangeText={setNumero} keyboardType="number-pad" placeholder="12" placeholderTextColor="#F4C9AD" editable={!ocupada} accessibilityLabel="Número de mesa" className="min-h-14 rounded-2xl border-2 border-orange-100/70 bg-orange-950/55 px-4 py-3 text-xl font-semibold text-yellow-50" />
+                  <Text className="mb-1 ml-1 text-sm text-white">Número de mesa</Text>
+                  <TextInput value={numero} onChangeText={setNumero} keyboardType="number-pad" placeholder="Ej. 12" placeholderTextColor="#e2b99f" editable={!ocupada} accessibilityLabel="Número de mesa" className="rounded-xl border border-[#b86127] bg-[#9c5120] p-3 text-white" />
                 </View>
                 <View className={camposEnFila ? "flex-1" : "w-full"}>
-                  <Text className="mb-2 text-base font-bold text-yellow-50">Comensales</Text>
-                  <TextInput value={cantidadComensales} onChangeText={setCantidadComensales} keyboardType="number-pad" placeholder="4" placeholderTextColor="#F4C9AD" editable={!ocupada} accessibilityLabel="Cantidad de comensales" className="min-h-14 rounded-2xl border-2 border-orange-100/70 bg-orange-950/55 px-4 py-3 text-xl font-semibold text-yellow-50" />
+                  <Text className="mb-1 ml-1 text-sm text-white">Comensales</Text>
+                  <TextInput value={cantidadComensales} onChangeText={setCantidadComensales} keyboardType="number-pad" placeholder="Ej. 4" placeholderTextColor="#e2b99f" editable={!ocupada} accessibilityLabel="Cantidad de comensales" className="rounded-xl border border-[#b86127] bg-[#9c5120] p-3 text-white" />
                 </View>
               </View>
 
-              <View>
-                <Text className="mb-2 text-base font-bold text-yellow-50">Tipo de mesa</Text>
+              <View className="mb-4">
+                <Text className="mb-2 ml-1 text-sm text-white">Tipo de mesa</Text>
                 <View className={`gap-2 ${tiposEnFila ? "flex-row" : "flex-col"}`} accessibilityRole="radiogroup">
                   {(["estándar", "VIP", "movilidad reducida"] as const).map((opcion) => (
-                    <Pressable key={opcion} className={`min-h-20 justify-center rounded-2xl border-2 px-2 py-3 ${tipo === opcion ? "border-orange-100/70 bg-red-900" : "border-orange-100/40 bg-red-900/70"}`} style={tiposEnFila ? { flex: 1 } : undefined} onPress={() => setTipo(opcion)} disabled={ocupada} accessibilityRole="radio" accessibilityState={{ checked: tipo === opcion, disabled: ocupada }}>
-                      <Text className={`text-center font-bold text-yellow-50 ${anchoUtil < 350 ? "text-sm" : "text-base"}`}>{opcion === "VIP" ? "Preferencial" : opcion === "estándar" ? "Estándar" : "Movilidad reducida"}</Text>
+                    <Pressable key={opcion} className={`min-h-14 justify-center rounded-xl border px-2 py-3 ${tipo === opcion ? "border-[#e6b18c] bg-[#9c5120]" : "border-[#b86127] bg-[#b35e25]"}`} style={tiposEnFila ? { flex: 1 } : undefined} onPress={() => setTipo(opcion)} disabled={ocupada} accessibilityRole="radio" accessibilityState={{ checked: tipo === opcion, disabled: ocupada }}>
+                      <Text className={`text-center font-bold text-white ${anchoUtil < 350 ? "text-sm" : "text-base"}`}>{opcion === "VIP" ? "Preferencial" : opcion === "estándar" ? "Estándar" : "Movilidad reducida"}</Text>
                     </Pressable>
                   ))}
                 </View>
               </View>
 
-              <View>
-                <Text className="mb-2 text-base font-bold text-yellow-50">Disponibilidad</Text>
-                <View className={`gap-2 rounded-2xl border-2 border-orange-100/70 bg-orange-950/55 px-4 py-3 ${camposEnFila ? "flex-row flex-wrap items-center justify-between" : "flex-col"}`}>
-                  <Text className="text-xl font-bold text-yellow-50">Vacía</Text>
-                  <Text className="text-base text-yellow-100">Estado inicial</Text>
+              <View className="mb-4">
+                <Text className="mb-2 ml-1 text-sm text-white">Disponibilidad</Text>
+                <View className={`gap-2 rounded-xl border border-[#b86127] bg-[#9c5120] px-4 py-3 ${camposEnFila ? "flex-row flex-wrap items-center justify-between" : "flex-col"}`}>
+                  <View className="flex-row items-center">
+                    <View className="mr-3 h-3 w-3 rounded-full bg-lime-400" />
+                    <Text className="text-lg font-bold text-white">Vacía</Text>
+                  </View>
+                  <Text className="text-sm text-[#e2b99f]">(predeterminada)</Text>
                 </View>
               </View>
 
-              <Pressable className={`min-h-16 justify-center rounded-2xl bg-red-900 p-4 ${ocupada ? "opacity-60" : "opacity-100"}`} onPress={guardarMesa} disabled={ocupada} accessibilityRole="button" accessibilityState={{ disabled: ocupada, busy: ocupada }}>
-                <Text className="text-center text-xl font-extrabold text-yellow-50">Guardar mesa</Text>
+              <Pressable className={`mb-12 items-center rounded-xl bg-[#9c5120] p-4 ${ocupada ? "opacity-60" : "opacity-100"}`} onPress={guardarMesa} disabled={ocupada} accessibilityRole="button" accessibilityState={{ disabled: ocupada, busy: ocupada }}>
+                <Text className="text-lg font-bold text-white">Guardar mesa</Text>
               </Pressable>
             </View>
           </ScrollView>
@@ -372,6 +374,6 @@ export default function AgregarMesa() {
         </ImageBackground>
       </Modal>
 
-    </ImageBackground>
+    </View>
   );
 }

@@ -16,7 +16,7 @@ export function Input({ label, error, containerClassName = '', ...props }: Input
         placeholderTextColor="#e2b99f"
         {...props}
       />
-      {error ? <Text className="text-red-300 text-xs mt-1 ml-1">{error}</Text> : null}
+      {error ? <Text className="text-red-600 text-sm mt-1 ml-1">{error}</Text> : null}
     </View>
   );
 }

@@ -4,6 +4,7 @@ import { Stack, router } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
+import { Ionicons } from '@expo/vector-icons';
 
 const QR_ENTRADA = 'ENTRADA_LOCAL';
 const CLIENTE_ANONIMO_ID_KEY = 'cliente_anonimo_id';
@@ -48,19 +49,28 @@ export default function EscanearEntrada() {
     };
 
     return (
-        <View className="flex-1 bg-[#d97736] items-center justify-center">
+        <View className="flex-1 bg-[#cf6f37] items-center justify-center px-6">
             <Stack.Screen options={{ headerShown: false }} />
-            <Text className="text-white text-xl mb-6">Escanear QR de entrada</Text>
+
+            <Text className="text-[#fff8ec] text-3xl font-bold mb-3 text-center">
+                Escanear QR de entrada
+            </Text>
+            <Text className="text-[#ffe4cf] text-xl text-center mb-10">
+                Buscá el código QR de la entrada del local para anotarte en la lista de espera.
+            </Text>
 
             <TouchableOpacity
                 onPress={abrirScanner}
-                className="bg-[#b35e25] px-6 py-4 rounded-2xl"
+                className="bg-[#8f3d22] w-full px-8 py-6 rounded-2xl flex-row items-center justify-center"
             >
-                <Text className="text-white font-bold text-lg">Escanear código QR</Text>
+                <Ionicons name="qr-code-outline" size={28} color="#fff8ec" />
+                <Text className="text-[#fff8ec] font-bold text-2xl ml-2">Escanear código QR</Text>
             </TouchableOpacity>
 
             {mensaje !== '' && (
-                <Text className="text-white text-center mt-6 px-6">{mensaje}</Text>
+                <Text className="text-[#ff6b57] text-lg text-center mt-6 px-6 font-semibold">
+                    {mensaje}
+                </Text>
             )}
 
             <Modal visible={escaneando} animationType="slide">
@@ -72,10 +82,10 @@ export default function EscanearEntrada() {
                     />
                     <View className="absolute bottom-10 left-0 right-0 items-center">
                         <TouchableOpacity
-                            className="bg-red-600 px-6 py-4 rounded-full"
                             onPress={() => setEscaneando(false)}
+                            className="bg-[#c94f4f] px-8 py-5 rounded-full"
                         >
-                            <Text className="text-white font-bold text-lg">Cancelar</Text>
+                            <Text className="text-[#fff8ec] font-bold text-xl">Cancelar</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

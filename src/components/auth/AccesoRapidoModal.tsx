@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 
 import {
   Modal,
   View,
   Text,
   Pressable,
+  Vibration,
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +13,7 @@ import { useRouter } from 'expo-router';
 
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { AppRole } from '../../types/roles';
+import ChidoLoader from '../ui/ChidoLoader';
 
 type Props = {
   visible: boolean;
@@ -25,6 +27,12 @@ const roles: {
   icono: keyof typeof Ionicons.glyphMap;
 }[] = [
   {
+    id: 'cliente registrado',
+    nombre: 'Cliente',
+    descripcion: 'Simular vista de cliente',
+  },
+  {
+
     id: 'dueño',
     nombre: 'Dueño',
     descripcion: 'Simular administración del restaurante',
@@ -36,12 +44,7 @@ const roles: {
     descripcion: 'Simular supervisión del restaurante',
     icono: 'briefcase-outline',
   },
-  {
-    id: 'cliente registrado',
-    nombre: 'Cliente registrado',
-    descripcion: 'Simular vista de cliente registrado',
-    icono: 'person-outline',
-  },
+  
   {
     id: 'cliente anónimo',
     nombre: 'Cliente anónimo',
@@ -62,8 +65,8 @@ const roles: {
   },
   {
     id: 'cocinero',
-    nombre: 'Cocinero',
-    descripcion: 'Simular elaboración de platos',
+    nombre: 'Cocina',
+    descripcion: 'Simular gestión de pedidos',
     icono: 'restaurant-outline',
   },
   {
@@ -81,6 +84,9 @@ export default function AccesoRapidoModal({
   const router = useRouter();
 
   const { enterSimulation } = useAppSession();
+  const ocupado = useRef(false);
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState('');
 
   const seleccionarRol = (rol: AppRole) => {
     enterSimulation(rol);
@@ -142,9 +148,12 @@ export default function AccesoRapidoModal({
 
           </View>
 
+          {!!error && <Text className="text-yellow-200 mb-3">{error}</Text>}
+          {cargando && <ChidoLoader mensaje="Abriendo simulación…" />}
           {roles.map((rol) => (
             <Pressable
               key={rol.id}
+              disabled={cargando}
               onPress={() => seleccionarRol(rol.id)}
               className="
                 flex-row

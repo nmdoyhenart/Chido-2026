@@ -37,7 +37,9 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Permití que Chido use la cámara para fotografiar mesas y leer códigos QR."
+          "cameraPermission": "Permití que Chido use la cámara para fotografiar mesas y leer códigos QR.",
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": true
         }
       ],
       "expo-image",
@@ -50,5 +52,7 @@
       "typedRoutes": true,
       "reactCompiler": true
     }
+    
+    
   }
 }

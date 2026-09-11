@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, ImageBackground, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useAudioPlayer } from 'expo-audio';
+import { setAudioModeAsync, setIsAudioActiveAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+
 import { Link } from 'expo-router';
 import { supabase } from '../../lib/supabase';
 import TacoSpinner from '../components/ui/TacoSpinner';
@@ -15,21 +16,80 @@ export default function SplashScreenAnimado() {
   const router = useRouter();
 
   const player = useAudioPlayer(
-    require('../../assets/sounds/splash.mp3')
+    require('../../assets/sounds/splash.mp3'),
+    { downloadFirst: true, updateInterval: 100 }
   );
+  const estadoAudio = useAudioPlayerStatus(player);
+  const [audioPreparado, setAudioPreparado] = useState(false);
+  const [animacionTerminada, setAnimacionTerminada] = useState(false);
+  const [sonidoTerminado, setSonidoTerminado] = useState(false);
+  const [esperaAgotada, setEsperaAgotada] = useState(false);
+  const [falloAudio, setFalloAudio] = useState(false);
+  const reproduccionIniciada = useRef(false);
+  const navegando = useRef(false);
 
   useEffect(() => {
-    player.volume = 0.25;
-    player.play();
+    let activo = true;
+    async function prepararAudio() {
+      try {
+        await setAudioModeAsync({
+          playsInSilentMode: true,
+          allowsRecording: false,
+          shouldRouteThroughEarpiece: false,
+          shouldPlayInBackground: false,
+          interruptionMode: 'duckOthers',
+        });
+        if (!activo) return;
+        await setIsAudioActiveAsync(true);
+        if (activo) setAudioPreparado(true);
+      } catch (error) {
+        if (activo) {
+          console.warn('SPLASH_AUDIO_CONFIGURACION', error);
+          setFalloAudio(true);
+        }
+      }
+    }
+    void prepararAudio();
+    return () => { activo = false; };
+  }, []);
 
-    const timer = setTimeout(() => {
-      router.replace('/(auth)/login');
-    }, 4500);
+  useEffect(() => {
+    const minimo = setTimeout(() => setAnimacionTerminada(true), 4500);
+    // El archivo puede tardar en llegar desde Metro en Expo Go. Una falla
+    // de carga no debe dejar al usuario atrapado en la pantalla inicial.
+    const maximo = setTimeout(() => setEsperaAgotada(true), 10000);
+    return () => { clearTimeout(minimo); clearTimeout(maximo); };
+  }, []);
 
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [player, router]);
+  useEffect(() => {
+    if (!audioPreparado || !estadoAudio.isLoaded || falloAudio || esperaAgotada || reproduccionIniciada.current) return;
+    reproduccionIniciada.current = true;
+    try {
+      player.volume = 1;
+      player.muted = false;
+      player.loop = false;
+      player.play();
+    } catch (error) {
+      console.warn('SPLASH_AUDIO_REPRODUCCION', error);
+      setFalloAudio(true);
+    }
+  }, [audioPreparado, estadoAudio.isLoaded, falloAudio, esperaAgotada, player]);
+
+  useEffect(() => {
+    if (estadoAudio.didJustFinish) setSonidoTerminado(true);
+    if (estadoAudio.error) {
+      console.warn('SPLASH_AUDIO_ARCHIVO', estadoAudio.error);
+      setFalloAudio(true);
+    }
+  }, [estadoAudio.didJustFinish, estadoAudio.error]);
+
+  useEffect(() => {
+    if (!animacionTerminada || (!sonidoTerminado && !falloAudio && !esperaAgotada) || navegando.current) return;
+    navegando.current = true;
+    if (esperaAgotada && !sonidoTerminado && !falloAudio) console.warn('SPLASH_AUDIO_TIEMPO_AGOTADO');
+    // useAudioPlayer libera el reproductor al desmontar esta pantalla.
+    router.replace('/(auth)/login');
+  }, [animacionTerminada, sonidoTerminado, falloAudio, esperaAgotada, router]);
 
   return (
     <ImageBackground

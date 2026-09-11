@@ -40,7 +40,7 @@ export function MesaCard({ mesa, actualizando, onCambiarDisponibilidad, onVerQr 
           <Text className="text-3xl font-bold text-chido-texto-sobre-oscuro" accessibilityRole="header">Mesa {mesa.numero}</Text>
           <Text className="mt-1 text-lg text-chido-texto-secundario-sobre-oscuro">{mesa.tipo === "VIP" ? "Preferencial" : mesa.tipo === "estándar" ? "Estándar" : "Movilidad reducida"} · {mesa.cantidad_comensales} comensales</Text>
           <Pressable
-            className={`mt-3 min-h-11 self-start flex-row items-center gap-2 rounded-full px-3 py-2 ${estaVacia ? "bg-chido-exito" : "bg-chido-error"}`}
+            className={`mt-3 min-h-11 self-start flex-row items-center gap-2 rounded-full px-3 py-2 ${estaVacia ? "bg-chido-exito/55" : "bg-chido-error/55"}`}
             onPress={() => onCambiarDisponibilidad(mesa)}
             disabled={actualizando}
             accessibilityRole="button"

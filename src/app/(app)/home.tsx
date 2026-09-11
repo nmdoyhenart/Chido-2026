@@ -38,7 +38,7 @@ export default function HomeScreen() {
             </Pressable>
           </Link>
 
-          <Link href="/productos/alta-bebida" asChild>
+          <Link href="../productos/alta-bebida" asChild>
             <Pressable className="bg-orange-950 p-4 rounded-2xl items-center">
               <Text className="text-white font-bold text-lg">Alta de bebida</Text>
             </Pressable>

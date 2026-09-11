@@ -3,6 +3,7 @@ export type AppRole =
   | 'supervisor'
   | 'metre'
   | 'mozo'
+  | 'cocina'
   | 'cocinero'
   | 'cantinero'
   | 'cliente registrado'

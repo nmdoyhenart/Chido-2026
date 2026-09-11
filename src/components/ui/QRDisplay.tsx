@@ -5,11 +5,17 @@ type QRDisplayProps = {
   etiqueta: string;
   payload: string;
   size?: number;
+  className?: string;
 };
 
-export function QRDisplay({ etiqueta, payload, size = 220 }: QRDisplayProps) {
+export function QRDisplay({
+  etiqueta,
+  payload,
+  size = 220,
+  className = "items-center rounded-3xl bg-[#f97316] p-5",
+}: QRDisplayProps) {
   return (
-    <View className="items-center rounded-3xl bg-[#f97316] p-5">
+    <View className={className}>
       <Text className="mb-4 text-center text-xl font-bold text-white">
         {etiqueta}
       </Text>

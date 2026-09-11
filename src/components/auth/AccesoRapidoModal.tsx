@@ -25,34 +25,52 @@ const roles: {
   icono: keyof typeof Ionicons.glyphMap;
 }[] = [
   {
-    id: 'cliente',
-    nombre: 'Cliente',
-    descripcion: 'Simular vista de cliente',
-    icono: 'person-outline',
+    id: 'dueño',
+    nombre: 'Dueño',
+    descripcion: 'Simular administración del restaurante',
+    icono: 'business-outline',
   },
   {
-    id: 'empleado',
-    nombre: 'Empleado',
-    descripcion: 'Simular vista general de empleado',
-    icono: 'people-outline',
-  },
-  {
-    id: 'cocina',
-    nombre: 'Cocina',
-    descripcion: 'Simular gestión de pedidos',
-    icono: 'restaurant-outline',
-  },
-  {
-    id: 'encargado',
-    nombre: 'Encargado',
-    descripcion: 'Simular supervisión del negocio',
+    id: 'supervisor',
+    nombre: 'Supervisor',
+    descripcion: 'Simular supervisión del restaurante',
     icono: 'briefcase-outline',
   },
   {
-    id: 'administrador',
-    nombre: 'Administrador',
-    descripcion: 'Simular acceso completo',
-    icono: 'settings-outline',
+    id: 'cliente registrado',
+    nombre: 'Cliente registrado',
+    descripcion: 'Simular vista de cliente registrado',
+    icono: 'person-outline',
+  },
+  {
+    id: 'cliente anónimo',
+    nombre: 'Cliente anónimo',
+    descripcion: 'Simular vista de cliente anónimo',
+    icono: 'person-outline',
+  },
+  {
+    id: 'metre',
+    nombre: 'Metre',
+    descripcion: 'Simular atención y asignación de mesas',
+    icono: 'people-outline',
+  },
+  {
+    id: 'mozo',
+    nombre: 'Mozo',
+    descripcion: 'Simular atención de pedidos',
+    icono: 'people-outline',
+  },
+  {
+    id: 'cocinero',
+    nombre: 'Cocinero',
+    descripcion: 'Simular elaboración de platos',
+    icono: 'restaurant-outline',
+  },
+  {
+    id: 'cantinero',
+    nombre: 'Cantinero',
+    descripcion: 'Simular elaboración de bebidas',
+    icono: 'wine-outline',
   },
 ];
 
@@ -70,8 +88,9 @@ export default function AccesoRapidoModal({
     onClose();
 
     switch (rol) {
-      case "encargado":
-        router.replace('../supervisor/home');
+      case "dueño":
+      case "supervisor":
+        router.replace('/supervisor/home');
         break;
       case "cliente":
         router.replace('../cliente/home');
@@ -89,7 +108,7 @@ export default function AccesoRapidoModal({
       animationType="slide"
       onRequestClose={onClose}
     >
-      <View className="flex-1 bg-black/60 justify-end">
+      <View className="flex-1 justify-end bg-orange-800/75">
 
         <View
           className="

@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { useAppSession } from '../../contexts/AppSessionContext';
@@ -32,6 +31,7 @@ export default function HomeScreen() {
           <SquareButton 
             icon="tablet-landscape-outline"
             title="Alta de mesa"
+            onPress={() => router.push('/mesas/alta')}
           />
         </View>
 
@@ -39,6 +39,7 @@ export default function HomeScreen() {
           icon="grid-outline"
           title="Gestión de mesas"
           subtitle="12 mesas · 7 disponibles"
+          onPress={() => router.push('/mesas/gestion')}
         />
 
         <ListButton 

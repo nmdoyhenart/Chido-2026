@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   actualizarDisponibilidadMesa,
   crearMesa,
@@ -9,21 +9,50 @@ import type { DisponibilidadMesa, Mesa, NuevaMesa } from "../types/mesa";
 export function useMesas() {
   const [mesas, setMesas] = useState<Mesa[]>([]);
   const [cargando, setCargando] = useState(true);
+  const activa = useRef(true);
+  const pendiente = useRef<Promise<Mesa[]> | null>(null);
+  const consulta = useRef<AbortController | null>(null);
 
-  const recargar = async (): Promise<Mesa[]> => {
+  useEffect(() => {
+    activa.current = true;
+    return () => {
+      activa.current = false;
+      consulta.current?.abort();
+    };
+  }, []);
+
+  const recargar = (forzar = false): Promise<Mesa[]> => {
+    if (pendiente.current && !forzar) return pendiente.current;
+    consulta.current?.abort();
     setCargando(true);
-    try {
-      const mesasActualizadas = await obtenerMesas();
-      setMesas(mesasActualizadas);
-      return mesasActualizadas;
-    } finally {
-      setCargando(false);
-    }
+    const controller = new AbortController();
+    consulta.current = controller;
+    let timer: ReturnType<typeof setTimeout>;
+    const limite = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        reject(new Error("La consulta tardó demasiado. Revisá la conexión y actualizá el listado."));
+        controller.abort();
+      }, 15000);
+    });
+    // El límite también cubre esperas del cliente de sesión previas al fetch.
+    pendiente.current = Promise.race([obtenerMesas(controller.signal), limite])
+      .then((resultado) => {
+        if (activa.current && !controller.signal.aborted) setMesas(resultado);
+        return resultado;
+      })
+      .finally(() => {
+        clearTimeout(timer);
+        if (consulta.current === controller) {
+          pendiente.current = null;
+          if (activa.current) setCargando(false);
+        }
+      });
+    return pendiente.current;
   };
 
   const agregar = async (datos: NuevaMesa): Promise<Mesa> => {
     const nuevaMesa = await crearMesa(datos);
-    setMesas((actuales) => [...actuales, nuevaMesa].sort((a, b) => a.numero - b.numero));
+    if (activa.current) setMesas((actuales) => [...actuales, nuevaMesa].sort((a, b) => a.numero - b.numero));
     return nuevaMesa;
   };
 
@@ -32,7 +61,7 @@ export function useMesas() {
     disponibilidad: DisponibilidadMesa,
   ): Promise<Mesa> => {
     const mesaActualizada = await actualizarDisponibilidadMesa(mesaId, disponibilidad);
-    setMesas((actuales) =>
+    if (activa.current) setMesas((actuales) =>
       actuales.map((mesa) => (mesa.id === mesaId ? mesaActualizada : mesa)),
     );
     return mesaActualizada;

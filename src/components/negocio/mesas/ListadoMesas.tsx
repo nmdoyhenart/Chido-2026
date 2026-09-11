@@ -84,16 +84,16 @@ export function ListadoMesas({ mesas, onCambiarDisponibilidad, onVerQr }: Listad
         ) : null}
       </View>
       <View className="gap-2 px-5 pb-2">
-        <Text accessibilityLiveRegion="polite" className="text-center text-sm font-bold text-[#fff4ea]">
+        <Text accessibilityLiveRegion="polite" className="text-center text-sm font-bold text-chido-texto-sobre-oscuro">
           Página {actual + 1} de {paginas.length}
         </Text>
-        <Text className="text-center text-sm text-[#f2c4a8]">Deslizá para recorrer el contenido.</Text>
+        <Text className="text-center text-sm text-chido-texto-secundario-sobre-oscuro">Deslizá para recorrer el contenido.</Text>
         <View className="flex-row gap-3">
-          <Pressable accessibilityRole="button" disabled={actual === 0} onPress={() => irAPagina(actual - 1)} className={`min-h-12 flex-1 justify-center rounded-2xl border-2 border-[#e6b18c] bg-[#b35e25] px-2 py-2 ${actual === 0 ? "opacity-60" : ""}`}>
-            <Text className="text-center font-bold text-[#fff4ea]">Anterior</Text>
+          <Pressable accessibilityRole="button" disabled={actual === 0} onPress={() => irAPagina(actual - 1)} className={`min-h-12 flex-1 justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo bg-chido-acento px-2 py-2 ${actual === 0 ? "opacity-60" : ""}`}>
+            <Text className="text-center font-bold text-chido-texto-sobre-oscuro">Anterior</Text>
           </Pressable>
-          <Pressable accessibilityRole="button" disabled={actual >= paginas.length - 1} onPress={() => irAPagina(actual + 1)} className={`min-h-12 flex-1 justify-center rounded-2xl border-2 border-[#e6b18c] bg-[#b35e25] px-2 py-2 ${actual >= paginas.length - 1 ? "opacity-60" : ""}`}>
-            <Text className="text-center font-bold text-[#fff4ea]">Siguiente</Text>
+          <Pressable accessibilityRole="button" disabled={actual >= paginas.length - 1} onPress={() => irAPagina(actual + 1)} className={`min-h-12 flex-1 justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo bg-chido-acento px-2 py-2 ${actual >= paginas.length - 1 ? "opacity-60" : ""}`}>
+            <Text className="text-center font-bold text-chido-texto-sobre-oscuro">Siguiente</Text>
           </Pressable>
         </View>
       </View>

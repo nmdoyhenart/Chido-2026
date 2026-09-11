@@ -88,7 +88,7 @@ export default function AccesoRapidoModal({
     onClose();
 
     switch (rol) {
-      case "encargado":
+      case "supervisor":
         router.replace('../supervisor/home');
         break;
       default:

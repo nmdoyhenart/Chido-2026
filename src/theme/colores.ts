@@ -1,0 +1,17 @@
+export const colores = {
+  fondo: "#cf6f37",
+  cabecera: "#8f3d22",
+  acento: "#b8602c",
+  textoSobreOscuro: "#fff8ec",
+  textoSecundarioSobreOscuro: "#f5d9bd",
+  textoSecundarioAlternativo: "#ffe4cf",
+  superficie: "#fbf3e3",
+  textoSobreClaro: "#3a1f14",
+  textoSecundarioSobreClaro: "#8a5a44",
+  textoBotonOutline: "#7a2e1f",
+  activo: "#9be27a",
+  notificacion: "#ff6b57",
+  aviso: "#e07a3c",
+  exito: "#4a9b6e",
+  error: "#c94f4f",
+} as const;

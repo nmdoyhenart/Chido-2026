@@ -1,9 +1,4 @@
-export type AppRole =
-    | 'cliente'
-    | 'empleado'
-    | 'cocina'
-    | 'encargado'
-    | 'administrador';
+export type { Perfil as AppRole } from '../../shared/acceso';
 
 export type SessionMode =
     | 'authenticated'

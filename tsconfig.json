@@ -12,8 +12,9 @@
     }
   },
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "shared/**/*.ts",
     "nativewind-env.d.ts"
   ]
 }

@@ -1,34 +1,36 @@
-import React from 'react';
-import { View, Text } from 'react-native';
-
+import { useState } from 'react';
+import { Image, Pressable, ScrollView, Text, Vibration } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { useAppSession } from '../../contexts/AppSessionContext';
+import ChidoLoader from '../../components/ui/ChidoLoader';
+import InicioDueno from '../../components/dueno/InicioDueno';
 
 export default function HomeScreen() {
-  const { mode, role } = useAppSession();
-
-  return (
-    <View className="flex-1 items-center justify-center bg-orange-700 px-6">
-
-      <Text className="text-white text-4xl font-extrabold text-center">
-        Bienvenido a Chido 🌮
-      </Text>
-
-      <Text className="text-yellow-100 text-lg mt-4 text-center">
-        Modo actual:
-      </Text>
-
-      <Text className="text-white text-2xl font-bold mt-2">
-        {mode}
-      </Text>
-
-      <Text className="text-yellow-100 text-lg mt-6 text-center">
-        Rol actual:
-      </Text>
-
-      <Text className="text-white text-3xl font-extrabold mt-2 capitalize">
-        {role ?? 'sin rol'}
-      </Text>
-
-    </View>
-  );
+  const router = useRouter();
+  const { mode, role, usuario, cerrarSesion } = useAppSession();
+  const [saliendo, setSaliendo] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  async function salir() {
+    if (saliendo) return;
+    setSaliendo(true);
+    try { await cerrarSesion(); router.replace('/(auth)/login'); }
+    catch { setError('No se pudo cerrar la sesión. Revisá la conexión e intentá nuevamente.'); Vibration.vibrate(180); }
+    finally { setSaliendo(false); }
+  }
+  if (mode === 'authenticated' && (role === 'dueño' || role === 'supervisor') && usuario) {
+    return <InicioDueno key={usuario.id} usuario={usuario} saliendo={saliendo} error={error} onSalir={salir} onPendientes={() => router.push('/(app)/clientes-pendientes')} />;
+  }
+  return <SafeAreaView className="flex-1 bg-orange-700">
+    <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}>
+      <Image source={require('../../../assets/images/logo.png')} style={{ width: 180, height: 180, alignSelf: 'center' }} resizeMode="contain" />
+      <Text className="text-white text-4xl font-extrabold text-center mt-5">Bienvenido a Chido</Text>
+      <Text className="text-white text-xl text-center mt-5">{usuario?.nombres ?? (mode === 'simulation' ? 'Vista de demostración' : 'Ingreso como invitado')}</Text>
+      <Text className="text-yellow-100 text-xl text-center mt-3 capitalize">{role}</Text>
+      {mode === 'authenticated' && role === 'metre' && <Pressable onPress={() => router.push('/(auth)/registro')} disabled={saliendo} className="bg-red-700 rounded-xl p-5 mt-8" accessibilityRole="button"><Text className="text-white text-xl font-bold text-center">Registrar cliente</Text></Pressable>}
+      {mode === 'authenticated' && (role === 'dueño' || role === 'supervisor') && <Pressable onPress={() => router.push('/(app)/clientes-pendientes')} disabled={saliendo} className="bg-red-700 rounded-xl p-5 mt-5" accessibilityRole="button"><Text className="text-white text-xl font-bold text-center">Clientes pendientes</Text></Pressable>}
+      {error && <Text className="text-yellow-200 text-lg text-center mt-5" accessibilityLiveRegion="assertive">{error}</Text>}
+      {saliendo ? <ChidoLoader mensaje="Cerrando sesión…" /> : <Pressable onPress={salir} className="bg-red-700 rounded-xl p-5 mt-8" accessibilityRole="button"><Text className="text-white text-xl font-bold text-center">Cerrar sesión</Text></Pressable>}
+    </ScrollView>
+  </SafeAreaView>;
 }

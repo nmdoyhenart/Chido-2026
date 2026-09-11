@@ -15,7 +15,15 @@
       "expo-splash-screen",
       "expo-status-bar",
       "expo-audio",
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Chido necesita usar la cámara para tomar tu foto personal y leer el DNI.",
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": true
+        }
+      ]
     ]
   }
 }

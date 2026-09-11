@@ -27,25 +27,28 @@ export async function crearProducto(datos:NuevoProducto) {
     return data;
 }
 
-export async function subirFoto(uri: string, nombreArchivo:string) {
-    const base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
-    const arrayBuffer = decode(base64);
+export async function subirFoto(uri: string, nombreArchivo: string) {
+    console.log('URI de la foto:', uri);
 
-    const {error} = await supabase.storage
-    .from('productos')
-    .upload(nombreArchivo, arrayBuffer, { contentType: 'image/jpeg'});
+    const base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
+    console.log('Longitud del base64:', base64.length);
+
+    const arrayBuffer = decode(base64);
+    console.log('Tamaño del arrayBuffer (bytes):', arrayBuffer.byteLength);
+
+    const { error } = await supabase.storage
+        .from('productos')
+        .upload(nombreArchivo, arrayBuffer, { contentType: 'image/jpeg' });
 
     if (error) {
         console.error('Error al subir la foto', error.message);
         throw error;
     }
 
-
-    const {data} = supabase.storage.from('productos').getPublicUrl(nombreArchivo);
+    const { data } = supabase.storage.from('productos').getPublicUrl(nombreArchivo);
 
     return data.publicUrl;
 }
-
 export async function subirFotos(fotos: (string | null)[]) {
     const urls: string[] = [];
 

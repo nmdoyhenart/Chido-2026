@@ -320,7 +320,7 @@ export default function LoginScreen() {
               <Pressable
                 disabled={loading}
                 onPress={() => {
-                  router.replace('/(app)/home');
+                  router.push('/cliente-anonimo/escanear');
                 }}
                 className="
                   h-16

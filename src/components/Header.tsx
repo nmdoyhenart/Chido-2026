@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
+import { useRouter } from 'expo-router';
+import { useAppSession } from '../contexts/AppSessionContext';
 
 interface HeaderProps {
   userName: string;
@@ -9,6 +10,14 @@ interface HeaderProps {
 }
 
 export function Header({ userName, role }: HeaderProps) {
+  const { clearSession } = useAppSession();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    clearSession();
+    router.replace('/');
+  };
+
   return (
     <View className="bg-[#9c5120] px-4 pt-12 pb-4 flex-row items-center justify-between">
       {/* Profile Info */}
@@ -32,11 +41,12 @@ export function Header({ userName, role }: HeaderProps) {
           {/* Notification dot */}
           <View className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500" />
         </TouchableOpacity>
-        <Link href="/" asChild>
-          <TouchableOpacity className="w-10 h-10 rounded-full bg-[#b35e25] items-center justify-center">
-            <Ionicons name="log-out-outline" size={20} color="#fff" />
-          </TouchableOpacity>
-        </Link>
+        <TouchableOpacity 
+          className="w-10 h-10 rounded-full bg-[#b35e25] items-center justify-center"
+          onPress={handleLogout}
+        >
+          <Ionicons name="log-out-outline" size={20} color="#fff" />
+        </TouchableOpacity>
       </View>
     </View>
   );

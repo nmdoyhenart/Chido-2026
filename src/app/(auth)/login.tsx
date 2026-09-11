@@ -339,7 +339,7 @@ export default function LoginScreen() {
                 disabled={loading}
                 onPress={() => {
                   enterGuest();
-                  router.replace('/(app)/home');
+                  router.push('/cliente-anonimo/escanear');
                 }}
                 className="
                   h-16

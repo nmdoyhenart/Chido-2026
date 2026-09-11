@@ -73,6 +73,9 @@ export default function AccesoRapidoModal({
       case "encargado":
         router.replace('../supervisor/home');
         break;
+      case "cliente":
+        router.replace('../cliente/home');
+        break;
       default:
         router.replace('/(app)/home');
         break;

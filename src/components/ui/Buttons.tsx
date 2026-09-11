@@ -65,14 +65,15 @@ interface PrimaryButtonProps {
   onPress?: () => void;
   className?: string;
   isLoading?: boolean;
+  disabled?: boolean;
 }
 
-export function PrimaryButton({ title, onPress, className = "", isLoading }: PrimaryButtonProps) {
+export function PrimaryButton({ title, onPress, className = "", isLoading, disabled }: PrimaryButtonProps) {
   return (
     <TouchableOpacity 
-      className={`bg-[#7a2e1f] p-4 rounded-xl items-center flex-row justify-center ${className}`}
+      className={`bg-[#7a2e1f] p-4 rounded-xl items-center flex-row justify-center ${disabled ? 'opacity-50' : ''} ${className}`}
       onPress={onPress}
-      disabled={isLoading}
+      disabled={isLoading || disabled}
     >
       {isLoading ? (
         <Text className="text-white font-bold text-lg">Guardando...</Text>

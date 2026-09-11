@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, Image, Alert, Modal, StyleShe
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../../../lib/supabase';
+import { crearEmpleado } from '../../services/empleados.service';
 import { Input } from '../../components/ui/Input';
 import { PrimaryButton } from '../../components/ui/Buttons';
 import { Header } from '../../components/Header';
@@ -76,21 +76,16 @@ export default function AgregarEmpleado() {
 
     setGuardando(true);
     try {
-      const insertData = {
+      await crearEmpleado({
         nombres: formData.nombres,
         apellidos: formData.apellidos,
         dni: formData.dni,
         cuil: formData.cuil,
         correo: formData.correo,
         perfil: formData.perfil,
-        foto_perfil: formData.foto,
-      };
-
-      const { error } = await supabase.from('usuarios').insert(insertData);
-
-      if (error) {
-        throw error;
-      }
+        foto: formData.foto,
+        contraseña: formData.contraseña
+      });
 
       Alert.alert("Éxito", "Empleado guardado correctamente.");
       router.back();

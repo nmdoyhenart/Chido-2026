@@ -9,6 +9,7 @@ import { Input } from '../../components/ui/Input';
 import { supabase } from '../../../lib/supabase';
 import { subirFotoCliente } from '../../../lib/clientesAnonimos';
 import { KeyboardAvoidingView, Platform } from 'react-native';
+import { colores } from '../../theme/colores';
 
 const CLIENTE_ANONIMO_ID_KEY = 'cliente_anonimo_id';
 
@@ -74,7 +75,7 @@ export default function AltaClienteAnonimo() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-[#cf6f37]">
+        <SafeAreaView className="flex-1 bg-chido-fondo">
             <Stack.Screen options={{ headerShown: false }} />
 
             <KeyboardAvoidingView
@@ -84,28 +85,28 @@ export default function AltaClienteAnonimo() {
                 <View className="flex-1 px-6">
                     <TouchableOpacity
                         onPress={() => router.back()}
-                        className="w-14 h-14 rounded-xl bg-[#8f3d22] items-center justify-center mt-4"
+                        className="w-14 h-14 rounded-xl bg-chido-cabecera items-center justify-center mt-4"
                     >
-                        <Ionicons name="arrow-back" size={26} color="#fff8ec" />
+                        <Ionicons name="arrow-back" size={26} color={colores.textoSobreOscuro} />
                     </TouchableOpacity>
 
                     <View className="flex-1 justify-around">
-                        <Text className="text-[#fff8ec] text-3xl font-bold text-center">
+                        <Text className="text-chido-texto-sobre-oscuro text-3xl font-bold text-center">
                             Anotate en la lista de espera
                         </Text>
 
                         <View className="items-center">
                             <TouchableOpacity
                                 onPress={abrirCamara}
-                                className="w-56 h-56 rounded-full border-4 border-dashed border-[#b8602c] items-center justify-center overflow-hidden"
+                                className="w-56 h-56 rounded-full border-4 border-dashed border-chido-acento items-center justify-center overflow-hidden"
                             >
                                 {foto ? (
                                     <Image source={{ uri: foto }} className="w-full h-full" />
                                 ) : (
-                                    <Ionicons name="camera-outline" size={64} color="#fff8ec" />
+                                    <Ionicons name="camera-outline" size={64} color={colores.textoSobreOscuro} />
                                 )}
                             </TouchableOpacity>
-                            <Text className="text-[#ffe4cf] text-lg mt-3">Tomar foto</Text>
+                            <Text className="text-chido-texto-secundario-alternativo text-lg mt-3">Tomar foto</Text>
                         </View>
 
                         <View>
@@ -117,19 +118,19 @@ export default function AltaClienteAnonimo() {
                             />
 
                             {error !== '' && (
-                                <Text className="text-[#ff6b57] text-lg text-center mt-3 font-semibold">{error}</Text>
+                                <Text className="text-chido-notificacion text-lg text-center mt-3 font-semibold">{error}</Text>
                             )}
                         </View>
 
                         <TouchableOpacity
                             onPress={handleGuardar}
                             disabled={guardando}
-                            className="bg-[#8f3d22] w-full px-8 py-6 rounded-2xl items-center"
+                            className="bg-chido-cabecera w-full px-8 py-6 rounded-2xl items-center"
                         >
                             {guardando ? (
-                                <ActivityIndicator color="#fff8ec" />
+                                <ActivityIndicator color={colores.textoSobreOscuro} />
                             ) : (
-                                <Text className="text-[#fff8ec] font-bold text-2xl">Guardar</Text>
+                                <Text className="text-chido-texto-sobre-oscuro font-bold text-2xl">Guardar</Text>
                             )}
                         </TouchableOpacity>
                     </View>
@@ -148,15 +149,15 @@ export default function AltaClienteAnonimo() {
                     <View className="absolute bottom-10 left-0 right-0 flex-row justify-center gap-4">
                         <TouchableOpacity
                             onPress={() => setTomandoFoto(false)}
-                            className="bg-[#c94f4f] px-8 py-5 rounded-full"
+                            className="bg-chido-error px-8 py-5 rounded-full"
                         >
-                            <Text className="text-[#fff8ec] font-bold text-xl">Cancelar</Text>
+                            <Text className="text-chido-texto-sobre-oscuro font-bold text-xl">Cancelar</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={tomarFoto}
-                            className="bg-[#b8602c] px-8 py-5 rounded-full"
+                            className="bg-chido-acento px-8 py-5 rounded-full"
                         >
-                            <Text className="text-[#fff8ec] font-bold text-xl">Capturar</Text>
+                            <Text className="text-chido-texto-sobre-oscuro font-bold text-xl">Capturar</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Header } from '../../components/Header';
 import { supabase } from '../../../lib/supabase';
+import { colores } from '../../theme/colores';
 
 type Mensaje = {
   id: string;
@@ -61,17 +62,17 @@ export default function ChatCliente() {
   };
 
   return (
-    <View className="flex-1 bg-[#d97736]">
+    <View className="flex-1 bg-chido-fondo">
       <Header userName="Cliente" role={`Mesa ${numMesa}`} />
 
-      <View className="flex-row items-center p-4 bg-[#b35e25]">
-        <TouchableOpacity 
-          className="w-10 h-10 rounded-xl bg-[#9c5120] items-center justify-center mr-4"
+      <View className="flex-row items-center p-4 bg-chido-acento">
+        <TouchableOpacity
+          className="w-10 h-10 rounded-xl bg-chido-cabecera items-center justify-center mr-4"
           onPress={() => router.back()}
         >
-          <Ionicons name="arrow-back" size={20} color="#fff" />
+          <Ionicons name="arrow-back" size={20} color={colores.textoSobreOscuro} />
         </TouchableOpacity>
-        <Text className="text-xl font-bold text-white flex-1">Consulta al mozo</Text>
+        <Text className="text-xl font-bold text-chido-texto-sobre-oscuro flex-1">Consulta al mozo</Text>
       </View>
 
       <KeyboardAvoidingView 
@@ -86,17 +87,17 @@ export default function ChatCliente() {
           {mensajes.map(msg => {
             const isMe = !msg.es_mozo;
             return (
-              <View 
-                key={msg.id} 
-                className={`mb-4 max-w-[80%] rounded-2xl p-4 ${isMe ? 'bg-[#9c5120] self-end rounded-tr-sm' : 'bg-[#e2b99f] self-start rounded-tl-sm'}`}
+              <View
+                key={msg.id}
+                className={`mb-4 max-w-[80%] rounded-2xl p-4 ${isMe ? 'bg-chido-cabecera self-end rounded-tr-sm' : 'bg-chido-texto-secundario-sobre-oscuro self-start rounded-tl-sm'}`}
               >
-                <Text className={`font-bold mb-1 ${isMe ? 'text-yellow-200' : 'text-[#7a2e1f]'}`}>
+                <Text className={`font-bold mb-1 ${isMe ? 'text-yellow-200' : 'text-chido-texto-boton-outline'}`}>
                   {isMe ? 'Yo' : 'Mozo'}
                 </Text>
-                <Text className={`text-base ${isMe ? 'text-white' : 'text-[#7a2e1f]'}`}>
+                <Text className={`text-base ${isMe ? 'text-chido-texto-sobre-oscuro' : 'text-chido-texto-boton-outline'}`}>
                   {msg.texto}
                 </Text>
-                <Text className={`text-xs mt-2 self-end ${isMe ? 'text-white/70' : 'text-[#7a2e1f]/70'}`}>
+                <Text className={`text-xs mt-2 self-end ${isMe ? 'text-chido-texto-sobre-oscuro/70' : 'text-chido-texto-boton-outline/70'}`}>
                   {formatearHora(msg.fecha)}
                 </Text>
               </View>
@@ -104,19 +105,19 @@ export default function ChatCliente() {
           })}
         </ScrollView>
 
-        <View className="p-4 bg-[#b35e25] flex-row items-center">
-          <TextInput 
-            className="flex-1 bg-white/20 rounded-full px-4 py-3 text-white mr-3"
+        <View className="p-4 bg-chido-acento flex-row items-center">
+          <TextInput
+            className="flex-1 bg-chido-superficie/20 rounded-full px-4 py-3 text-chido-texto-sobre-oscuro mr-3"
             placeholder="Escribe tu consulta..."
-            placeholderTextColor="rgba(255,255,255,0.5)"
+            placeholderTextColor={colores.textoSecundarioSobreOscuro}
             value={nuevoMensaje}
             onChangeText={setNuevoMensaje}
           />
-          <TouchableOpacity 
-            className="w-12 h-12 bg-[#9c5120] rounded-full items-center justify-center"
+          <TouchableOpacity
+            className="w-12 h-12 bg-chido-cabecera rounded-full items-center justify-center"
             onPress={handleEnviar}
           >
-            <Ionicons name="send" size={20} color="#fff" />
+            <Ionicons name="send" size={20} color={colores.textoSobreOscuro} />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

@@ -8,7 +8,7 @@ import { registrarCliente } from '../../services/registro-cliente.service';
 export default function RegistroScreen() {
   const router = useRouter();
   const { mode, role, cargando } = useAppSession();
-  if (cargando) return <View className="flex-1 bg-orange-700 justify-center"><ChidoLoader mensaje="Verificando sesión…" /></View>;
+  if (cargando) return <View className="flex-1 bg-chido-fondo justify-center"><ChidoLoader mensaje="Verificando sesión…" /></View>;
   const esMetre = mode === 'authenticated' && role === 'metre';
   if (mode === 'authenticated' && !esMetre) return <Redirect href="/(app)/home" />;
   return <FormularioRegistroCliente

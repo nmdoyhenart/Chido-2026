@@ -14,11 +14,11 @@ export default function HomeScreen() {
   const displayRole = role ? role.charAt(0).toUpperCase() + role.slice(1) : "Supervisor";
 
   return (
-    <View className="flex-1 bg-[#d97736]">
+    <View className="flex-1 bg-chido-fondo">
       <Header userName={userName} role={displayRole} />
 
       <ScrollView className="flex-1 p-5 pt-8">
-        <Text className="text-3xl font-bold text-white mb-6">
+        <Text className="text-3xl font-bold text-chido-texto-sobre-oscuro mb-6">
           Hola, Laura
         </Text>
 

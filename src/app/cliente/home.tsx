@@ -16,15 +16,15 @@ export default function HomeCliente() {
   };
 
   return (
-    <View className="flex-1 bg-[#d97736]">
+    <View className="flex-1 bg-chido-fondo">
       <Header userName="Cliente" role="Bienvenido" />
-      
+
       <View className="flex-1 p-5 justify-center items-center">
-        <Text className="text-4xl font-extrabold text-white mb-4 text-center" style={{ textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4 }}>
+        <Text className="text-4xl font-extrabold text-chido-texto-sobre-oscuro mb-4 text-center" style={{ textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4 }}>
           ¡Bienvenido a Chido!
         </Text>
-        
-        <Text className="text-white text-lg mb-10 text-center font-medium px-4">
+
+        <Text className="text-chido-texto-sobre-oscuro text-lg mb-10 text-center font-medium px-4">
           Para ver nuestra carta y realizar tu pedido, por favor escaneá el código QR ubicado en tu mesa.
         </Text>
         

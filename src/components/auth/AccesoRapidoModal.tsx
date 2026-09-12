@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { AppRole } from '../../types/roles';
 import ChidoLoader from '../ui/ChidoLoader';
+import { colores } from '../../theme/colores';
 
 type Props = {
   visible: boolean;
@@ -45,7 +46,7 @@ const roles: {
     descripcion: 'Simular supervisión del restaurante',
     icono: 'briefcase-outline',
   },
-  
+
   {
     id: 'cliente anónimo',
     nombre: 'Cliente anónimo',
@@ -124,11 +125,11 @@ export default function AccesoRapidoModal({
       animationType="slide"
       onRequestClose={onClose}
     >
-      <View className="flex-1 justify-end bg-orange-800/75">
+      <View className="flex-1 justify-end bg-chido-cabecera/75">
 
         <View
           className="
-            bg-orange-950
+            bg-chido-cabecera
             rounded-t-[32px]
             px-6
             pt-6
@@ -139,11 +140,11 @@ export default function AccesoRapidoModal({
           <View className="flex-row items-center justify-between mb-6">
 
             <View>
-              <Text className="text-white text-2xl font-extrabold">
+              <Text className="text-chido-texto-sobre-oscuro text-2xl font-extrabold">
                 Acceso rápido
               </Text>
 
-              <Text className="text-yellow-100 mt-1">
+              <Text className="text-chido-texto-secundario-sobre-oscuro mt-1">
                 Elegí un rol para simular
               </Text>
             </View>
@@ -152,13 +153,13 @@ export default function AccesoRapidoModal({
               <Ionicons
                 name="close"
                 size={30}
-                color="#FFF7ED"
+                color={colores.textoSobreOscuro}
               />
             </Pressable>
 
           </View>
 
-          {!!error && <Text className="text-yellow-200 mb-3">{error}</Text>}
+          {!!error && <Text className="text-chido-error mb-3">{error}</Text>}
           {cargando && <ChidoLoader mensaje="Abriendo simulación…" />}
           {roles.map((rol) => (
             <Pressable
@@ -171,9 +172,9 @@ export default function AccesoRapidoModal({
                 p-4
                 mb-3
                 rounded-2xl
-                bg-orange-900/60
+                bg-chido-acento/60
                 border
-                border-orange-200/30
+                border-chido-texto-secundario-alternativo/30
               "
             >
 
@@ -182,7 +183,7 @@ export default function AccesoRapidoModal({
                   w-14
                   h-14
                   rounded-full
-                  bg-yellow-200
+                  bg-chido-superficie
                   items-center
                   justify-center
                   mr-4
@@ -191,17 +192,17 @@ export default function AccesoRapidoModal({
                 <Ionicons
                   name={rol.icono}
                   size={28}
-                  color="#7C2D12"
+                  color={colores.textoSobreClaro}
                 />
               </View>
 
               <View className="flex-1">
 
-                <Text className="text-white text-xl font-bold">
+                <Text className="text-chido-texto-sobre-oscuro text-xl font-bold">
                   {rol.nombre}
                 </Text>
 
-                <Text className="text-yellow-100 mt-1">
+                <Text className="text-chido-texto-secundario-sobre-oscuro mt-1">
                   {rol.descripcion}
                 </Text>
 

@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import type { PropositoScannerQr } from "../../types/qr";
+import { colores } from "../../theme/colores";
 
 type QRScannerProps = {
   visible: boolean;
@@ -93,30 +94,30 @@ export function QRScanner({
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={close}>
-      <View className="flex-1 bg-[#f97316] px-5 pb-8 pt-14">
-        <Text className="text-center text-3xl font-bold text-white">
+      <View className="flex-1 bg-chido-fondo px-5 pb-8 pt-14">
+        <Text className="text-center text-3xl font-bold text-chido-texto-sobre-oscuro">
           Escanear código
         </Text>
-        <Text className="mb-6 mt-2 text-center text-base text-white">
+        <Text className="mb-6 mt-2 text-center text-base text-chido-texto-sobre-oscuro">
           {instrucciones[proposito]}
         </Text>
 
         {!permission || !permission.granted ? (
-          <View className="flex-1 justify-center rounded-3xl bg-[#ea580c] p-6">
-            <Text className="mb-6 text-center text-lg font-semibold text-white">
+          <View className="flex-1 justify-center rounded-3xl bg-chido-acento p-6">
+            <Text className="mb-6 text-center text-lg font-semibold text-chido-texto-sobre-oscuro">
               Se necesita permiso para acceder a la cámara.
             </Text>
             <Pressable
-              className="rounded-2xl bg-[#fb923c] p-4"
+              className="rounded-2xl bg-chido-fondo p-4"
               onPress={requestCameraPermission}
             >
-              <Text className="text-center text-lg font-bold text-white">
+              <Text className="text-center text-lg font-bold text-chido-texto-sobre-oscuro">
                 Dar permiso de cámara
               </Text>
             </Pressable>
           </View>
         ) : (
-          <View className="flex-1 overflow-hidden rounded-3xl border-4 border-[#fed7aa]">
+          <View className="flex-1 overflow-hidden rounded-3xl border-4 border-chido-texto-secundario-alternativo">
             <CameraView
               style={StyleSheet.absoluteFill}
               facing="back"
@@ -129,32 +130,32 @@ export function QRScanner({
         )}
 
         {error ? (
-          <View className="mt-5 rounded-2xl bg-[#facc15] p-4">
-            <Text className="text-center font-semibold text-[#9a3412]">{error}</Text>
+          <View className="mt-5 rounded-2xl bg-chido-error p-4">
+            <Text className="text-center font-semibold text-chido-texto-sobre-oscuro">{error}</Text>
           </View>
         ) : null}
 
         <View className="mt-5 gap-3">
           {error ? (
-            <Pressable className="rounded-2xl bg-[#fb923c] p-4" onPress={reset}>
-              <Text className="text-center text-lg font-bold text-white">
+            <Pressable className="rounded-2xl bg-chido-fondo p-4" onPress={reset}>
+              <Text className="text-center text-lg font-bold text-chido-texto-sobre-oscuro">
                 Escanear nuevamente
               </Text>
             </Pressable>
           ) : null}
-          <Pressable className="rounded-2xl bg-[#ea580c] p-4" onPress={close}>
-            <Text className="text-center text-lg font-bold text-white">Cancelar</Text>
+          <Pressable className="rounded-2xl bg-chido-acento p-4" onPress={close}>
+            <Text className="text-center text-lg font-bold text-chido-texto-sobre-oscuro">Cancelar</Text>
           </Pressable>
         </View>
 
         {processing ? (
-          <View className="absolute inset-0 items-center justify-center bg-[#ea580c]/95 px-8">
+          <View className="absolute inset-0 items-center justify-center bg-chido-acento/95 px-8">
             <Image
               source={require("../../../assets/images/icon.png")}
               className="mb-5 h-24 w-24 rounded-3xl"
             />
-            <ActivityIndicator size="large" color="#ffffff" />
-            <Text className="mt-4 text-center text-lg font-bold text-white">
+            <ActivityIndicator size="large" color={colores.textoSobreOscuro} />
+            <Text className="mt-4 text-center text-lg font-bold text-chido-texto-sobre-oscuro">
               Procesando código
             </Text>
           </View>

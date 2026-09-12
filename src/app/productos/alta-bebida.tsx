@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Input } from '../../components/ui/Input';
 import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
+import { colores } from '../../theme/colores';
 
 export default function AltaBebida() {
     const [nombre, setNombre] = useState('');
@@ -167,7 +168,7 @@ export default function AltaBebida() {
     }
 
     return (
-        <View className="flex-1 bg-[#d97736] ">
+        <View className="flex-1 bg-chido-fondo ">
             <Stack.Screen options={{ headerShown: false }} />
             <Header userName='Emmanuel Martín' role='Cantinero'/>
             <KeyboardAvoidingView
@@ -178,50 +179,50 @@ export default function AltaBebida() {
                     <View className="flex-row items-center mb-8 relative">
                         <Pressable
                             onPress={() => router.back()}
-                            className="w-10 h-10 rounded-xl bg-[#b35e25] items-center justify-center absolute left-0 z-10"
+                            className="w-10 h-10 rounded-xl bg-chido-acento items-center justify-center absolute left-0 z-10"
                         >
-                        <Ionicons name="arrow-back" size={20} color="#fff" />
+                        <Ionicons name="arrow-back" size={20} color={colores.textoSobreOscuro} />
                         </Pressable>
-                        <Text className="text-2xl font-bold text-white text-center flex-1">Alta de bebida</Text>
+                        <Text className="text-2xl font-bold text-chido-texto-sobre-oscuro text-center flex-1">Alta de bebida</Text>
                     </View>
 
                     <View className="mb-4">
-                        <Text className="text-white text-sm mb-2 ml-1">Fotos de la bebida</Text>
+                        <Text className="text-chido-texto-sobre-oscuro text-sm mb-2 ml-1">Fotos de la bebida</Text>
                         <View className="flex-row gap-3">
                             <Pressable
                                 onPress={() => abrirSelector(0)}
-                                className="flex-1 aspect-square rounded-2xl border-2 border-dashed border-[#e6b18c] bg-[#b35e25] items-center justify-center overflow-hidden"
+                                className="flex-1 aspect-square rounded-2xl border-2 border-dashed border-chido-texto-secundario-alternativo bg-chido-acento items-center justify-center overflow-hidden"
                             >
                                 {fotos[0] ? (
                                     <Image source={{ uri: fotos[0] }} className="w-full h-full" />
                                 ) : (
-                                    <Ionicons name="image-outline" size={28} color="#fff" />
+                                    <Ionicons name="image-outline" size={28} color={colores.textoSobreOscuro} />
                                 )}
                             </Pressable>
 
                             <Pressable
                                 onPress={() => abrirSelector(1)}
-                                className="flex-1 aspect-square rounded-2xl border-2 border-dashed border-[#e6b18c] bg-[#b35e25] items-center justify-center overflow-hidden"
+                                className="flex-1 aspect-square rounded-2xl border-2 border-dashed border-chido-texto-secundario-alternativo bg-chido-acento items-center justify-center overflow-hidden"
                             >
                                 {fotos[1] ? (
                                     <Image source={{ uri: fotos[1] }} className="w-full h-full" />
                                 ) : (
-                                    <Ionicons name="image-outline" size={28} color="#fff" />
+                                    <Ionicons name="image-outline" size={28} color={colores.textoSobreOscuro} />
                                 )}
                             </Pressable>
 
                             <Pressable
                                 onPress={() => abrirSelector(2)}
-                                className="flex-1 aspect-square rounded-2xl border-2 border-dashed border-[#e6b18c] bg-[#b35e25] items-center justify-center overflow-hidden"
+                                className="flex-1 aspect-square rounded-2xl border-2 border-dashed border-chido-texto-secundario-alternativo bg-chido-acento items-center justify-center overflow-hidden"
                             >
                                 {fotos[2] ? (
                                     <Image source={{ uri: fotos[2] }} className="w-full h-full" />
                                 ) : (
-                                    <Ionicons name="image-outline" size={28} color="#fff" />
+                                    <Ionicons name="image-outline" size={28} color={colores.textoSobreOscuro} />
                                 )}
                             </Pressable>
                         </View>
-                        {errores.fotos && <Text className="text-red-300 text-xs mt-1 ml-1">{errores.fotos}</Text>}
+                        {errores.fotos && <Text className="text-chido-error text-xs mt-1 ml-1">{errores.fotos}</Text>}
                     </View>
 
                     <Input
@@ -259,18 +260,18 @@ export default function AltaBebida() {
                         />
                     </View>
 
-                    {error !== '' && <Text className="text-red-400 font-bold mb-2">{error}</Text>}
-                    {exito && <Text className="text-green-400 font-bold mb-2">¡Bebida guardada con éxito!</Text>}   
-                    
-                    {cargando && <ActivityIndicator size="large" color="#ffffff" />}
+                    {error !== '' && <Text className="text-chido-error font-bold mb-2">{error}</Text>}
+                    {exito && <Text className="text-chido-exito font-bold mb-2">¡Bebida guardada con éxito!</Text>}
 
-                    <Pressable className="bg-[#9c5120] p-4 rounded-xl mt-4 mb-12 items-center" onPress={handleGuardar}>
-                        <Text className="text-white font-bold text-lg">Guardar</Text>
+                    {cargando && <ActivityIndicator size="large" color={colores.textoSobreOscuro} />}
+
+                    <Pressable className="bg-chido-cabecera p-4 rounded-xl mt-4 mb-12 items-center" onPress={handleGuardar}>
+                        <Text className="text-chido-texto-sobre-oscuro font-bold text-lg">Guardar</Text>
                     </Pressable>
 
                     <Modal visible={selectorVisible} transparent animationType="fade">
-                        <View className="flex-1 bg-black/50 items-center justify-center">
-                            <View className="bg-[#9c5120] rounded-2xl p-4 w-64 gap-3">
+                        <View className="flex-1 bg-chido-cabecera/50 items-center justify-center">
+                            <View className="bg-chido-cabecera rounded-2xl p-4 w-64 gap-3">
                                 <Pressable
                                     onPress={() => {
                                         if (indiceSeleccionado !== null) {
@@ -278,9 +279,9 @@ export default function AltaBebida() {
                                         }
                                         setSelectorVisible(false);
                                     }}
-                                    className="bg-[#b35e25] p-3 rounded-xl items-center"
+                                    className="bg-chido-acento p-3 rounded-xl items-center"
                                 >
-                                    <Text className="text-white font-bold">Tomar foto</Text>
+                                    <Text className="text-chido-texto-sobre-oscuro font-bold">Tomar foto</Text>
                                 </Pressable>
 
                                 <Pressable
@@ -290,16 +291,16 @@ export default function AltaBebida() {
                                         }
                                         setSelectorVisible(false);
                                     }}
-                                    className="bg-[#b35e25] p-3 rounded-xl items-center"
+                                    className="bg-chido-acento p-3 rounded-xl items-center"
                                 >
-                                    <Text className="text-white font-bold">Elegir de galería</Text>
+                                    <Text className="text-chido-texto-sobre-oscuro font-bold">Elegir de galería</Text>
                                 </Pressable>
 
                                 <Pressable
                                     onPress={() => setSelectorVisible(false)}
                                     className="p-3 rounded-xl items-center"
                                 >
-                                    <Text className="text-white">Cancelar</Text>
+                                    <Text className="text-chido-texto-sobre-oscuro">Cancelar</Text>
                                 </Pressable>
                             </View>
                         </View>

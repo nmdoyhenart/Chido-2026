@@ -128,7 +128,7 @@ export default function SplashScreenAnimado() {
           >
             <Text
               className="
-                text-white
+                text-chido-texto-sobre-oscuro
                 text-6xl
                 font-extrabold
                 italic
@@ -186,7 +186,7 @@ export default function SplashScreenAnimado() {
 
             <Text
               className="
-                text-white
+                text-chido-texto-sobre-oscuro
                 text-xl
                 font-medium
                 text-center
@@ -197,7 +197,7 @@ export default function SplashScreenAnimado() {
 
             <Text
               className="
-                text-white
+                text-chido-texto-sobre-oscuro
                 text-xl
                 font-medium
                 text-center
@@ -208,7 +208,7 @@ export default function SplashScreenAnimado() {
 
             <Text
               className="
-                text-white
+                text-chido-texto-sobre-oscuro
                 text-xl
                 font-medium
                 text-center
@@ -219,7 +219,7 @@ export default function SplashScreenAnimado() {
 
             <Text
               className="
-                text-white
+                text-chido-texto-sobre-oscuro
                 text-xl
                 font-medium
                 text-center

@@ -22,6 +22,7 @@ import { useAppSession } from '../../contexts/AppSessionContext';
 import ChidoLoader from '../ui/ChidoLoader';
 import { validarCorreo } from '../../../shared/registro-cliente';
 import AccesoRapidoModal from './AccesoRapidoModal';
+import { colores } from '../../theme/colores';
 
 export default function Login() {
   const router = useRouter();
@@ -81,7 +82,7 @@ export default function Login() {
     finally { operacion.current = false; setLoading(false); }
   }
 
-  if (cargando && !loading) return <View className="flex-1 bg-orange-700 justify-center"><ChidoLoader mensaje="Verificando sesión…" /></View>;
+  if (cargando && !loading) return <View className="flex-1 bg-chido-fondo justify-center"><ChidoLoader mensaje="Verificando sesión…" /></View>;
 
   return (
     <ImageBackground
@@ -91,7 +92,7 @@ export default function Login() {
       className="flex-1"
     >
       {/* Capa para diferenciar el login del splash */}
-      <View className="absolute inset-0 bg-orange-800/35" />
+      <View className="absolute inset-0 bg-chido-cabecera/35" />
 
       <SafeAreaView className="flex-1">
 
@@ -127,7 +128,7 @@ export default function Login() {
                   }}
                 />
 
-                <Text className="text-yellow-100 text-xl text-center mt-2 font-medium">
+                <Text className="text-chido-texto-secundario-sobre-oscuro text-xl text-center mt-2 font-medium">
                   Deja de buscar, la mejor comida mexicana está acá
                 </Text>
 
@@ -136,7 +137,7 @@ export default function Login() {
               {/* EMAIL */}
               <View className="mb-5">
 
-                <Text className="text-yellow-50 text-lg font-bold mb-2">
+                <Text className="text-chido-texto-sobre-oscuro text-lg font-bold mb-2">
                   Correo electrónico
                 </Text>
 
@@ -144,7 +145,7 @@ export default function Login() {
                   value={email}
                   onChangeText={setEmail}
                   placeholder="Escribe tu correo"
-                  placeholderTextColor="#F4C9AD"
+                  placeholderTextColor={colores.textoSecundarioAlternativo}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -154,9 +155,9 @@ export default function Login() {
                     px-5
                     rounded-2xl
                     border-2
-                    border-orange-100/70
-                    bg-orange-950/55
-                    text-yellow-50
+                    border-chido-texto-secundario-alternativo/70
+                    bg-chido-cabecera/55
+                    text-chido-texto-sobre-oscuro
                     text-xl
                     font-semibold
                   "
@@ -169,7 +170,7 @@ export default function Login() {
 
                 <View className="flex-row items-center justify-between mb-2">
 
-                  <Text className="text-yellow-50 text-lg font-bold">
+                  <Text className="text-chido-texto-sobre-oscuro text-lg font-bold">
                     Contraseña
                   </Text>
 
@@ -182,7 +183,7 @@ export default function Login() {
                     }
                   >
 
-                    <Text className="text-yellow-50 text-base font-bold underline">
+                    <Text className="text-chido-texto-sobre-oscuro text-base font-bold underline">
                       ¿Olvidaste tu contraseña?
                     </Text>
 
@@ -197,8 +198,8 @@ export default function Login() {
                     items-center
                     rounded-2xl
                     border-2
-                    border-orange-100/70
-                    bg-orange-950/55
+                    border-chido-texto-secundario-alternativo/70
+                    bg-chido-cabecera/55
                   "
                 >
 
@@ -206,7 +207,7 @@ export default function Login() {
                     value={password}
                     onChangeText={setPassword}
                     placeholder="Escribe tu contraseña"
-                    placeholderTextColor="#F4C9AD"
+                    placeholderTextColor={colores.textoSecundarioAlternativo}
                     secureTextEntry={!mostrarPassword}
                     autoCapitalize="none"
                     editable={!loading}
@@ -214,7 +215,7 @@ export default function Login() {
                       flex-1
                       h-full
                       px-5
-                      text-yellow-50
+                      text-chido-texto-sobre-oscuro
                       text-xl
                       font-semibold
                     "
@@ -242,7 +243,7 @@ export default function Login() {
                           : 'eye-off-outline'
                       }
                       size={28}
-                      color="#FFE4C7"
+                      color={colores.textoSecundarioAlternativo}
                     />
 
                   </Pressable>
@@ -252,7 +253,7 @@ export default function Login() {
               </View>
 
               {/* LOGIN */}
-              {(mensaje || avisoSesion) && <View className="bg-red-700 rounded-xl p-4 mb-5" accessibilityLiveRegion="assertive"><Text className="text-white text-lg">{mensaje || avisoSesion}</Text></View>}
+              {(mensaje || avisoSesion) && <View className="bg-chido-error rounded-xl p-4 mb-5" accessibilityLiveRegion="assertive"><Text className="text-chido-texto-sobre-oscuro text-lg">{mensaje || avisoSesion}</Text></View>}
               {loading && <ChidoLoader mensaje="Verificando acceso…" />}
               <Pressable
                 onPress={iniciarSesion}
@@ -262,7 +263,7 @@ export default function Login() {
                   rounded-2xl
                   items-center
                   justify-center
-                  bg-red-900
+                  bg-chido-cabecera
                   shadow-lg
                   ${
                     loading
@@ -272,7 +273,7 @@ export default function Login() {
                 `}
               >
 
-                <Text className="text-white text-xl font-extrabold">
+                <Text className="text-chido-texto-sobre-oscuro text-xl font-extrabold">
                   {
                     loading
                       ? 'Ingresando...'
@@ -285,13 +286,13 @@ export default function Login() {
               {/* SEPARADOR */}
               <View className="flex-row items-center my-7">
 
-                <View className="flex-1 h-[1px] bg-yellow-100/50" />
+                <View className="flex-1 h-[1px] bg-chido-texto-secundario-alternativo/50" />
 
-                <Text className="mx-4 text-yellow-50 text-lg font-bold">
+                <Text className="mx-4 text-chido-texto-sobre-oscuro text-lg font-bold">
                   o
                 </Text>
 
-                <View className="flex-1 h-[1px] bg-yellow-100/50" />
+                <View className="flex-1 h-[1px] bg-chido-texto-secundario-alternativo/50" />
 
               </View>
 
@@ -305,15 +306,15 @@ export default function Login() {
                   h-16
                   rounded-2xl
                   border-2
-                  border-orange-100/40
-                  bg-red-900/70
+                  border-chido-texto-secundario-alternativo/40
+                  bg-chido-cabecera/70
                   items-center
                   justify-center
                   mb-4
                 "
               >
 
-                <Text className="text-white text-xl font-bold">
+                <Text className="text-chido-texto-sobre-oscuro text-xl font-bold">
                   Registrarse
                 </Text>
 
@@ -351,14 +352,14 @@ export default function Login() {
                   h-16
                   rounded-2xl
                   border-2
-                  border-orange-100/40
-                  bg-red-900/70
+                  border-chido-texto-secundario-alternativo/40
+                  bg-chido-cabecera/70
                   items-center
                   justify-center
                 "
               >
 
-                <Text className="text-white text-xl font-bold">
+                <Text className="text-chido-texto-sobre-oscuro text-xl font-bold">
                   Acceso rápido
                 </Text>
 

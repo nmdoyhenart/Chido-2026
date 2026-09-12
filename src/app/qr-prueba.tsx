@@ -60,12 +60,12 @@ export default function PruebaQr() {
   };
 
   return (
-    <View className="flex-1 bg-[#f97316]">
+    <View className="flex-1 bg-chido-fondo">
       <ScrollView contentContainerClassName="gap-5 px-5 pb-10 pt-14">
-        <Text className="text-center text-3xl font-bold text-white">
+        <Text className="text-center text-3xl font-bold text-chido-texto-sobre-oscuro">
           Prueba de códigos QR
         </Text>
-        <Text className="text-center text-base text-white">
+        <Text className="text-center text-base text-chido-texto-sobre-oscuro">
           Mostrá estos códigos en otro dispositivo o imprimilos antes de escanearlos.
         </Text>
 
@@ -73,10 +73,10 @@ export default function PruebaQr() {
           {(["ingreso", "mesa", "propina", "dni"] as const).map((tipo) => (
             <Pressable
               key={tipo}
-              className="rounded-2xl bg-[#ea580c] p-4"
+              className="rounded-2xl bg-chido-acento p-4"
               onPress={() => abrirScanner(tipo)}
             >
-              <Text className="text-center text-lg font-bold text-white">
+              <Text className="text-center text-lg font-bold text-chido-texto-sobre-oscuro">
                 {etiquetas[tipo]}
               </Text>
             </Pressable>

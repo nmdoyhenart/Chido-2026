@@ -6,6 +6,7 @@ import { Header } from '../../components/Header';
 import { PrimaryButton } from '../../components/ui/Buttons';
 import { Producto } from '../../types/producto';
 import { getProductos } from '../../services/productos.service';
+import { colores } from '../../theme/colores';
 
 const { width } = Dimensions.get('window');
 const ITEM_HEIGHT = 440;
@@ -92,8 +93,8 @@ export default function MenuCliente() {
   const renderCarousel = (fotos: string[]) => {
     if (!fotos || fotos.length === 0) {
       return (
-        <View className="w-full h-48 bg-[#9c5120] rounded-xl items-center justify-center">
-          <Ionicons name="fast-food-outline" size={40} color="#e2b99f" />
+        <View className="w-full h-48 bg-chido-cabecera rounded-xl items-center justify-center">
+          <Ionicons name="fast-food-outline" size={40} color={colores.textoSecundarioSobreOscuro} />
         </View>
       );
     }
@@ -125,48 +126,48 @@ export default function MenuCliente() {
   });
 
   return (
-    <View className="flex-1 bg-[#d97736]">
+    <View className="flex-1 bg-chido-fondo">
       <Header userName="Cliente" role="Mesa 4" />
       
-      <View className="flex-row items-center p-4 bg-[#b35e25]">
-        <Text className="text-2xl font-bold text-white mr-auto">Menú</Text>
-        <TouchableOpacity 
-          className="flex-row items-center bg-[#9c5120] px-4 py-2 rounded-full"
+      <View className="flex-row items-center p-4 bg-chido-acento">
+        <Text className="text-2xl font-bold text-chido-texto-sobre-oscuro mr-auto">Menú</Text>
+        <TouchableOpacity
+          className="flex-row items-center bg-chido-cabecera px-4 py-2 rounded-full"
           onPress={() => router.push('/cliente/chat')}
         >
-          <Ionicons name="chatbubbles-outline" size={20} color="#fff" />
-          <Text className="text-white font-bold ml-2">Consultar al mozo</Text>
+          <Ionicons name="chatbubbles-outline" size={20} color={colores.textoSobreOscuro} />
+          <Text className="text-chido-texto-sobre-oscuro font-bold ml-2">Consultar al mozo</Text>
         </TouchableOpacity>
       </View>
 
       <View className="flex-row p-5 gap-2">
-        <TouchableOpacity 
-          className={`px-4 py-2 rounded-full border-2 ${filtro === 'todos' ? 'bg-[#e2b99f] border-[#e2b99f]' : 'bg-transparent border-[#e2b99f]'}`}
+        <TouchableOpacity
+          className={`px-4 py-2 rounded-full border-2 ${filtro === 'todos' ? 'bg-chido-texto-secundario-sobre-oscuro border-chido-texto-secundario-sobre-oscuro' : 'bg-transparent border-chido-texto-secundario-sobre-oscuro'}`}
           onPress={() => setFiltro('todos')}
         >
-          <Text className={`font-bold ${filtro === 'todos' ? 'text-[#9c5120]' : 'text-[#e2b99f]'}`}>Todos</Text>
+          <Text className={`font-bold ${filtro === 'todos' ? 'text-chido-cabecera' : 'text-chido-texto-secundario-sobre-oscuro'}`}>Todos</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          className={`px-4 py-2 rounded-full border-2 ${filtro === 'plato' ? 'bg-[#e2b99f] border-[#e2b99f]' : 'bg-transparent border-[#e2b99f]'}`}
+        <TouchableOpacity
+          className={`px-4 py-2 rounded-full border-2 ${filtro === 'plato' ? 'bg-chido-texto-secundario-sobre-oscuro border-chido-texto-secundario-sobre-oscuro' : 'bg-transparent border-chido-texto-secundario-sobre-oscuro'}`}
           onPress={() => setFiltro('plato')}
         >
-          <Text className={`font-bold ${filtro === 'plato' ? 'text-[#9c5120]' : 'text-[#e2b99f]'}`}>Platos</Text>
+          <Text className={`font-bold ${filtro === 'plato' ? 'text-chido-cabecera' : 'text-chido-texto-secundario-sobre-oscuro'}`}>Platos</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          className={`px-4 py-2 rounded-full border-2 ${filtro === 'bebida' ? 'bg-[#e2b99f] border-[#e2b99f]' : 'bg-transparent border-[#e2b99f]'}`}
+        <TouchableOpacity
+          className={`px-4 py-2 rounded-full border-2 ${filtro === 'bebida' ? 'bg-chido-texto-secundario-sobre-oscuro border-chido-texto-secundario-sobre-oscuro' : 'bg-transparent border-chido-texto-secundario-sobre-oscuro'}`}
           onPress={() => setFiltro('bebida')}
         >
-          <Text className={`font-bold ${filtro === 'bebida' ? 'text-[#9c5120]' : 'text-[#e2b99f]'}`}>Bebidas</Text>
+          <Text className={`font-bold ${filtro === 'bebida' ? 'text-chido-cabecera' : 'text-chido-texto-secundario-sobre-oscuro'}`}>Bebidas</Text>
         </TouchableOpacity>
       </View>
 
       {loading ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#fff" />
+          <ActivityIndicator size="large" color={colores.textoSobreOscuro} />
         </View>
       ) : productosFiltrados.length === 0 ? (
         <View className="flex-1 px-5">
-          <Text className="text-white text-center text-lg mt-10">No hay productos en esta categoría.</Text>
+          <Text className="text-chido-texto-sobre-oscuro text-center text-lg mt-10">No hay productos en esta categoría.</Text>
         </View>
       ) : (
         <FlatList
@@ -180,38 +181,38 @@ export default function MenuCliente() {
           renderItem={({ item: prod }) => {
             const cant = pedido[prod.id] || 0;
             return (
-              <View 
-                className="bg-[#b35e25] p-4 rounded-2xl"
+              <View
+                className="bg-chido-acento p-4 rounded-2xl"
                 style={{ height: ITEM_HEIGHT, marginBottom: ITEM_MARGIN }}
               >
-                <Text className="text-xl font-bold text-white mb-2" numberOfLines={1}>{prod.nombre}</Text>
-                
+                <Text className="text-xl font-bold text-chido-texto-sobre-oscuro mb-2" numberOfLines={1}>{prod.nombre}</Text>
+
                 <View className="mb-4">
                   {renderCarousel(prod.fotos)}
                 </View>
-                
-                <Text className="text-white/90 text-sm mb-2 flex-1" numberOfLines={2}>{prod.descripcion}</Text>
-                
+
+                <Text className="text-chido-texto-sobre-oscuro/90 text-sm mb-2 flex-1" numberOfLines={2}>{prod.descripcion}</Text>
+
                 <View className="flex-row justify-between items-center mb-4">
-                  <Text className="text-[#e2b99f] font-bold text-lg">${prod.precio}</Text>
-                  <Text className="text-[#e2b99f]"><Ionicons name="time-outline" size={16} /> {prod.tiempo_elaboracion} min</Text>
+                  <Text className="text-chido-texto-secundario-sobre-oscuro font-bold text-lg">${prod.precio}</Text>
+                  <Text className="text-chido-texto-secundario-sobre-oscuro"><Ionicons name="time-outline" size={16} /> {prod.tiempo_elaboracion} min</Text>
                 </View>
 
                 <View className="flex-row items-center justify-center gap-6 mt-auto">
-                  <TouchableOpacity 
-                    className="w-12 h-12 bg-[#9c5120] rounded-full items-center justify-center"
+                  <TouchableOpacity
+                    className="w-12 h-12 bg-chido-cabecera rounded-full items-center justify-center"
                     onPress={() => updateCantidad(prod.id, -1)}
                   >
-                    <Ionicons name="remove" size={28} color="#fff" />
+                    <Ionicons name="remove" size={28} color={colores.textoSobreOscuro} />
                   </TouchableOpacity>
-                  
-                  <Text className="text-white text-2xl font-bold w-8 text-center">{cant}</Text>
-                  
-                  <TouchableOpacity 
-                    className="w-12 h-12 bg-[#9c5120] rounded-full items-center justify-center"
+
+                  <Text className="text-chido-texto-sobre-oscuro text-2xl font-bold w-8 text-center">{cant}</Text>
+
+                  <TouchableOpacity
+                    className="w-12 h-12 bg-chido-cabecera rounded-full items-center justify-center"
                     onPress={() => updateCantidad(prod.id, 1)}
                   >
-                    <Ionicons name="add" size={28} color="#fff" />
+                    <Ionicons name="add" size={28} color={colores.textoSobreOscuro} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -220,14 +221,14 @@ export default function MenuCliente() {
         />
       )}
 
-      <View className="p-5 bg-[#9c5120] rounded-t-3xl shadow-lg border-t border-[#b35e25]">
+      <View className="p-5 bg-chido-cabecera rounded-t-3xl shadow-lg border-t border-chido-acento">
         <View className="flex-row justify-between mb-2">
-          <Text className="text-white text-lg">Tiempo est. total:</Text>
-          <Text className="text-white text-lg font-bold">{tiempoEstimado} min</Text>
+          <Text className="text-chido-texto-sobre-oscuro text-lg">Tiempo est. total:</Text>
+          <Text className="text-chido-texto-sobre-oscuro text-lg font-bold">{tiempoEstimado} min</Text>
         </View>
         <View className="flex-row justify-between mb-4">
-          <Text className="text-white text-2xl font-bold">Total a pagar:</Text>
-          <Text className="text-white text-2xl font-bold">${totalImporte}</Text>
+          <Text className="text-chido-texto-sobre-oscuro text-2xl font-bold">Total a pagar:</Text>
+          <Text className="text-chido-texto-sobre-oscuro text-2xl font-bold">${totalImporte}</Text>
         </View>
         <PrimaryButton 
           title={Object.keys(pedido).length > 0 ? "Realizar pedido" : "Seleccione un producto"}

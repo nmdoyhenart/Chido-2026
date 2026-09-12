@@ -7,6 +7,7 @@ import { crearEmpleado } from '../../services/empleados.service';
 import { Input } from '../../components/ui/Input';
 import { PrimaryButton } from '../../components/ui/Buttons';
 import { Header } from '../../components/Header';
+import { colores } from '../../theme/colores';
 
 export default function AgregarEmpleado() {
   const [permission, requestPermission] = useCameraPermissions();
@@ -142,9 +143,9 @@ export default function AgregarEmpleado() {
   };
 
   return (
-    <View className="flex-1 bg-[#d97736]">
+    <View className="flex-1 bg-chido-fondo">
       <Stack.Screen options={{ headerShown: false }} />
-      
+
       <Header userName="Laura Gauto Morales" role="Dueño" />
 
       <KeyboardAvoidingView 
@@ -154,13 +155,13 @@ export default function AgregarEmpleado() {
         <ScrollView className="flex-1 p-5">
           {/* Top bar with back button and title */}
           <View className="flex-row items-center mb-8 relative">
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => router.back()}
-              className="w-10 h-10 rounded-xl bg-[#b35e25] items-center justify-center absolute left-0 z-10"
+              className="w-10 h-10 rounded-xl bg-chido-acento items-center justify-center absolute left-0 z-10"
             >
-              <Ionicons name="arrow-back" size={20} color="#fff" />
+              <Ionicons name="arrow-back" size={20} color={colores.textoSobreOscuro} />
             </TouchableOpacity>
-            <Text className="text-2xl font-bold text-white text-center flex-1">Alta de empleado</Text>
+            <Text className="text-2xl font-bold text-chido-texto-sobre-oscuro text-center flex-1">Alta de empleado</Text>
           </View>
 
           {/* Camera Button */}
@@ -170,26 +171,26 @@ export default function AgregarEmpleado() {
                 if (!permission?.granted) requestPermission();
                 else setTakingPhoto(true);
               }}
-              className="w-32 h-32 rounded-full border-2 border-dashed border-[#e6b18c] items-center justify-center mb-2"
+              className="w-32 h-32 rounded-full border-2 border-dashed border-chido-texto-secundario-alternativo items-center justify-center mb-2"
             >
               {formData.foto ? (
                 <Image source={{uri: formData.foto}} className="w-full h-full rounded-full" />
               ) : (
-                <Ionicons name="camera-outline" size={40} color="#fff" />
+                <Ionicons name="camera-outline" size={40} color={colores.textoSobreOscuro} />
               )}
-              
+
               {/* Small camera icon badge */}
-              <View className="absolute bottom-0 right-0 bg-[#9c5120] w-10 h-10 rounded-full items-center justify-center border-2 border-[#d97736]">
-                <Ionicons name="camera" size={20} color="#fff" />
+              <View className="absolute bottom-0 right-0 bg-chido-cabecera w-10 h-10 rounded-full items-center justify-center border-2 border-chido-fondo">
+                <Ionicons name="camera" size={20} color={colores.textoSobreOscuro} />
               </View>
             </TouchableOpacity>
-            <Text className="text-white text-sm">Tomar foto con la cámara</Text>
-            {errors.foto && <Text className="text-red-600 text-sm mt-1">{errors.foto}</Text>}
+            <Text className="text-chido-texto-sobre-oscuro text-sm">Tomar foto con la cámara</Text>
+            {errors.foto && <Text className="text-chido-error text-sm mt-1">{errors.foto}</Text>}
           </View>
 
           {/* Scan DNI Button */}
-          <TouchableOpacity 
-            className="bg-[#b35e25] flex-row justify-center items-center p-4 rounded-2xl mb-6"
+          <TouchableOpacity
+            className="bg-chido-acento flex-row justify-center items-center p-4 rounded-2xl mb-6"
             onPress={() => {
               if (!permission?.granted) requestPermission();
               else {
@@ -198,8 +199,8 @@ export default function AgregarEmpleado() {
               }
             }}
           >
-            <Ionicons name="qr-code-outline" size={20} color="#fff" className="mr-2" />
-            <Text className="text-white font-bold text-lg ml-2">Escanear QR del DNI</Text>
+            <Ionicons name="qr-code-outline" size={20} color={colores.textoSobreOscuro} className="mr-2" />
+            <Text className="text-chido-texto-sobre-oscuro font-bold text-lg ml-2">Escanear QR del DNI</Text>
           </TouchableOpacity>
 
           {/* Form Fields */}
@@ -261,21 +262,21 @@ export default function AgregarEmpleado() {
 
           {/* Perfil Selector */}
           <View className="mb-6">
-            <Text className="text-white font-bold text-base mb-2">Perfil</Text>
+            <Text className="text-chido-texto-sobre-oscuro font-bold text-base mb-2">Perfil</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
               {['supervisor', 'metre', 'mozo', 'cocinero', 'cantinero'].map((rol) => (
                 <TouchableOpacity
                   key={rol}
                   onPress={() => setFormData(prev => ({...prev, perfil: rol}))}
                   className={`px-4 py-2 rounded-full mr-2 border-2 ${
-                    formData.perfil === rol 
-                      ? 'bg-[#e6b18c] border-[#e6b18c]' 
-                      : 'bg-[#b35e25] border-[#9c5120]'
+                    formData.perfil === rol
+                      ? 'bg-chido-texto-secundario-alternativo border-chido-texto-secundario-alternativo'
+                      : 'bg-chido-acento border-chido-cabecera'
                   }`}
                 >
-                  <Text 
+                  <Text
                     className={`font-bold ${
-                      formData.perfil === rol ? 'text-[#9c5120]' : 'text-white'
+                      formData.perfil === rol ? 'text-chido-cabecera' : 'text-chido-texto-sobre-oscuro'
                     }`}
                   >
                     {rol.charAt(0).toUpperCase() + rol.slice(1)}
@@ -306,9 +307,9 @@ export default function AgregarEmpleado() {
             />
           )}
           <View className="absolute bottom-10 left-0 right-0 items-center">
-            <Text className="text-white bg-black/50 p-2 mb-4 rounded text-center">Apunte al código del DNI</Text>
-            <TouchableOpacity className="bg-red-600 px-6 py-4 rounded-full" onPress={() => setScanningDni(false)}>
-              <Text className="text-white font-bold text-lg">Cancelar</Text>
+            <Text className="text-chido-texto-sobre-oscuro bg-black/50 p-2 mb-4 rounded text-center">Apunte al código del DNI</Text>
+            <TouchableOpacity className="bg-chido-error px-6 py-4 rounded-full" onPress={() => setScanningDni(false)}>
+              <Text className="text-chido-texto-sobre-oscuro font-bold text-lg">Cancelar</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -318,27 +319,27 @@ export default function AgregarEmpleado() {
       <Modal visible={takingPhoto} animationType="slide">
         <View className="flex-1 bg-black">
           {permission?.granted && (
-            <CameraView 
+            <CameraView
               style={StyleSheet.absoluteFill}
               ref={cameraRef}
               facing={cameraFacing}
             />
           )}
-          
+
           {/* Flip Camera Button */}
-          <TouchableOpacity 
+          <TouchableOpacity
             className="absolute top-12 right-6 bg-black/50 p-3 rounded-full"
             onPress={toggleCameraFacing}
           >
-            <Ionicons name="camera-reverse-outline" size={28} color="#fff" />
+            <Ionicons name="camera-reverse-outline" size={28} color={colores.textoSobreOscuro} />
           </TouchableOpacity>
 
           <View className="absolute bottom-10 left-0 right-0 flex-row justify-center gap-4">
-            <TouchableOpacity className="bg-red-600 px-6 py-4 rounded-full" onPress={() => setTakingPhoto(false)}>
-              <Text className="text-white font-bold text-lg">Cancelar</Text>
+            <TouchableOpacity className="bg-chido-error px-6 py-4 rounded-full" onPress={() => setTakingPhoto(false)}>
+              <Text className="text-chido-texto-sobre-oscuro font-bold text-lg">Cancelar</Text>
             </TouchableOpacity>
-            <TouchableOpacity className="bg-[#b35e25] px-6 py-4 rounded-full" onPress={takePicture}>
-              <Text className="text-white font-bold text-lg">Capturar</Text>
+            <TouchableOpacity className="bg-chido-acento px-6 py-4 rounded-full" onPress={takePicture}>
+              <Text className="text-chido-texto-sobre-oscuro font-bold text-lg">Capturar</Text>
             </TouchableOpacity>
           </View>
         </View>

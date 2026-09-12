@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import type { Usuario } from '../../../shared/acceso';
 import ChidoLoader from '../ui/ChidoLoader';
 import { useContadorPendientes } from '../../hooks/useContadorPendientes';
+import { colores as chido } from '../../theme/colores';
 
 type Props = {
   usuario: Usuario;
@@ -15,10 +16,11 @@ type Props = {
   onPendientes: () => void;
 };
 
+// Paleta local mapeada 1:1 a src/theme/colores.ts (fuente única de verdad).
 const colores = {
-  fondo: '#CC7135', cabecera: '#8C3E22', tarjeta: '#A85B2E',
-  borde: '#C58C5B', crema: '#FFF5E5', secundario: '#F3CFAB',
-  boton: '#A25D43', coral: '#FF6954', verde: '#93E270',
+  fondo: chido.fondo, cabecera: chido.cabecera, tarjeta: chido.acento,
+  borde: chido.acento, crema: chido.textoSobreOscuro, secundario: chido.textoSecundarioSobreOscuro,
+  boton: chido.acento, coral: chido.notificacion, verde: chido.activo,
 };
 
 // Las solicitudes usan datos reales. Mesas, altas y carta conservan el mockup.
@@ -135,5 +137,5 @@ const styles = StyleSheet.create({
   detalle: { color: colores.secundario, fontWeight: '500' },
   contador: { borderRadius: 30, backgroundColor: colores.coral, alignItems: 'center', justifyContent: 'center' },
   numero: { color: colores.crema, fontWeight: '800' },
-  error: { color: colores.crema, backgroundColor: '#9B3024', padding: 12, borderRadius: 12, marginBottom: 16, fontSize: 16 },
+  error: { color: colores.crema, backgroundColor: chido.error, padding: 12, borderRadius: 12, marginBottom: 16, fontSize: 16 },
 });

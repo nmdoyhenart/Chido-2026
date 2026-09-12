@@ -7,6 +7,7 @@ import { validarConfirmacion, validarRegistroCliente, type CampoRegistro, type D
 import CampoFormulario from '../ui/CampoFormulario';
 import ChidoLoader from '../ui/ChidoLoader';
 import CamaraRegistro, { type FotoCapturada } from './CamaraRegistro';
+import { colores } from '../../theme/colores';
 
 export type ResultadoFormulario = { ok: true } | { ok: false; mensaje: string; campos?: ErroresRegistro };
 type Props = {
@@ -124,37 +125,37 @@ export default function FormularioRegistroCliente({ esMetre, onSubmit, onVolver 
 
   return (
     <ImageBackground source={require('../../../assets/images/fondo.jpeg')} className="flex-1" resizeMode="cover" blurRadius={3}>
-      <SafeAreaView className="flex-1 bg-orange-700/95">
+      <SafeAreaView className="flex-1 bg-chido-fondo/95">
         {finalizado ? (
           <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}>
             <Image source={require('../../../assets/images/logo.png')} style={{ width: 180, height: 180, alignSelf: 'center' }} resizeMode="contain" />
-            <Text className="text-white text-3xl font-bold text-center mt-6" accessibilityLiveRegion="polite">Registro recibido</Text>
-            <Text className="text-white text-xl text-center my-6">
+            <Text className="text-chido-texto-sobre-oscuro text-3xl font-bold text-center mt-6" accessibilityLiveRegion="polite">Registro recibido</Text>
+            <Text className="text-chido-texto-sobre-oscuro text-xl text-center my-6">
               {esMetre ? 'El cliente quedó pendiente de aprobación. Podrá ingresar cuando el dueño o supervisor acepte su registro.' : 'Tu registro quedó pendiente de aprobación. Podrás ingresar cuando el dueño o supervisor lo acepte.'}
             </Text>
-            <Pressable onPress={onVolver} accessibilityRole="button" className="bg-red-700 rounded-xl p-5"><Text className="text-white text-xl text-center font-bold">{esMetre ? 'Volver al inicio' : 'Volver al ingreso'}</Text></Pressable>
+            <Pressable onPress={onVolver} accessibilityRole="button" className="bg-chido-cabecera rounded-xl p-5"><Text className="text-chido-texto-sobre-oscuro text-xl text-center font-bold">{esMetre ? 'Volver al inicio' : 'Volver al ingreso'}</Text></Pressable>
           </ScrollView>
         ) : (
           <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
             <ScrollView ref={scroll} keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1 }}>
               <View className="items-center px-6 pt-5 pb-4">
                 <Image source={require('../../../assets/images/logo.png')} style={{ width: 125, height: 125 }} resizeMode="contain" />
-                <Text className="text-white text-3xl font-extrabold text-center mt-2">{esMetre ? 'Registrar cliente' : 'Crear cuenta'}</Text>
-                <Text className="text-orange-100 text-lg text-center mt-3">Completá todos los campos. El registro requiere aprobación del dueño o supervisor.</Text>
+                <Text className="text-chido-texto-sobre-oscuro text-3xl font-extrabold text-center mt-2">{esMetre ? 'Registrar cliente' : 'Crear cuenta'}</Text>
+                <Text className="text-chido-texto-secundario-sobre-oscuro text-lg text-center mt-3">Completá todos los campos. El registro requiere aprobación del dueño o supervisor.</Text>
               </View>
               <View className="px-6 pb-6" onLayout={({ nativeEvent }) => { inicioFormulario.current = nativeEvent.layout.y; }}>
                 <View onLayout={({ nativeEvent }) => { posiciones.current.fotoBase64 = nativeEvent.layout.y; }} className="mb-5">
-                  <Text className="text-white text-lg font-bold mb-3">Foto personal</Text>
-                  <View className={`h-64 rounded-2xl bg-orange-800 border-2 items-center justify-center overflow-hidden ${errores.fotoBase64 ? 'border-yellow-300' : 'border-orange-300'}`}>
-                    {foto ? <Image source={{ uri: foto.uri }} style={{ width: '100%', height: '100%' }} resizeMode="contain" accessibilityLabel="Foto personal tomada con la cámara" /> : <View className="items-center px-5 gap-3"><Ionicons name="camera-outline" size={56} color="#FED7AA" /><Text className="text-orange-100 text-lg text-center">Tomá una foto donde se vea bien tu rostro.</Text></View>}
+                  <Text className="text-chido-texto-sobre-oscuro text-lg font-bold mb-3">Foto personal</Text>
+                  <View className={`h-64 rounded-2xl bg-chido-cabecera border-2 items-center justify-center overflow-hidden ${errores.fotoBase64 ? 'border-chido-error' : 'border-chido-texto-boton-outline'}`}>
+                    {foto ? <Image source={{ uri: foto.uri }} style={{ width: '100%', height: '100%' }} resizeMode="contain" accessibilityLabel="Foto personal tomada con la cámara" /> : <View className="items-center px-5 gap-3"><Ionicons name="camera-outline" size={56} color={colores.textoSecundarioAlternativo} /><Text className="text-chido-texto-secundario-sobre-oscuro text-lg text-center">Tomá una foto donde se vea bien tu rostro.</Text></View>}
                   </View>
-                  {errores.fotoBase64 && <Text className="text-yellow-200 text-base font-bold mt-2" accessibilityLiveRegion="polite">{errores.fotoBase64}</Text>}
-                  <Pressable disabled={enviando} onPress={() => { Keyboard.dismiss(); setCamara('foto'); }} accessibilityRole="button" className="bg-red-700 rounded-xl p-4 mt-3"><Text className="text-white text-lg text-center font-bold">{foto ? 'Volver a tomar foto' : 'Tomar foto'}</Text></Pressable>
+                  {errores.fotoBase64 && <Text className="text-chido-error text-base font-bold mt-2" accessibilityLiveRegion="polite">{errores.fotoBase64}</Text>}
+                  <Pressable disabled={enviando} onPress={() => { Keyboard.dismiss(); setCamara('foto'); }} accessibilityRole="button" className="bg-chido-cabecera rounded-xl p-4 mt-3"><Text className="text-chido-texto-sobre-oscuro text-lg text-center font-bold">{foto ? 'Volver a tomar foto' : 'Tomar foto'}</Text></Pressable>
                 </View>
-                <Pressable disabled={enviando} onPress={() => { Keyboard.dismiss(); setCamara('dni'); }} accessibilityRole="button" className="border-2 border-orange-200 bg-orange-800 rounded-xl p-4 mb-3 flex-row justify-center items-center gap-3">
-                  <Ionicons name="scan-outline" size={28} color="white" /><Text className="text-white text-lg font-bold">Leer DNI con la cámara</Text>
+                <Pressable disabled={enviando} onPress={() => { Keyboard.dismiss(); setCamara('dni'); }} accessibilityRole="button" className="border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera rounded-xl p-4 mb-3 flex-row justify-center items-center gap-3">
+                  <Ionicons name="scan-outline" size={28} color={colores.textoSobreOscuro} /><Text className="text-chido-texto-sobre-oscuro text-lg font-bold">Leer DNI con la cámara</Text>
                 </Pressable>
-                <Text className="text-orange-100 text-base mb-5" accessibilityLiveRegion="polite">{avisoDni ? 'Datos del DNI cargados. Revisalos antes de continuar.' : 'La lectura del DNI es opcional. También podés escribir los datos.'}</Text>
+                <Text className="text-chido-texto-secundario-sobre-oscuro text-base mb-5" accessibilityLiveRegion="polite">{avisoDni ? 'Datos del DNI cargados. Revisalos antes de continuar.' : 'La lectura del DNI es opcional. También podés escribir los datos.'}</Text>
                 {campos.map((campo, indice) => (
                   <View key={campo.id} onLayout={({ nativeEvent }) => { posiciones.current[campo.id] = nativeEvent.layout.y; }}>
                     <CampoFormulario
@@ -174,11 +175,11 @@ export default function FormularioRegistroCliente({ esMetre, onSubmit, onVolver 
                   </View>
                 ))}
                 <Pressable disabled={enviando} onPress={() => setMostrarPassword((valor) => !valor)} accessibilityRole="button" accessibilityLabel={mostrarPassword ? 'Ocultar contraseñas' : 'Mostrar contraseñas'} className="flex-row gap-3 items-center py-3 mb-4">
-                  <Ionicons name={mostrarPassword ? 'eye-off-outline' : 'eye-outline'} size={26} color="white" /><Text className="text-white text-lg">{mostrarPassword ? 'Ocultar contraseñas' : 'Mostrar contraseñas'}</Text>
+                  <Ionicons name={mostrarPassword ? 'eye-off-outline' : 'eye-outline'} size={26} color={colores.textoSobreOscuro} /><Text className="text-chido-texto-sobre-oscuro text-lg">{mostrarPassword ? 'Ocultar contraseñas' : 'Mostrar contraseñas'}</Text>
                 </Pressable>
-                {mensaje && <View className="bg-red-700 rounded-xl p-4 mb-4" accessibilityLiveRegion="assertive"><Text className="text-white text-lg">{mensaje}</Text></View>}
-                {enviando ? <ChidoLoader mensaje="Registrando cliente…" /> : <Pressable onPress={registrar} accessibilityRole="button" className="bg-red-700 rounded-xl p-5"><Text className="text-white text-xl text-center font-bold">{esMetre ? 'Registrar cliente' : 'Registrarme'}</Text></Pressable>}
-                <Pressable disabled={enviando} onPress={onVolver} accessibilityRole="button" className="py-5"><Text className="text-white text-lg font-bold text-center underline">{esMetre ? 'Volver al inicio' : 'Volver al ingreso'}</Text></Pressable>
+                {mensaje && <View className="bg-chido-error rounded-xl p-4 mb-4" accessibilityLiveRegion="assertive"><Text className="text-chido-texto-sobre-oscuro text-lg">{mensaje}</Text></View>}
+                {enviando ? <ChidoLoader mensaje="Registrando cliente…" /> : <Pressable onPress={registrar} accessibilityRole="button" className="bg-chido-cabecera rounded-xl p-5"><Text className="text-chido-texto-sobre-oscuro text-xl text-center font-bold">{esMetre ? 'Registrar cliente' : 'Registrarme'}</Text></Pressable>}
+                <Pressable disabled={enviando} onPress={onVolver} accessibilityRole="button" className="py-5"><Text className="text-chido-texto-sobre-oscuro text-lg font-bold text-center underline">{esMetre ? 'Volver al inicio' : 'Volver al ingreso'}</Text></Pressable>
               </View>
             </ScrollView>
           </KeyboardAvoidingView>

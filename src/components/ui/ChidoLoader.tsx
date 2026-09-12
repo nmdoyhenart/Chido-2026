@@ -17,7 +17,7 @@ export default function ChidoLoader({ mensaje = 'Cargando…' }: { mensaje?: str
         resizeMode="contain"
         style={{ width: 72, height: 72, transform: [{ rotate: giro.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }] }}
       />
-      <Text className="text-white text-lg font-bold text-center" accessibilityLiveRegion="polite">{mensaje}</Text>
+      <Text className="text-chido-texto-sobre-oscuro text-lg font-bold text-center" accessibilityLiveRegion="polite">{mensaje}</Text>
     </View>
   );
 }

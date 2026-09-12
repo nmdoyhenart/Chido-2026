@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { leerDni, validarFotoBase64, type DatosDni } from '../../../shared/registro-cliente';
 import ChidoLoader from '../ui/ChidoLoader';
 import ConfirmacionDni from './ConfirmacionDni';
+import { colores } from '../../theme/colores';
 
 export type FotoCapturada = { uri: string; base64: string };
 type Props = {
@@ -126,7 +127,7 @@ export default function CamaraRegistro({ modo, onFoto, onDni, onClose }: Props) 
 
   if (dniLeido) return (
     <Modal animationType="slide" onRequestClose={cerrar}>
-      <SafeAreaView className="flex-1 bg-orange-700">
+      <SafeAreaView className="flex-1 bg-chido-fondo">
         <ConfirmacionDni
           datos={dniLeido}
           onConfirmar={() => {
@@ -148,28 +149,28 @@ export default function CamaraRegistro({ modo, onFoto, onDni, onClose }: Props) 
 
   return (
     <Modal animationType="slide" onRequestClose={cerrar}>
-      <SafeAreaView className="flex-1 bg-orange-700">
+      <SafeAreaView className="flex-1 bg-chido-fondo">
         <View className="flex-row items-center justify-between gap-3 px-5 py-4">
-          <Text className="flex-1 text-white text-2xl font-bold">{modo === 'dni' ? 'Escanear DNI' : 'Foto personal'}</Text>
+          <Text className="flex-1 text-chido-texto-sobre-oscuro text-2xl font-bold">{modo === 'dni' ? 'Escanear DNI' : 'Foto personal'}</Text>
           <Pressable onPress={cerrar} accessibilityRole="button" accessibilityLabel="Cerrar cámara" className="p-3">
-            <Ionicons name="close" size={30} color="white" />
+            <Ionicons name="close" size={30} color={colores.textoSobreOscuro} />
           </Pressable>
         </View>
-        <Text className="text-white text-lg text-center px-5 pb-4">
+        <Text className="text-chido-texto-sobre-oscuro text-lg text-center px-5 pb-4">
           {modo === 'dni' ? 'Escanea el código de barras completo de tu DNI dentro del marco, en horizontal.' : 'Centra tu rostro en el marco y asegurate de tener una buena iluminación.'}
         </Text>
-        <View className="flex-1 min-h-48 mx-4 rounded-2xl overflow-hidden bg-orange-800">
+        <View className="flex-1 min-h-48 mx-4 rounded-2xl overflow-hidden bg-chido-cabecera">
           {!permiso ? <ChidoLoader mensaje="Consultando permiso de cámara…" /> : !permiso.granted ? (
             <View className="flex-1 justify-center p-5 gap-5">
-              <Text className="text-white text-lg text-center">Permití el acceso a la cámara para continuar.</Text>
+              <Text className="text-chido-texto-sobre-oscuro text-lg text-center">Permití el acceso a la cámara para continuar.</Text>
               <Pressable
                 disabled={espera !== null}
                 onPress={permiso.canAskAgain ? pedirPermiso : () => {
                   void Linking.openSettings().catch(() => mostrarError('Abrí la configuración del dispositivo y habilitá el uso de la cámara.'));
                 }}
-                className="bg-red-700 rounded-xl p-4" accessibilityRole="button"
+                className="bg-chido-cabecera rounded-xl p-4" accessibilityRole="button"
               >
-                <Text className="text-white text-center text-lg font-bold">{permiso.canAskAgain ? 'Permitir cámara' : 'Abrir configuración'}</Text>
+                <Text className="text-chido-texto-sobre-oscuro text-center text-lg font-bold">{permiso.canAskAgain ? 'Permitir cámara' : 'Abrir configuración'}</Text>
               </Pressable>
             </View>
           ) : primerPlano ? (
@@ -193,7 +194,7 @@ export default function CamaraRegistro({ modo, onFoto, onDni, onClose }: Props) 
               {modo === 'dni' && lista && !error && !espera && (
                 <View pointerEvents="none" className="absolute inset-0" accessible accessibilityLabel="Guía de lectura: ubicá el código de barras dentro del rectángulo">
                   <View style={{ flex: 1, backgroundColor: 'rgba(67,20,7,0.55)', justifyContent: 'flex-end', paddingBottom: 12 }}>
-                    <Text className="text-white text-base font-bold text-center">Código de barras del DNI</Text>
+                    <Text className="text-chido-texto-sobre-oscuro text-base font-bold text-center">Código de barras del DNI</Text>
                   </View>
                   <View style={{ flexDirection: 'row' }}>
                     <View style={{ flex: 1, backgroundColor: 'rgba(67,20,7,0.55)' }} />
@@ -201,41 +202,41 @@ export default function CamaraRegistro({ modo, onFoto, onDni, onClose }: Props) 
                     <View style={{ flex: 1, backgroundColor: 'rgba(67,20,7,0.55)' }} />
                   </View>
                   <View style={{ flex: 1, backgroundColor: 'rgba(67,20,7,0.55)', paddingTop: 12 }}>
-                    <Text className="text-white text-base font-bold text-center">Mantené tu documento quieto.</Text>
+                    <Text className="text-chido-texto-sobre-oscuro text-base font-bold text-center">Mantené tu documento quieto.</Text>
                   </View>
                 </View>
               )}
-              {!lista && !error && <View className="absolute inset-0 bg-orange-800 justify-center"><ChidoLoader mensaje="Iniciando cámara…" /></View>}
+              {!lista && !error && <View className="absolute inset-0 bg-chido-cabecera justify-center"><ChidoLoader mensaje="Iniciando cámara…" /></View>}
             </>
           ) : <ChidoLoader mensaje="Esperando volver a la aplicación…" />}
-          {espera && <View className="absolute inset-0 bg-orange-800 justify-center"><ChidoLoader mensaje={espera} /></View>}
+          {espera && <View className="absolute inset-0 bg-chido-cabecera justify-center"><ChidoLoader mensaje={espera} /></View>}
         </View>
         {error && (
-          <View className="bg-red-700 rounded-xl mx-4 mt-4 p-4 gap-3" accessibilityLiveRegion="assertive">
-            <Text className="text-white text-base">{error}</Text>
+          <View className="bg-chido-error rounded-xl mx-4 mt-4 p-4 gap-3" accessibilityLiveRegion="assertive">
+            <Text className="text-chido-texto-sobre-oscuro text-base">{error}</Text>
             <Pressable onPress={reiniciarCamara} accessibilityRole="button">
-              <Text className="text-white font-bold text-lg underline">Reintentar</Text>
+              <Text className="text-chido-texto-sobre-oscuro font-bold text-lg underline">Reintentar</Text>
             </Pressable>
           </View>
         )}
         {modo === 'dni' && permiso?.granted && primerPlano && !error && (
           <View className="px-5 pt-3 gap-3">
-            <Text className="text-white text-base text-center">Si se ve borroso, alejá un poco el DNI y usá +. Evitá los reflejos sobre el documento.</Text>
+            <Text className="text-chido-texto-sobre-oscuro text-base text-center">Si se ve borroso, alejá un poco el DNI y usá +. Evitá los reflejos sobre el documento.</Text>
             <View className="flex-row items-center justify-between gap-3">
-              <Pressable disabled={!lista || zoom <= 0} onPress={() => setZoom(actual => Math.max(0, Math.round((actual - 0.05) * 100) / 100))} accessibilityRole="button" accessibilityLabel="Reducir acercamiento" style={{ opacity: !lista || zoom <= 0 ? 0.45 : 1 }} className="bg-orange-800 rounded-xl p-3">
-                <Ionicons name="remove" size={26} color="white" />
+              <Pressable disabled={!lista || zoom <= 0} onPress={() => setZoom(actual => Math.max(0, Math.round((actual - 0.05) * 100) / 100))} accessibilityRole="button" accessibilityLabel="Reducir acercamiento" style={{ opacity: !lista || zoom <= 0 ? 0.45 : 1 }} className="bg-chido-cabecera rounded-xl p-3">
+                <Ionicons name="remove" size={26} color={colores.textoSobreOscuro} />
               </Pressable>
-              <Text className="text-white text-base text-center flex-1">Acercamiento {Math.round(zoom / 0.05)} de 4</Text>
-              <Pressable disabled={!lista || zoom >= 0.2} onPress={() => setZoom(actual => Math.min(0.2, Math.round((actual + 0.05) * 100) / 100))} accessibilityRole="button" accessibilityLabel="Aumentar acercamiento" style={{ opacity: !lista || zoom >= 0.2 ? 0.45 : 1 }} className="bg-orange-800 rounded-xl p-3">
-                <Ionicons name="add" size={26} color="white" />
+              <Text className="text-chido-texto-sobre-oscuro text-base text-center flex-1">Acercamiento {Math.round(zoom / 0.05)} de 4</Text>
+              <Pressable disabled={!lista || zoom >= 0.2} onPress={() => setZoom(actual => Math.min(0.2, Math.round((actual + 0.05) * 100) / 100))} accessibilityRole="button" accessibilityLabel="Aumentar acercamiento" style={{ opacity: !lista || zoom >= 0.2 ? 0.45 : 1 }} className="bg-chido-cabecera rounded-xl p-3">
+                <Ionicons name="add" size={26} color={colores.textoSobreOscuro} />
               </Pressable>
             </View>
             <View className="flex-row gap-3">
-              <Pressable disabled={!lista} onPress={() => setFlash(actual => !actual)} accessibilityRole="button" accessibilityState={{ disabled: !lista, selected: flash }} className="flex-1 bg-orange-800 rounded-xl p-3">
-                <Text className="text-white text-base font-bold text-center">{flash ? 'Apagar flash' : 'Encender flash'}</Text>
+              <Pressable disabled={!lista} onPress={() => setFlash(actual => !actual)} accessibilityRole="button" accessibilityState={{ disabled: !lista, selected: flash }} className="flex-1 bg-chido-cabecera rounded-xl p-3">
+                <Text className="text-chido-texto-sobre-oscuro text-base font-bold text-center">{flash ? 'Apagar flash' : 'Encender flash'}</Text>
               </Pressable>
-              <Pressable disabled={!lista} onPress={reiniciarCamara} accessibilityRole="button" className="flex-1 bg-orange-800 rounded-xl p-3">
-                <Text className="text-white text-base font-bold text-center">Reiniciar cámara</Text>
+              <Pressable disabled={!lista} onPress={reiniciarCamara} accessibilityRole="button" className="flex-1 bg-chido-cabecera rounded-xl p-3">
+                <Text className="text-chido-texto-sobre-oscuro text-base font-bold text-center">Reiniciar cámara</Text>
               </Pressable>
             </View>
           </View>
@@ -243,14 +244,14 @@ export default function CamaraRegistro({ modo, onFoto, onDni, onClose }: Props) 
         <View className="flex-row gap-3 p-5">
           {modo === 'foto' && permiso?.granted ? (
             <>
-              <Pressable disabled={!lista || espera !== null} onPress={() => { setLista(false); setFrente((actual) => actual === 'front' ? 'back' : 'front'); }} accessibilityRole="button" accessibilityLabel="Cambiar cámara" className="bg-orange-800 rounded-xl p-4 justify-center">
-                <Ionicons name="camera-reverse-outline" size={28} color="white" />
+              <Pressable disabled={!lista || espera !== null} onPress={() => { setLista(false); setFrente((actual) => actual === 'front' ? 'back' : 'front'); }} accessibilityRole="button" accessibilityLabel="Cambiar cámara" className="bg-chido-cabecera rounded-xl p-4 justify-center">
+                <Ionicons name="camera-reverse-outline" size={28} color={colores.textoSobreOscuro} />
               </Pressable>
-              <Pressable disabled={!lista || espera !== null || !!error} onPress={tomarFoto} accessibilityRole="button" className={`flex-1 bg-red-700 rounded-xl p-4 ${!lista || espera || error ? 'opacity-50' : ''}`}>
-                <Text className="text-white font-bold text-xl text-center">Tomar foto</Text>
+              <Pressable disabled={!lista || espera !== null || !!error} onPress={tomarFoto} accessibilityRole="button" className={`flex-1 bg-chido-cabecera rounded-xl p-4 ${!lista || espera || error ? 'opacity-50' : ''}`}>
+                <Text className="text-chido-texto-sobre-oscuro font-bold text-xl text-center">Tomar foto</Text>
               </Pressable>
             </>
-          ) : <Pressable onPress={cerrar} accessibilityRole="button" className="flex-1 bg-red-700 rounded-xl p-4"><Text className="text-white text-lg text-center font-bold">Volver al formulario</Text></Pressable>}
+          ) : <Pressable onPress={cerrar} accessibilityRole="button" className="flex-1 bg-chido-cabecera rounded-xl p-4"><Text className="text-chido-texto-sobre-oscuro text-lg text-center font-bold">Volver al formulario</Text></Pressable>}
         </View>
       </SafeAreaView>
     </Modal>

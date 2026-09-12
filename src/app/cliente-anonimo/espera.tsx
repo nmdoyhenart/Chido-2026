@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Stack, router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import { colores } from '../../theme/colores';
 
 const CLIENTE_ANONIMO_ID_KEY = 'cliente_anonimo_id';
 
@@ -14,7 +15,7 @@ export default function EsperaClienteAnonimo() {
     };
 
     return (
-        <View className="flex-1 bg-[#cf6f37] items-center justify-center p-6">
+        <View className="flex-1 bg-chido-fondo items-center justify-center p-6">
             <Stack.Screen options={{ headerShown: false }} />
 
             <Image
@@ -23,19 +24,19 @@ export default function EsperaClienteAnonimo() {
                 resizeMode="contain"
             />
 
-            <Text className="text-[#fff8ec] text-3xl font-bold text-center mt-4 mb-3">
+            <Text className="text-chido-texto-sobre-oscuro text-3xl font-bold text-center mt-4 mb-3">
                 ¡Ya estás anotado!
             </Text>
-            <Text className="text-[#ffe4cf] text-xl text-center mb-10">
+            <Text className="text-chido-texto-secundario-alternativo text-xl text-center mb-10">
                 Estás en la lista de espera. En cuanto el metre te asigne una mesa, vas a poder ingresar.
             </Text>
 
             <TouchableOpacity
                 onPress={salirDelLocal}
-                className="bg-[#8f3d22] w-full px-8 py-6 rounded-2xl flex-row items-center justify-center"
+                className="bg-chido-cabecera w-full px-8 py-6 rounded-2xl flex-row items-center justify-center"
             >
-                <Ionicons name="exit-outline" size={28} color="#fff8ec" />
-                <Text className="text-[#fff8ec] font-bold text-2xl ml-2">Salir del local</Text>
+                <Ionicons name="exit-outline" size={28} color={colores.textoSobreOscuro} />
+                <Text className="text-chido-texto-sobre-oscuro font-bold text-2xl ml-2">Salir del local</Text>
             </TouchableOpacity>
         </View>
     )

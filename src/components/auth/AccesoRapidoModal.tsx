@@ -67,7 +67,7 @@ const roles: {
   },
   {
     id: 'cocinero',
-    nombre: 'Cocina',
+    nombre: 'Cocinero',
     descripcion: 'Simular gestión de pedidos',
     icono: 'restaurant-outline',
   },

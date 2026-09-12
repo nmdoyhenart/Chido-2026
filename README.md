@@ -5,17 +5,16 @@
 </p>
 
 <p align="center">
-Trabajo Final Integrador — Aplicación de gestión de restaurante (mobile)
+  Trabajo Final Integrador — Aplicación de gestión de restaurante (mobile)
 </p>
 
 ## Integrantes
-
-| Apellidos y Nombres | Rol | Módulos (objetivos) a desarrollar | Fecha de inicio | Fecha de finalización | Branch |
-|---|---|---|---|---|---|
-| Doyhenart, Nicolás | **Líder** | Cliente registrado y Cliente anónimo: registro, aprobación, QR de ingreso/mesa, menú, chat con mozo, carrito, estado de pedido | | |nico |
-| Gauto Morales, Silvina | Integrante | Dueño y Supervisor: alta de empleado, alta de mesa, gestión de mesas, aprobación/rechazo de clientes, mails automáticos | | |silvina |
-| Martín, Emmanuel David | Integrante | Cocinero y Cantinero: alta de plato, alta de bebida, cartas, vistas de cocina y bar (Kanban) | | |emma |
-| Antuñez, Juan Ignacio | Integrante | Metre y Mozo: lista de espera, asignación de mesas, chat con clientes, confirmación/rechazo de pedidos | | |juan |
+| Apellidos y Nombres | Rol | Branch |
+| :---: | :---: | :---: |
+| Doyhenart, Nicolás | **Líder** | nico |
+| Gauto Morales, Silvina | Integrante | silvina |
+| Martín, Emmanuel David | Integrante | emma |
+| Antuñez, Juan Ignacio | Integrante | juan |
 
 ## Descripción del proyecto
 
@@ -32,48 +31,14 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 - Cliente registrado
 - Cliente anónimo
 
-## Distribución de trabajo por perfil
+## Sprints
 
-### Dueño / Supervisor (Silvina)
-- Alta de empleado (con foto y lector de QR de DNI)
-- Alta de mesa (con foto y generación automática de QR)
-- Gestión de mesas (listado y disponibilidad)
-- Listado de clientes pendientes de aprobación
-- Aceptación / rechazo de clientes (con envío automático de mail)
+### Sprint 1 (29/08 | 05/09)
+- Silvi: Alta platos, alta bebidas y pantalla del cliente anonimo (punto 2, 3 y 9)
+- Nico: Registrar un usuario y aprobar el registro del mismo [Dueño/Supervisor] (punto 1 y 6)
+- Emma: Gestión y alta de mesa (punto 4)
+- Juan: Registro de empleado y menú cliente (punto 1 y 11)
 
-### Cocinero / Cantinero (Emmanuel)
-- Alta de plato / Alta de bebida (con 3 fotos cada uno)
-- Carta de platos / Carta de bebidas
-- Vista de cocina y vista de bar (pedidos: Pendientes / En preparación / Finalizados)
-- Pedidos pendientes de cocina y bar, agrupados por número de mesa, con fecha/hora, ítems y cantidades.
-- Actualización de estado de elaboración: pendiente, en preparación y finalizado.
-- Aviso de pedido listo al mozo cuando ambos sectores intervinientes hayan finalizado.
-
-### Metre / Mozo (Juan)
-- Lista de espera (con eliminación de clientes)
-- Disponibilidad del salón y asignación de mesas
-- Bandeja de consultas y chat con clientes
-- Pedidos por confirmar y confirmación/rechazo
-- Pedidos listos para entrega, con validación de pedido completo entre cocina y bar.
-- Entrega del pedido y confirmación de recepción por parte del cliente.
-- Recepción de solicitud de cuenta.
-- Confirmación de pago y liberación de la mesa.
-
-### Cliente registrado / Cliente anónimo (Nicolás)
-- Registro (con foto y lector de QR de DNI) y registro rápido anónimo
-- QR de ingreso al local y lista de espera
-- Escaneo de QR de mesa asignada
-- Menú/carta, chat con el mozo, carrito y armado de pedido
-- Estado del pedido y edición tras rechazo
-- Tres juegos funcionales para cliente registrado con descuentos de 10%, 15% y 20%.
-- Aplicación de un único descuento, únicamente si se gana en el primer intento; acceso libre posterior a los juegos.
-- Visualización de los cambios de estado del pedido durante preparación y entrega.
-- Encuesta de satisfacción, limitada a una respuesta por estadía.
-- Resultados de encuestas en gráficos separados: torta, barras y línea.
-- Solicitud de cuenta, lectura de QR de propina y selección obligatoria del porcentaje.
-- Detalle de cuenta: productos, precios unitarios, importes, descuento aplicado, propina y total.
-- Pago simulado y espera de confirmación del mozo.
-- Consulta de resultados de encuestas mediante el QR de ingreso/lista de espera.
 
 ## Pantallas de la aplicación
 
@@ -91,7 +56,7 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 
 | Gestión de mesas | Clientes pendientes |
 | :---: | :---: |
-| <img width="240" alt="Gestión de Mesas" src="https://github.com/user-attachments/assets/71aa769c-ad66-4fcc-89fb-a2887159c0ae" /> | <img width="240" alt="Clientes Pendientes" src="https://github.com/user-attachments/assets/a3ef55fe-fcc0-41a4-b5de-0403267eb21d" /> |
+| <img width="240" alt="Gestión de Mesas" src="https://github.com/user-attachments/assets/71aa769c-ad66-4fcc-89fb-a2887159c0ae" /> | <img width="240" alt="Clientes Pendientes" src="https://github.com/user-attachments/assets/e519088c-144f-4941-aaca-8fba76cb441a" /> |
 
 ---
 
@@ -103,7 +68,7 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 
 | Gestión de mesas | Clientes pendientes |
 | :---: | :---: |
-| <img width="240" alt="Gestión de Mesas" src="https://github.com/user-attachments/assets/641d445d-41b9-41da-ad40-d2dd2410da24" /> | <img width="240" alt="Clientes Pendientes" src="https://github.com/user-attachments/assets/e3eaf9f3-ca2a-4170-a4fa-a7d590e1e097" /> |
+| <img width="240" alt="Gestión de Mesas" src="https://github.com/user-attachments/assets/641d445d-41b9-41da-ad40-d2dd2410da24" /> | <img width="240" alt="Clientes Pendientes" src="https://github.com/user-attachments/assets/e519088c-144f-4941-aaca-8fba76cb441a" /> |
 
 ---
 
@@ -111,7 +76,7 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 
 | Home | Alta de plato | Carta de platos |
 | :---: | :---: | :---: |
-| <img width="240" alt="Home Cocinero" src="https://github.com/user-attachments/assets/eb95a3ca-29ed-4d9a-952d-8385c5cf97ee" /> | <img width="240" alt="Alta de Plato" src="https://github.com/user-attachments/assets/0946c298-591e-4e0a-8bbe-d40d7db3b8b7" /> | <img width="240" alt="Carta General" src="https://github.com/user-attachments/assets/d62a8f75-351a-4ef1-b82f-cfd5b8784222" /> |
+| <img width="240" alt="Home Cocinero" src="https://github.com/user-attachments/assets/eb95a3ca-29ed-4d9a-952d-8385c5cf97ee" /> | <img width="240" alt="Alta de Plato" src="https://github.com/user-attachments/assets/2da0f6e9-fb80-469c-83c4-05f2247a62fa" /> | <img width="240" alt="Carta General" src="https://github.com/user-attachments/assets/d62a8f75-351a-4ef1-b82f-cfd5b8784222" /> |
 
 ---
 
@@ -127,7 +92,26 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 
 | Home | Alta de bebida | Carta de bebidas | Vista bar |
 | :---: | :---: | :---: | :---: |
-| <img width="200" alt="Home Cantinero" src="https://github.com/user-attachments/assets/ff44051b-c392-4819-a839-ce8f9eb3504b" /> | <img width="200" alt="Alta de Bebida" src="https://github.com/user-attachments/assets/34d3cb86-2bfc-4db3-be0b-aa9db5669890" /> | <img width="200" alt="Carta de Bebidas" src="https://github.com/user-attachments/assets/f9231f32-5ef0-4f97-b8ac-5a05cb2bdd64" /> | <img width="200" alt="Vista Bar" src="https://github.com/user-attachments/assets/74f89c07-19a5-4002-9dcc-77b8a8551ea2" /> |
+| <img width="200" alt="Home Cantinero" src="https://github.com/user-attachments/assets/ff44051b-c392-4819-a839-ce8f9eb3504b" /> | <img width="200" alt="Alta de Bebida" src="https://github.com/user-attachments/assets/2eea65b9-9658-4b4e-badd-e5fb23a6a419" /> | <img width="200" alt="Carta de Bebidas" src="https://github.com/user-attachments/assets/f9231f32-5ef0-4f97-b8ac-5a05cb2bdd64" /> | <img width="200" alt="Vista Bar" src="https://github.com/user-attachments/assets/74f89c07-19a5-4002-9dcc-77b8a8551ea2" /> |
+
+### Cliente
+
+| Entrada al sistema | Menú | Consulta al mozo |
+| :---: | :---: | :---: |
+| <img width="200" alt="Entrada al sistema" src="https://github.com/user-attachments/assets/a3b44658-746d-4ea6-8257-19c8a9c138ed" /> | <img width="200" alt="Menú" src="https://github.com/user-attachments/assets/99af8c36-e734-4ab0-90cd-2f5ce148e4b8" /> | <img width="200" alt="Consulta al mozo" src="https://github.com/user-attachments/assets/b3f51646-dc19-408d-8a0b-606a46d6ccb7" /> |
+
+### Cliente anonimo
+
+| Escanear QR | Anotarse en la fila | Confirmación |
+| :---: | :---: | :---: |
+| <img width="200" alt="Escanear QR" src="https://github.com/user-attachments/assets/f666327b-72f9-40c2-b57b-9fb97ec04fe4" /> | <img width="200" alt="Anotarse en la fila" src="https://github.com/user-attachments/assets/a6614c07-7cc7-40af-8bd9-e9b9842916ff" /> | <img width="200" alt="Confirmación" src="https://github.com/user-attachments/assets/3a250564-dcc4-4ccc-b78f-9ea5ca35c457" /> |
+
+### Registro
+
+| Formulario de registro | Pendiente a confirmación (Dueño/Supervisor) |
+| :---: | :---: |
+| <img width="200" alt="Formulario de registro" src="https://github.com/user-attachments/assets/bbcd8df7-a333-421a-b58e-69d547d3a257" /> | <img width="200" alt="Confirmación" src="https://github.com/user-attachments/assets/dd71e098-b639-408c-8357-328638df9803" /> |
+
 ## Profesores
 
 Maximiliano Neiner, Alejandro Constanzo, Nicolás Ferrero, Augusto Morelli, Octavio Villegas, Alejandro Loredo

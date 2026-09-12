@@ -320,7 +320,7 @@ export default function Login() {
               </Pressable>
 
               {/* INVITADO */}
-              <Pressable
+              {/* <Pressable
                 disabled={loading}
                 onPress={ingresarInvitado}
                 className="
@@ -339,7 +339,7 @@ export default function Login() {
                   Ingresar como invitado
                 </Text>
 
-              </Pressable>
+              </Pressable> */}
 
               {/* ACCESO RÁPIDO */}
               <Pressable

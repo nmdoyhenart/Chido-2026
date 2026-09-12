@@ -30,6 +30,7 @@ const roles: {
     id: 'cliente registrado',
     nombre: 'Cliente',
     descripcion: 'Simular vista de cliente',
+    icono: 'business-outline',
   },
   {
 
@@ -96,13 +97,22 @@ export default function AccesoRapidoModal({
     switch (rol) {
       case "dueño":
       case "supervisor":
-        router.replace('/supervisor/home');
+        router.push('/supervisor/home');
         break;
-      case "cliente":
-        router.replace('../cliente/home');
+      case "cliente registrado":
+        router.push('../cliente/home');
+        break;
+      case "cliente anónimo":
+        router.push('../cliente-anonimo/escanear')
+        break;
+      case "cocinero":
+        router.push('../productos/alta');
+        break;
+      case "cantinero":
+        router.push('/productos/alta-bebida');
         break;
       default:
-        router.replace('/(app)/home');
+        router.push('/(app)/home');
         break;
     }
   };

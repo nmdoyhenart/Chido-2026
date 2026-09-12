@@ -33,7 +33,7 @@ export default function GestionMesas() {
     saliendo.current = true;
     setMesaQr(null);
     setAviso(null);
-    router.dismissTo("/(app)/home");
+    router.dismissTo("/supervisor/home");
   }
 
   async function mostrarError(mensaje: string) {
@@ -117,7 +117,7 @@ export default function GestionMesas() {
         <View className="w-full max-w-2xl flex-1 self-center">
           <View className="gap-3 px-5 pt-5 pb-2">
             <View className="relative flex-row items-center">
-              <Pressable className="absolute left-0 z-10 h-10 w-10 items-center justify-center rounded-xl bg-chido-acento" accessibilityRole="button" accessibilityLabel="Volver al inicio" onPress={volverAlInicio}>
+              <Pressable className="absolute left-0 z-10 h-10 w-10 items-center justify-center rounded-xl bg-chido-acento" accessibilityRole="button" accessibilityLabel="Volver al panel de Supervisor" onPress={volverAlInicio}>
                 <Ionicons name="arrow-back" size={20} color={colores.textoSobreOscuro} />
               </Pressable>
               <Text accessibilityRole="header" className="flex-1 text-center text-2xl font-bold text-chido-texto-sobre-oscuro">Gestión de mesas</Text>
@@ -164,18 +164,19 @@ export default function GestionMesas() {
       </SafeAreaView>
 
       <Modal visible={mesaQr !== null} animationType="slide" onRequestClose={() => setMesaQr(null)}>
-        <View className="flex-1 bg-chido-superficie">
+        <ImageBackground source={require("../../../assets/images/fondo.jpeg")} resizeMode="cover" blurRadius={2} className="flex-1">
+          <View className="absolute inset-0 bg-chido-cabecera/35" />
           <SafeAreaView className="flex-1">
-            <Pressable accessibilityRole="button" className="mx-5 mt-2 min-h-12 justify-center rounded-xl bg-chido-cabecera p-3" onPress={() => setMesaQr(null)}><Text className="text-center text-lg font-bold text-chido-texto-sobre-oscuro">Volver a mesas</Text></Pressable>
             <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}>
               <View className="w-full max-w-lg self-center items-center gap-5 p-5">
-                <Image source={require("../../../assets/images/logo.png")} style={{ width: 96, height: 96 }} resizeMode="contain" />
-                {mesaQr ? <QRDisplay etiqueta={`Código QR de la mesa ${mesaQr.numero}`} payload={createMesaQr(mesaQr.id)} size={Math.min(240, Math.max(100, width - 120))} className="items-center rounded-3xl border-2 border-chido-acento bg-chido-superficie p-5" /> : null}
-                <Text className="text-center text-base text-chido-texto-secundario-sobre-claro">Este código identifica la mesa. La asignación del cliente se verifica por separado.</Text>
+                <Image source={require("../../../assets/images/logo.png")} style={{ width: 96, height: 96, transform: [{ translateY: -20 }] }} resizeMode="contain" />
+                {mesaQr ? <QRDisplay etiqueta={`Código QR de la mesa ${mesaQr.numero}`} payload={createMesaQr(mesaQr.id)} size={Math.min(240, Math.max(100, width - 120))} className="items-center rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera/70 p-5" /> : null}
+                <Text className="text-center text-base text-chido-texto-secundario-sobre-oscuro">Este código identifica la mesa. La asignación del cliente se verifica por separado.</Text>
+                <Pressable accessibilityRole="button" className="mt-5 min-h-12 w-full justify-center rounded-xl bg-chido-cabecera p-3" onPress={() => setMesaQr(null)}><Text className="text-center text-lg font-bold text-chido-texto-sobre-oscuro">Volver a mesas</Text></Pressable>
               </View>
             </ScrollView>
           </SafeAreaView>
-        </View>
+        </ImageBackground>
       </Modal>
 
       <Modal visible={aviso !== null} animationType="fade" onRequestClose={() => setAviso(null)}>

@@ -181,7 +181,7 @@ export default function AgregarMesa() {
     tokenCamara.current += 1;
     setMesaQr(null);
     setAviso(null);
-    router.dismissTo("/mesas/gestion");
+    router.dismissTo("/supervisor/home");
   };
 
   const cerrarCamara = () => {
@@ -201,7 +201,7 @@ export default function AgregarMesa() {
   const salida = (
     <Pressable className="min-h-12 flex-row items-center self-start rounded-2xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera/70 px-3 py-2" onPress={volver} accessibilityRole="button">
       <Ionicons name="arrow-back" size={20} color={colores.textoSobreOscuro} />
-      <Text className="ml-2 shrink text-base font-bold text-chido-texto-sobre-oscuro">Volver a mesas</Text>
+      <Text className="ml-2 shrink text-base font-bold text-chido-texto-sobre-oscuro">Volver al panel</Text>
     </Pressable>
   );
   const indicador = (
@@ -248,7 +248,7 @@ export default function AgregarMesa() {
           <ScrollView className="flex-1 p-5" contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" accessibilityElementsHidden={ocupada} importantForAccessibility={ocupada ? "no-hide-descendants" : "auto"}>
             <View className="w-full max-w-xl self-center">
               <View className="relative mb-8 flex-row items-center">
-                <Pressable className="absolute left-0 z-10 h-10 w-10 items-center justify-center rounded-xl bg-chido-acento" onPress={volver} accessibilityRole="button" accessibilityLabel="Volver a mesas">
+                <Pressable className="absolute left-0 z-10 h-10 w-10 items-center justify-center rounded-xl bg-chido-acento" onPress={volver} accessibilityRole="button" accessibilityLabel="Volver al panel de Supervisor">
                   <Ionicons name="arrow-back" size={20} color={colores.textoSobreOscuro} />
                 </Pressable>
                 <Text className="flex-1 text-center text-2xl font-bold text-chido-texto-sobre-oscuro" accessibilityRole="header">Alta de mesa</Text>

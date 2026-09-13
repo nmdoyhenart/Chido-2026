@@ -20,6 +20,22 @@ Deno.serve(async (request: Request) => {
     let enviados = 0;
     for (const correo of (data ?? []) as CorreoRegistro[]) {
       try {
+        // Una aprobación o rechazo puede ocurrir antes del siguiente ciclo.
+        // No enviar entonces el aviso pendiente que quedó obsoleto en la cola.
+        const { data: usuario, error: usuarioError } = await admin.from('usuarios')
+          .select('estado_registro')
+          .eq('correo', correo.correo)
+          .eq('perfil', 'cliente registrado')
+          .maybeSingle();
+        if (usuarioError) throw usuarioError;
+        if (!usuario || usuario.estado_registro !== correo.estado) {
+          const { error: descarteError } = await admin.from('correos_registro')
+            .delete()
+            .eq('id', correo.id)
+            .eq('bloqueo', correo.bloqueo);
+          if (descarteError) throw descarteError;
+          continue;
+        }
         const contenido = componerCorreo(correo, logo);
         const respuesta = await fetch('https://api.resend.com/emails', {
           method: 'POST',

@@ -3,6 +3,7 @@ import { AppState } from 'react-native';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { authService, ErrorAcceso } from '../services/auth.service';
+import { desvincularDispositivoPush } from '../services/notificaciones-push';
 import type { AppRole, SessionMode } from '../types/roles';
 import type { Usuario } from '../../shared/acceso';
 
@@ -121,6 +122,8 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
 
   async function cerrarSesion() {
     revision.current++;
+    // Evita que el siguiente aviso del dispositivo alcance a la cuenta que cerró sesión.
+    await desvincularDispositivoPush().catch(() => undefined);
     await authService.logout();
     identidadVerificada.current = null;
     modoLocal.current = null;

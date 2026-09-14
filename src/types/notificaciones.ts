@@ -13,3 +13,5 @@ export type NotificacionPush = {
   cuerpo: string;
   datos: { ruta: RutaNotificacion };
 };
+
+export type DatosNotificacionPush = NotificacionPush['datos'];

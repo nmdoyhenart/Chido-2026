@@ -1,10 +1,7 @@
 import { useState } from 'react';
-import { Image, Pressable, ScrollView, Text, Vibration, View } from 'react-native';
+import { Image, Pressable, ScrollView, Text, Vibration } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import React from 'react';
-
-import { Link } from 'expo-router';
 
 import { useAppSession } from '../../contexts/AppSessionContext';
 import ChidoLoader from '../../components/ui/ChidoLoader';

@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type ClientePendiente = { id: string; nombres: string; apellidos: string | null; dni: string | null; correo: string | null; foto_perfil: string; fotoUrl: string | null };
-export const TAMANO_PAGINA = 10;
+export const TAMANO_PAGINA = 1;
 
 async function mensajeErrorDecision(error: unknown): Promise<string> {
   const contexto = typeof error === 'object' && error !== null && 'context' in error

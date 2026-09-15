@@ -10,6 +10,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StyleSheet,
+  TouchableOpacity,
   Vibration,
 } from 'react-native';
 
@@ -26,7 +28,7 @@ import { colores } from '../../theme/colores';
 
 export default function Login() {
   const router = useRouter();
-  const { iniciarSesion: autenticar, enterGuest, mode, cargando, avisoSesion, limpiarAviso } = useAppSession();
+  const { iniciarSesion: autenticar, mode, cargando, avisoSesion, limpiarAviso } = useAppSession();
   const [mensaje, setMensaje] = useState<string | null>(null);
   const operacion = useRef(false);
 
@@ -72,15 +74,6 @@ export default function Login() {
       setLoading(false);
     }
   };
-
-  async function ingresarInvitado() {
-    if (operacion.current) return;
-    operacion.current = true;
-    setLoading(true);
-    try { await enterGuest(); router.replace('/(app)/home'); }
-    catch { setMensaje('No pudimos ingresar como invitado. Revisá la conexión.'); Vibration.vibrate(180); }
-    finally { operacion.current = false; setLoading(false); }
-  }
 
   if (cargando && !loading) return <View className="flex-1 bg-chido-fondo justify-center"><ChidoLoader mensaje="Verificando sesión…" /></View>;
 
@@ -255,25 +248,16 @@ export default function Login() {
               {/* LOGIN */}
               {(mensaje || avisoSesion) && <View className="bg-chido-error rounded-xl p-4 mb-5" accessibilityLiveRegion="assertive"><Text className="text-chido-texto-sobre-oscuro text-lg">{mensaje || avisoSesion}</Text></View>}
               {loading && <ChidoLoader mensaje="Verificando acceso…" />}
-              <Pressable
+              <TouchableOpacity
                 onPress={iniciarSesion}
                 disabled={loading}
-                className={`
-                  h-16
-                  rounded-2xl
-                  items-center
-                  justify-center
-                  bg-chido-cabecera
-                  shadow-lg
-                  ${
-                    loading
-                      ? 'opacity-60'
-                      : 'opacity-100'
-                  }
-                `}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: loading, busy: loading }}
+                activeOpacity={0.85}
+                style={[styles.boton, styles.iniciarSesion, loading && styles.deshabilitado]}
               >
 
-                <Text className="text-chido-texto-sobre-oscuro text-xl font-extrabold">
+                <Text style={styles.textoClaro}>
                   {
                     loading
                       ? 'Ingresando...'
@@ -281,7 +265,7 @@ export default function Login() {
                   }
                 </Text>
 
-              </Pressable>
+              </TouchableOpacity>
 
               {/* SEPARADOR */}
               <View className="flex-row items-center my-7">
@@ -297,28 +281,22 @@ export default function Login() {
               </View>
 
               {/* REGISTRO */}
-              <Pressable
+              <TouchableOpacity
                 disabled={loading}
                 onPress={() =>
                   router.push('/(auth)/registro')
                 }
-                className="
-                  h-16
-                  rounded-2xl
-                  border-2
-                  border-chido-texto-secundario-alternativo/40
-                  bg-chido-cabecera/70
-                  items-center
-                  justify-center
-                  mb-4
-                "
+                accessibilityRole="button"
+                accessibilityState={{ disabled: loading }}
+                activeOpacity={0.85}
+                style={[styles.boton, styles.registrarse, loading && styles.deshabilitado]}
               >
 
-                <Text className="text-chido-texto-sobre-oscuro text-xl font-bold">
+                <Text style={[styles.textoClaro, styles.textoOscuro]}>
                   Registrarse
                 </Text>
 
-              </Pressable>
+              </TouchableOpacity>
 
               {/* INVITADO */}
               {/* <Pressable
@@ -343,27 +321,22 @@ export default function Login() {
               </Pressable> */}
 
               {/* ACCESO RÁPIDO */}
-              <Pressable
+              <TouchableOpacity
                 disabled={loading}
                 onPress={() =>
                   setAccesoRapidoVisible(true)
                 }
-                className="
-                  h-16
-                  rounded-2xl
-                  border-2
-                  border-chido-texto-secundario-alternativo/40
-                  bg-chido-cabecera/70
-                  items-center
-                  justify-center
-                "
+                accessibilityRole="button"
+                accessibilityState={{ disabled: loading }}
+                activeOpacity={0.85}
+                style={[styles.boton, styles.accesoRapido, loading && styles.deshabilitado]}
               >
 
-                <Text className="text-chido-texto-sobre-oscuro text-xl font-bold">
+                <Text style={styles.textoClaro}>
                   Acceso rápido
                 </Text>
 
-              </Pressable>
+              </TouchableOpacity>
 
             </View>
 
@@ -384,3 +357,21 @@ export default function Login() {
     </ImageBackground>
   );
 }
+
+const styles = StyleSheet.create({
+  boton: {
+    minHeight: 64,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iniciarSesion: { backgroundColor: '#700e22', borderColor: '#ffb3ae' },
+  registrarse: { backgroundColor: colores.superficieNaranja, borderColor: '#ffbe8c', marginBottom: 16 },
+  accesoRapido: { backgroundColor: colores.textoBotonOutline, borderColor: colores.superficieNaranja },
+  textoClaro: { color: colores.textoSobreOscuro, fontSize: 20, lineHeight: 26, fontWeight: '800', textAlign: 'center' },
+  textoOscuro: { color: colores.textoSobreClaro },
+  deshabilitado: { opacity: 0.55 },
+});

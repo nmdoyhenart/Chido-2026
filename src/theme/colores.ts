@@ -1,6 +1,9 @@
 export const colores = {
   fondo: "#cf6f37",
   cabecera: "#8f3d22",
+  botonPrincipal: "#700e22",
+  bordeError: "#ffb3ae",
+  textoError: "#2b160e",
   acento: "#b8602c",
   textoSobreOscuro: "#fff8ec",
   textoSecundarioSobreOscuro: "#f5d9bd",

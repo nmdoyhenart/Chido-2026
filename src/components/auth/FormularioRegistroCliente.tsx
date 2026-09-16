@@ -5,6 +5,7 @@ import { Image, ImageBackground, Keyboard, KeyboardAvoidingView, Platform, Press
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { validarConfirmacion, validarRegistroCliente, type CampoRegistro, type DatosRegistroCliente, type ErroresRegistro } from '../../../shared/registro-cliente';
 import CampoFormulario from '../ui/CampoFormulario';
+import ErrorFormulario from '../ui/ErrorFormulario';
 import ChidoLoader from '../ui/ChidoLoader';
 import CamaraRegistro, { type FotoCapturada } from './CamaraRegistro';
 import { colores } from '../../theme/colores';
@@ -146,10 +147,10 @@ export default function FormularioRegistroCliente({ esMetre, onSubmit, onVolver 
               <View className="px-6 pb-6" onLayout={({ nativeEvent }) => { inicioFormulario.current = nativeEvent.layout.y; }}>
                 <View onLayout={({ nativeEvent }) => { posiciones.current.fotoBase64 = nativeEvent.layout.y; }} className="mb-5">
                   <Text className="text-chido-texto-sobre-oscuro text-lg font-bold mb-3">Foto personal</Text>
-                  <View className={`h-64 rounded-2xl bg-chido-cabecera border-2 items-center justify-center overflow-hidden ${errores.fotoBase64 ? 'border-chido-error' : 'border-chido-texto-boton-outline'}`}>
+                  <View style={errores.fotoBase64 ? { borderColor: colores.bordeError } : undefined} className="h-64 rounded-2xl bg-chido-cabecera border-2 border-chido-texto-boton-outline items-center justify-center overflow-hidden">
                     {foto ? <Image source={{ uri: foto.uri }} style={{ width: '100%', height: '100%' }} resizeMode="contain" accessibilityLabel="Foto personal tomada con la cámara" /> : <View className="items-center px-5 gap-3"><Ionicons name="camera-outline" size={56} color={colores.textoSecundarioAlternativo} /><Text className="text-chido-texto-secundario-sobre-oscuro text-lg text-center">Tomá una foto donde se vea bien tu rostro.</Text></View>}
                   </View>
-                  {errores.fotoBase64 && <Text className="text-chido-error text-base font-bold mt-2" accessibilityLiveRegion="polite">{errores.fotoBase64}</Text>}
+                  {errores.fotoBase64 && <View className="mt-2"><ErrorFormulario mensaje={errores.fotoBase64} /></View>}
                   <Pressable disabled={enviando} onPress={() => { Keyboard.dismiss(); setCamara('foto'); }} accessibilityRole="button" className="bg-chido-cabecera rounded-xl p-4 mt-3"><Text className="text-chido-texto-sobre-oscuro text-lg text-center font-bold">{foto ? 'Volver a tomar foto' : 'Tomar foto'}</Text></Pressable>
                 </View>
                 <Pressable disabled={enviando} onPress={() => { Keyboard.dismiss(); setCamara('dni'); }} accessibilityRole="button" className="border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera rounded-xl p-4 mb-3 flex-row justify-center items-center gap-3">
@@ -177,7 +178,7 @@ export default function FormularioRegistroCliente({ esMetre, onSubmit, onVolver 
                 <Pressable disabled={enviando} onPress={() => setMostrarPassword((valor) => !valor)} accessibilityRole="button" accessibilityLabel={mostrarPassword ? 'Ocultar contraseñas' : 'Mostrar contraseñas'} className="flex-row gap-3 items-center py-3 mb-4">
                   <Ionicons name={mostrarPassword ? 'eye-off-outline' : 'eye-outline'} size={26} color={colores.textoSobreOscuro} /><Text className="text-chido-texto-sobre-oscuro text-lg">{mostrarPassword ? 'Ocultar contraseñas' : 'Mostrar contraseñas'}</Text>
                 </Pressable>
-                {mensaje && <View className="bg-chido-error rounded-xl p-4 mb-4" accessibilityLiveRegion="assertive"><Text className="text-chido-texto-sobre-oscuro text-lg">{mensaje}</Text></View>}
+                {mensaje && <View className="mb-4"><ErrorFormulario mensaje={mensaje} /></View>}
                 {enviando ? <ChidoLoader mensaje="Registrando cliente…" /> : <Pressable onPress={registrar} accessibilityRole="button" className="bg-chido-cabecera rounded-xl p-5"><Text className="text-chido-texto-sobre-oscuro text-xl text-center font-bold">{esMetre ? 'Registrar cliente' : 'Registrarme'}</Text></Pressable>}
                 <Pressable disabled={enviando} onPress={onVolver} accessibilityRole="button" className="py-5"><Text className="text-chido-texto-sobre-oscuro text-lg font-bold text-center underline">{esMetre ? 'Volver al inicio' : 'Volver al ingreso'}</Text></Pressable>
               </View>

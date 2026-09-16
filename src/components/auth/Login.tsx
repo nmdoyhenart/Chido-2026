@@ -292,7 +292,7 @@ export default function Login() {
                 style={[styles.boton, styles.registrarse, loading && styles.deshabilitado]}
               >
 
-                <Text style={[styles.textoClaro, styles.textoOscuro]}>
+                <Text style={styles.textoClaro}>
                   Registrarse
                 </Text>
 
@@ -368,10 +368,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iniciarSesion: { backgroundColor: '#700e22', borderColor: '#ffb3ae' },
-  registrarse: { backgroundColor: colores.superficieNaranja, borderColor: '#ffbe8c', marginBottom: 16 },
-  accesoRapido: { backgroundColor: colores.textoBotonOutline, borderColor: colores.superficieNaranja },
+  iniciarSesion: { backgroundColor: colores.botonPrincipal, borderColor: '#ffb3ae' },
+  registrarse: { backgroundColor: colores.botonPrincipal, borderColor: '#ffb3ae', marginBottom: 16 },
+  accesoRapido: { backgroundColor: colores.botonPrincipal, borderColor: '#ffb3ae' },
   textoClaro: { color: colores.textoSobreOscuro, fontSize: 20, lineHeight: 26, fontWeight: '800', textAlign: 'center' },
-  textoOscuro: { color: colores.textoSobreClaro },
   deshabilitado: { opacity: 0.55 },
 });

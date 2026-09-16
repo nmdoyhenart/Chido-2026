@@ -26,13 +26,19 @@ import { colores } from '../../theme/colores';
 
 export default function Login() {
   const router = useRouter();
-  const { iniciarSesion: autenticar, enterGuest, mode, cargando, avisoSesion, limpiarAviso } = useAppSession();
+  const { iniciarSesion: autenticar, enterGuest, mode, role, cargando, avisoSesion, limpiarAviso } = useAppSession();
   const [mensaje, setMensaje] = useState<string | null>(null);
   const operacion = useRef(false);
 
   useEffect(() => {
-    if (mode === 'authenticated' && !cargando) router.replace('/(app)/home');
-  }, [mode, cargando, router]);
+    if (mode === 'authenticated' && !cargando) {
+      if (role === 'supervisor') {
+        router.replace('/supervisor/home');
+      } else {
+        router.replace('/(app)/home');
+      }
+    }
+  }, [mode, role, cargando, router]);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -61,8 +67,8 @@ export default function Login() {
         emailLimpio,
         password
       );
-
-      router.replace('/(app)/home');
+      
+      // La redirección ocurrirá automáticamente por el useEffect de arriba al cambiar mode/role
 
     } catch (error: unknown) {
       setMensaje(error instanceof ErrorAcceso ? error.message : 'No pudimos iniciar sesión. Revisá la conexión e intentá nuevamente.');

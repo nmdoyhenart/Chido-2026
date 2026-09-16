@@ -8,8 +8,13 @@ import { Input } from '../../components/ui/Input';
 import { PrimaryButton } from '../../components/ui/Buttons';
 import { Header } from '../../components/Header';
 import { colores } from '../../theme/colores';
+import { useAppSession } from '../../contexts/AppSessionContext';
 
 export default function AgregarEmpleado() {
+  const { role, usuario } = useAppSession();
+  const userName = usuario ? `${usuario.nombres} ${usuario.apellidos}` : "Supervisor";
+  const displayRole = role ? role.charAt(0).toUpperCase() + role.slice(1) : "Supervisor";
+
   const [permission, requestPermission] = useCameraPermissions();
   const [scanningDni, setScanningDni] = useState(false);
   const [takingPhoto, setTakingPhoto] = useState(false);
@@ -21,9 +26,10 @@ export default function AgregarEmpleado() {
     dni: '',
     cuil: '',
     correo: '',
-    contraseña: '',
+    password: '',
     perfil: 'cocinero',
-    foto: null as string | null
+    fotoBase64: '',
+    fotoUri: null as string | null
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -33,60 +39,40 @@ export default function AgregarEmpleado() {
   const isScanningDniRef = useRef(false);
 
   const formatName = (name: string) => {
-    let cleaned = name.replace(/NXX/g, 'Ñ').replace(/xx/g, 'ñ');
-
-    return cleaned
-      .toLowerCase()
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    let cleaned = name.replace(/XX/g, 'Ñ').replace(/xx/g, 'ñ');
+    cleaned = cleaned.replace(/nñ/gi, 'ñ').replace(/NÑ/g, 'Ñ');
+    cleaned = cleaned.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+    return cleaned.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   };
 
   const formatCuil = (text: string) => {
     const cleaned = text.replace(/\D/g, '');
     let formatted = cleaned;
-    if (cleaned.length > 2) {
-      formatted = `${cleaned.slice(0, 2)}-${cleaned.slice(2)}`;
-    }
-    if (cleaned.length > 10) {
-      formatted = `${formatted.slice(0, 11)}-${cleaned.slice(10, 11)}`;
-    }
+    if (cleaned.length > 2) formatted = `${cleaned.slice(0, 2)}-${cleaned.slice(2)}`;
+    if (cleaned.length > 10) formatted = `${formatted.slice(0, 11)}-${cleaned.slice(10, 11)}`;
     return formatted.slice(0, 13);
   };
 
-  const validate = () => {
-    let newErrors: Record<string, string> = {};
-    if (!formData.nombres.trim()) newErrors.nombres = "Requerido";
-    if (!formData.apellidos.trim()) newErrors.apellidos = "Requerido";
-    if (!formData.dni.trim() || !/^\d{7,8}$/.test(formData.dni)) newErrors.dni = "DNI inválido";
-    const cleanCuil = formData.cuil.replace(/\D/g, '');
-    if (!cleanCuil || cleanCuil.length !== 11) newErrors.cuil = "CUIL inválido (11 dígitos requeridos)";
-    if (!formData.correo.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.correo)) newErrors.correo = "Correo inválido";
-    if (!formData.contraseña.trim() || formData.contraseña.length < 6) newErrors.contraseña = "Mínimo 6 caracteres";
-    if (!formData.foto) newErrors.foto = "Foto requerida";
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = async () => {
-    if (!validate()) {
-      Alert.alert("Error", "Por favor, revise los campos marcados.");
-      return;
-    }
-
     setGuardando(true);
+    setErrors({});
     try {
-      await crearEmpleado({
+      const resultado = await crearEmpleado({
         nombres: formData.nombres,
         apellidos: formData.apellidos,
         dni: formData.dni,
         cuil: formData.cuil,
         correo: formData.correo,
         perfil: formData.perfil,
-        foto: formData.foto,
-        contraseña: formData.contraseña
+        fotoBase64: formData.fotoBase64,
+        password: formData.password
       });
+
+      if (!resultado.ok) {
+        if (resultado.campos) setErrors(resultado.campos);
+        Alert.alert("Error", resultado.mensaje);
+        return;
+      }
 
       Alert.alert("Éxito", "Empleado guardado correctamente.");
       router.back();
@@ -133,7 +119,9 @@ export default function AgregarEmpleado() {
         base64: true,
         quality: 0.5,
       });
-      setFormData(prev => ({ ...prev, foto: photo.uri }));
+      // La Edge function usa una firma tipo JPG
+      const base64Format = photo.base64 ? `/9j/${photo.base64.substring(0, photo.base64.length).replace(/^\/9j\//, '')}` : '';
+      setFormData(prev => ({ ...prev, fotoUri: photo.uri, fotoBase64: base64Format }));
       setTakingPhoto(false);
     }
   };
@@ -146,7 +134,7 @@ export default function AgregarEmpleado() {
     <View className="flex-1 bg-chido-fondo">
       <Stack.Screen options={{ headerShown: false }} />
 
-      <Header userName="Laura Gauto Morales" role="Dueño" />
+      <Header userName={userName} role={displayRole} />
 
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -173,8 +161,8 @@ export default function AgregarEmpleado() {
               }}
               className="w-32 h-32 rounded-full border-2 border-dashed border-chido-texto-secundario-alternativo items-center justify-center mb-2"
             >
-              {formData.foto ? (
-                <Image source={{uri: formData.foto}} className="w-full h-full rounded-full" />
+              {formData.fotoUri ? (
+                <Image source={{uri: formData.fotoUri}} className="w-full h-full rounded-full" />
               ) : (
                 <Ionicons name="camera-outline" size={40} color={colores.textoSobreOscuro} />
               )}
@@ -185,7 +173,7 @@ export default function AgregarEmpleado() {
               </View>
             </TouchableOpacity>
             <Text className="text-chido-texto-sobre-oscuro text-sm">Tomar foto con la cámara</Text>
-            {errors.foto && <Text className="text-chido-error text-sm mt-1">{errors.foto}</Text>}
+            {errors.fotoBase64 && <Text className="text-chido-error text-sm mt-1">{errors.fotoBase64}</Text>}
           </View>
 
           {/* Scan DNI Button */}
@@ -228,6 +216,7 @@ export default function AgregarEmpleado() {
             placeholder="Ej. 34567890"
             value={formData.dni}
             keyboardType="numeric"
+            maxLength={8}
             onChangeText={(t) => setFormData(prev => ({...prev, dni: t}))}
             error={errors.dni}
           />
@@ -253,11 +242,11 @@ export default function AgregarEmpleado() {
 
           <Input 
             label="Contraseña"
-            placeholder="Mínimo 6 caracteres"
-            value={formData.contraseña}
+            placeholder="Mínimo 8 caracteres"
+            value={formData.password}
             secureTextEntry
-            onChangeText={(t) => setFormData(prev => ({...prev, contraseña: t}))}
-            error={errors.contraseña}
+            onChangeText={(t) => setFormData(prev => ({...prev, password: t}))}
+            error={errors.password}
           />
 
           {/* Perfil Selector */}

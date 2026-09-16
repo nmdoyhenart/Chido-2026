@@ -67,14 +67,11 @@ export async function registrarCliente(input: unknown, gateway: RegistroGateway)
     authId = await gateway.crearCuenta(datos);
     ruta = `${authId}/perfil.jpg`;
     await gateway.subirFoto(ruta, foto);
-    // El INSERT incluye el aviso de correo mediante un trigger
     guardandoPerfil = true;
     await gateway.crearPerfil(authId, datos, ruta);
   } catch (error) {
     if (authId) {
       if (guardandoPerfil) {
-        // Una respuesta perdida no implica que el INSERT haya fallado.
-        // No borrar Auth/foto de un perfil que sí se guardó.
         try { if (await gateway.perfilExiste(authId)) return; }
         catch {
           gateway.informarLimpiezaFallida(authId);

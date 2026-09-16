@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAppSession } from '../contexts/AppSessionContext';
@@ -11,7 +11,7 @@ interface HeaderProps {
 }
 
 export function Header({ userName, role }: HeaderProps) {
-  const { cerrarSesion } = useAppSession();
+  const { cerrarSesion, usuario } = useAppSession();
   const router = useRouter();
 
   const handleLogout = () => {
@@ -19,12 +19,18 @@ export function Header({ userName, role }: HeaderProps) {
     router.replace('/');
   };
 
+  const fotoValida = usuario?.foto_perfil && /^https:\/\//i.test(usuario.foto_perfil);
+
   return (
     <View className="bg-chido-cabecera px-4 pt-12 pb-4 flex-row items-center justify-between">
       {/* Profile Info */}
       <View className="flex-row items-center">
-        <View className="w-12 h-12 rounded-full bg-chido-fondo items-center justify-center border border-chido-acento mr-3">
-          <Ionicons name="person" size={24} color={colores.textoSobreOscuro} />
+        <View className="w-12 h-12 rounded-full bg-chido-fondo items-center justify-center border border-chido-acento mr-3 overflow-hidden">
+          {fotoValida ? (
+            <Image source={{ uri: usuario.foto_perfil }} className="w-full h-full" />
+          ) : (
+            <Ionicons name="person" size={24} color={colores.textoSobreOscuro} />
+          )}
         </View>
         <View>
           <Text className="text-chido-texto-sobre-oscuro font-bold text-lg">{userName}</Text>

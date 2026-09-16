@@ -1,81 +1,35 @@
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import * as FileSystem from 'expo-file-system/legacy';
-import { decode } from 'base64-arraybuffer';
-import * as Crypto from 'expo-crypto';
+import { validarRegistroEmpleado, type DatosRegistroEmpleado, type ErroresRegistroEmpleado } from '../../shared/registro-empleado';
 
-export type EmpleadoFormData = {
-  nombres: string;
-  apellidos: string;
-  dni: string;
-  cuil: string;
-  correo: string;
-  perfil: string;
-  foto: string | null;
-  contraseña?: string;
-};
+type Resultado = { ok: true } | { ok: false; mensaje: string; campos?: ErroresRegistroEmpleado };
 
-export async function subirFotoPerfil(uri: string, dni: string) {
-  const base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
-  const arrayBuffer = decode(base64);
-
-  const nombreArchivo = `perfil-${dni}-${Date.now()}.jpg`;
-
-  const { error } = await supabase.storage
-    .from('foto_personal')
-    .upload(nombreArchivo, arrayBuffer, { contentType: 'image/jpeg' });
-
-  if (error) {
-    console.error('Error al subir la foto de perfil:', error.message);
-    throw new Error('Error al subir foto (Verifica los permisos/RLS del Bucket "foto_personal"): ' + error.message);
+export async function crearEmpleado(datos: DatosRegistroEmpleado): Promise<Resultado> {
+  const validacion = validarRegistroEmpleado(datos);
+  if (Object.keys(validacion.errores).length) return { ok: false, mensaje: 'Revisá los campos indicados.', campos: validacion.errores };
+  
+  const { data, error } = await supabase.functions.invoke('registrar-empleado', { body: validacion.datos, timeout: 45000 });
+  
+  if (error instanceof FunctionsHttpError) {
+    try {
+      const respuesta: unknown = await error.context.json();
+      if (respuesta && typeof respuesta === 'object' && 'mensaje' in respuesta && typeof respuesta.mensaje === 'string') {
+        const campos: ErroresRegistroEmpleado = {};
+        if ('campos' in respuesta && respuesta.campos && typeof respuesta.campos === 'object') {
+          for (const campo of ['nombres', 'apellidos', 'dni', 'cuil', 'correo', 'password', 'fotoBase64', 'perfil'] as const) {
+            const valor = (respuesta.campos as Record<string, unknown>)[campo];
+            if (typeof valor === 'string') campos[campo] = valor.slice(0, 250);
+          }
+        }
+        return { ok: false, mensaje: respuesta.mensaje.slice(0, 500), campos };
+      }
+    } catch { /* Respuesta vacía o no JSON: mostrar el mensaje general. */ }
   }
-
-  const { data } = supabase.storage.from('foto_personal').getPublicUrl(nombreArchivo);
-  return data.publicUrl;
-}
-
-export async function crearEmpleado(formData: EmpleadoFormData) {
-  const { data: existingUser } = await supabase
-    .from('usuarios')
-    .select('id')
-    .eq('correo', formData.correo)
-    .maybeSingle();
-
-  if (existingUser) {
-    throw new Error('El correo electrónico ya se encuentra registrado en otro empleado.');
-  }
-
-  let fotoUrl = '';
-  if (formData.foto) {
-    fotoUrl = await subirFotoPerfil(formData.foto, formData.dni);
-  } else {
-    throw new Error('La foto es obligatoria');
-  }
-
-  let contraseña_hash = '';
-  if (formData.contraseña) {
-    contraseña_hash = await Crypto.digestStringAsync(
-      Crypto.CryptoDigestAlgorithm.SHA256,
-      formData.contraseña
-    );
-  }
-
-  const insertData: any = {
-    nombres: formData.nombres,
-    apellidos: formData.apellidos,
-    dni: formData.dni,
-    cuil: formData.cuil,
-    correo: formData.correo,
-    perfil: formData.perfil,
-    foto_perfil: fotoUrl,
+  
+  if (error || data?.ok !== true) return {
+    ok: false,
+    mensaje: 'No pudimos confirmar el registro. Revisá la conexión.',
   };
-
-  const { error } = await supabase.from('usuarios').insert(insertData);
-
-  if (error) {
-    console.error('Error al insertar usuario:', error);
-    if (error.code === '23505') {
-      throw new Error('El correo, DNI o CUIL ya se encuentra registrado.');
-    }
-    throw new Error('Error al guardar datos (Verifica los permisos/RLS de la tabla "usuarios"): ' + error.message);
-  }
+  
+  return { ok: true };
 }

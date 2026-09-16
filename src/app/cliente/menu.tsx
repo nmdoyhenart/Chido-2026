@@ -1,3 +1,6 @@
+import { useAppSession } from '../../contexts/AppSessionContext';
+import { useRestriccionSimulacion } from '../../components/ui/RestriccionSimulacion';
+import { productosDemostracion } from '../../data/demostracion';
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, Alert, FlatList, Dimensions, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +17,9 @@ const ITEM_MARGIN = 24;
 
 export default function MenuCliente() {
   const router = useRouter();
+  const { mode, role } = useAppSession();
+  const administracion = role === 'dueño' || role === 'supervisor';
+  const { bloquear, modal } = useRestriccionSimulacion();
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -22,20 +28,19 @@ export default function MenuCliente() {
   const [filtro, setFiltro] = useState<'todos' | 'plato' | 'bebida'>('todos');
 
   useEffect(() => {
-    cargarProductos();
-  }, []);
-
-  const cargarProductos = async () => {
-    try {
-      const data = await getProductos();
-      setProductos(data);
-    } catch (err: any) {
-      console.log('Error fetching productos:', err);
-      Alert.alert('Error', 'No se pudieron cargar los productos.');
-    } finally {
-      setLoading(false);
+    let activo = true;
+    async function cargar() {
+      try {
+        const data = mode === 'simulation' ? productosDemostracion : await getProductos();
+        if (activo) setProductos(data);
+      } catch {
+        if (activo) Alert.alert('Error', 'No se pudieron cargar los productos.');
+      } finally { if (activo) setLoading(false); }
     }
-  };
+    void cargar();
+    return () => { activo = false; };
+  }, [mode]);
+
 
   const updateCantidad = (id: string, delta: number) => {
     setPedido(prev => {
@@ -62,14 +67,13 @@ export default function MenuCliente() {
   }, 0);
 
   const handleRealizarPedido = async () => {
+    if (bloquear('realizar pedidos')) return;
     if (Object.keys(pedido).length === 0) {
       Alert.alert('Aviso', 'Agrega productos al pedido.');
       return;
     }
     
     try {
-      const mockClienteId = "00000000-0000-0000-0000-000000000000";
-      const mockMesaId = "00000000-0000-0000-0000-000000000000"; 
       
       Alert.alert(
         'Confirmar pedido',
@@ -85,7 +89,7 @@ export default function MenuCliente() {
           }
         ]
       );
-    } catch (err: any) {
+    } catch {
       Alert.alert('Error', 'No se pudo realizar el pedido');
     }
   };
@@ -127,17 +131,19 @@ export default function MenuCliente() {
 
   return (
     <View className="flex-1 bg-chido-fondo">
-      <Header userName="Cliente" role="Mesa 4" />
+      {modal}
+      <Header userName={administracion ? 'Administración' : 'Cliente'} role={mode === 'simulation' ? 'Demostración' : administracion ? 'Carta' : 'Mesa 4'} />
+      {administracion && <TouchableOpacity accessibilityRole="button" className="p-4" onPress={() => router.dismissTo('/(app)/home')}><Text className="text-chido-texto-sobre-oscuro font-bold">← Volver al inicio</Text></TouchableOpacity>}
       
       <View className="flex-row items-center p-4 bg-chido-acento">
         <Text className="text-2xl font-bold text-chido-texto-sobre-oscuro mr-auto">Menú</Text>
-        <TouchableOpacity
+        {!administracion && <TouchableOpacity
           className="flex-row items-center bg-chido-cabecera px-4 py-2 rounded-full"
-          onPress={() => router.push('/cliente/chat')}
+          onPress={() => { if (!bloquear('enviar consultas al mozo')) router.push('/cliente/chat'); }}
         >
           <Ionicons name="chatbubbles-outline" size={20} color={colores.textoSobreOscuro} />
           <Text className="text-chido-texto-sobre-oscuro font-bold ml-2">Consultar al mozo</Text>
-        </TouchableOpacity>
+        </TouchableOpacity>}
       </View>
 
       <View className="flex-row p-5 gap-2">
@@ -198,7 +204,7 @@ export default function MenuCliente() {
                   <Text className="text-chido-texto-secundario-sobre-oscuro"><Ionicons name="time-outline" size={16} /> {prod.tiempo_elaboracion} min</Text>
                 </View>
 
-                <View className="flex-row items-center justify-center gap-6 mt-auto">
+                {!administracion && <View className="flex-row items-center justify-center gap-6 mt-auto">
                   <TouchableOpacity
                     className="w-12 h-12 bg-chido-cabecera rounded-full items-center justify-center"
                     onPress={() => updateCantidad(prod.id, -1)}
@@ -214,14 +220,14 @@ export default function MenuCliente() {
                   >
                     <Ionicons name="add" size={28} color={colores.textoSobreOscuro} />
                   </TouchableOpacity>
-                </View>
+                </View>}
               </View>
             );
           }}
         />
       )}
 
-      <View className="p-5 bg-chido-cabecera rounded-t-3xl shadow-lg border-t border-chido-acento">
+      {!administracion && <View className="p-5 bg-chido-cabecera rounded-t-3xl shadow-lg border-t border-chido-acento">
         <View className="flex-row justify-between mb-2">
           <Text className="text-chido-texto-sobre-oscuro text-lg">Tiempo est. total:</Text>
           <Text className="text-chido-texto-sobre-oscuro text-lg font-bold">{tiempoEstimado} min</Text>
@@ -235,7 +241,7 @@ export default function MenuCliente() {
           onPress={Object.keys(pedido).length > 0 ? handleRealizarPedido : undefined}
           disabled={Object.keys(pedido).length === 0}
         />
-      </View>
+      </View>}
     </View>
   );
 }

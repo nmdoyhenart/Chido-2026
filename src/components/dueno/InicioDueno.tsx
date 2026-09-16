@@ -3,13 +3,15 @@ import { useState } from 'react';
 import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useRouter } from 'expo-router';
 import type { Usuario } from '../../../shared/acceso';
 import ChidoLoader from '../ui/ChidoLoader';
 import { useContadorPendientes } from '../../hooks/useContadorPendientes';
 import { colores as chido } from '../../theme/colores';
 
 type Props = {
-  usuario: Usuario;
+  usuario: Pick<Usuario, 'nombres' | 'apellidos' | 'foto_perfil' | 'perfil'>;
+  simulacion?: boolean;
   saliendo: boolean;
   error: string | null;
   onSalir: () => void;
@@ -23,9 +25,9 @@ const colores = {
   boton: chido.acento, coral: chido.notificacion, verde: chido.activo,
 };
 
-// Las solicitudes usan datos reales. Mesas, altas y carta conservan el mockup.
-export default function InicioDueno({ usuario, saliendo, error, onSalir, onPendientes }: Props) {
-  const { total: pendientes, error: errorPendientes } = useContadorPendientes();
+export default function InicioDueno({ usuario, simulacion = false, saliendo, error, onSalir, onPendientes }: Props) {
+  const { total: pendientes, error: errorPendientes } = useContadorPendientes(simulacion);
+  const router = useRouter();
   const { width } = useWindowDimensions();
   const escala = Math.min(width / 393, 1.25);
   const [fotoFallida, setFotoFallida] = useState(false);
@@ -67,32 +69,33 @@ export default function InicioDueno({ usuario, saliendo, error, onSalir, onPendi
     <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.contenido}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 20 * escala, paddingTop: 25 * escala, paddingBottom: 30 * escala }}>
         <Text style={[styles.saludo, { fontSize: 27 * escala, marginBottom: 23 * escala }]}>Hola, {primerNombre}</Text>
+        {simulacion && <Text style={[styles.detalle, { marginBottom: 18 }]}>Modo demostración · Explorá las pantallas sin modificar datos.</Text>}
         {saliendo && <ChidoLoader mensaje="Cerrando sesión…" />}
         {!!error && <Text style={styles.error} accessibilityLiveRegion="assertive">{error}</Text>}
         {pendientes === null && !errorPendientes && <ChidoLoader mensaje="Consultando solicitudes…" />}
         {!!errorPendientes && <Text style={styles.error} accessibilityLiveRegion="polite">{errorPendientes}</Text>}
 
         <View style={{ flexDirection: 'row', gap: 14 * escala, marginBottom: 22 * escala }}>
-          <View accessible accessibilityRole="button" accessibilityLabel="Alta de empleado" accessibilityState={{ disabled: true }} style={[styles.tarjeta, styles.tarjetaAlta, { minHeight: 140 * escala, padding: 20 * escala }]}>
+          <TouchableOpacity onPress={() => router.push('/supervisor/agregar-empleado')} disabled={saliendo} activeOpacity={0.8} accessible accessibilityRole="button" accessibilityLabel="Alta de empleado" accessibilityState={{ disabled: saliendo }} style={[styles.tarjeta, styles.tarjetaAlta, { minHeight: 140 * escala, padding: 20 * escala }]}>
             {icono('user-plus')}
             <Text style={[styles.titulo, titulo, { marginTop: 14 * escala }]}>Alta de{ '\n' }empleado</Text>
-          </View>
-          <View accessible accessibilityRole="button" accessibilityLabel="Alta de mesa" accessibilityState={{ disabled: true }} style={[styles.tarjeta, styles.tarjetaAlta, { minHeight: 140 * escala, padding: 20 * escala }]}>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/mesas/alta')} disabled={saliendo} activeOpacity={0.8} accessible accessibilityRole="button" accessibilityLabel="Alta de mesa" accessibilityState={{ disabled: saliendo }} style={[styles.tarjeta, styles.tarjetaAlta, { minHeight: 140 * escala, padding: 20 * escala }]}>
             <View style={[styles.icono, { width: 45 * escala, height: 45 * escala, borderRadius: 12 * escala }]}>
               <MaterialCommunityIcons name="table-furniture" size={24 * escala} color={colores.crema} />
             </View>
             <Text style={[styles.titulo, titulo, { marginTop: 14 * escala }]}>Alta de mesa</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
-        <View accessible accessibilityRole="button" accessibilityLabel="Gestión de mesas. Datos de muestra: 12 mesas, 7 disponibles" accessibilityState={{ disabled: true }} style={[styles.tarjeta, styles.tarjetaFila, { minHeight: 124 * escala, padding: 20 * escala, gap: 14 * escala, marginBottom: 22 * escala }]}>
+        <TouchableOpacity onPress={() => router.push('/mesas/gestion')} disabled={saliendo} activeOpacity={0.8} accessible accessibilityRole="button" accessibilityLabel="Gestión de mesas" accessibilityState={{ disabled: saliendo }} style={[styles.tarjeta, styles.tarjetaFila, { minHeight: 124 * escala, padding: 20 * escala, gap: 14 * escala, marginBottom: 22 * escala }]}>
           {icono('layout')}
           <View style={styles.textos}>
             <Text style={[styles.titulo, titulo]}>Gestión de mesas</Text>
-            <Text style={[styles.detalle, { fontSize: 14 * escala, marginTop: 7 * escala }]}>12 mesas · 7 disponibles</Text>
+            <Text style={[styles.detalle, { fontSize: 14 * escala, marginTop: 7 * escala }]}>Consultar disponibilidad</Text>
           </View>
           <Feather name="chevron-right" size={20 * escala} color={colores.secundario} />
-        </View>
+        </TouchableOpacity>
 
         <TouchableOpacity onPress={onPendientes} disabled={saliendo} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={`Clientes pendientes de aprobación: ${pendientes ?? 'cantidad no disponible'}`} style={[styles.tarjeta, styles.tarjetaFila, { minHeight: 124 * escala, padding: 20 * escala, gap: 14 * escala, marginBottom: 22 * escala }]}>
           {icono('users')}
@@ -104,11 +107,11 @@ export default function InicioDueno({ usuario, saliendo, error, onSalir, onPendi
           </View>
         </TouchableOpacity>
 
-        <View accessible accessibilityRole="button" accessibilityLabel="Ver la carta" accessibilityState={{ disabled: true }} style={[styles.tarjeta, styles.tarjetaFila, { minHeight: 124 * escala, padding: 20 * escala, gap: 14 * escala }]}>
+        <TouchableOpacity onPress={() => router.push('/cliente/menu')} disabled={saliendo} activeOpacity={0.8} accessible accessibilityRole="button" accessibilityLabel="Ver la carta" accessibilityState={{ disabled: saliendo }} style={[styles.tarjeta, styles.tarjetaFila, { minHeight: 124 * escala, padding: 20 * escala, gap: 14 * escala }]}>
           {icono('book')}
           <Text style={[styles.titulo, styles.textos, titulo]}>Ver la carta</Text>
           <Feather name="chevron-right" size={20 * escala} color={colores.secundario} />
-        </View>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   </View>;

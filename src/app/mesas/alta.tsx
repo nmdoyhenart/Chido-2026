@@ -1,3 +1,4 @@
+import { useRestriccionSimulacion } from '../../components/ui/RestriccionSimulacion';
 import { Ionicons } from "@expo/vector-icons";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as Haptics from "expo-haptics";
@@ -36,8 +37,9 @@ type FotoTomada = {
 };
 
 export default function AgregarMesa() {
-  const { role } = useAppSession();
-  const permitido = puedeAdministrarMesas(role);
+  const { bloquear, modal } = useRestriccionSimulacion();
+  const { role, mode } = useAppSession();
+  const permitido = (mode === 'authenticated' || mode === 'simulation') && puedeAdministrarMesas(role);
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
   const operacionEnCurso = useRef(false);
@@ -147,6 +149,7 @@ export default function AgregarMesa() {
   };
 
   const guardarMesa = async () => {
+    if (bloquear('guardar mesas') || !permitido || mode !== 'authenticated') return;
     if (!activa.current || operacionEnCurso.current || !validarFormulario() || !foto) return;
 
     operacionEnCurso.current = true;
@@ -181,7 +184,7 @@ export default function AgregarMesa() {
     tokenCamara.current += 1;
     setMesaQr(null);
     setAviso(null);
-    router.dismissTo("/supervisor/home");
+    router.dismissTo("/(app)/home");
   };
 
   const cerrarCamara = () => {
@@ -241,8 +244,9 @@ export default function AgregarMesa() {
 
   return (
     <View className="flex-1 bg-chido-fondo">
+      {modal}
       <Stack.Screen options={{ headerShown: false }} />
-      <Header userName="Administración" role="Mesas" />
+      <Header userName="Administración" role={mode === 'simulation' ? 'Mesas · Demostración' : 'Mesas'} />
       <SafeAreaView edges={["left", "right", "bottom"]} className="flex-1">
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
           <ScrollView className="flex-1 p-5" contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" accessibilityElementsHidden={ocupada} importantForAccessibility={ocupada ? "no-hide-descendants" : "auto"}>

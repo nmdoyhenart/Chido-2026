@@ -13,12 +13,16 @@ import { listarPendientes, resolverCliente, type ClientePendiente } from '../../
 import { colores } from '../../theme/colores';
 import { SolicitudClienteCard, ConfirmacionCliente } from './SolicitudClienteCard';
 
+import { clientesDemostracion } from '../../data/demostracion';
+import { useRestriccionSimulacion } from '../ui/RestriccionSimulacion';
+
 type Decision = { cliente: ClientePendiente; estado: 'aceptado' | 'rechazado' };
 
 export default function SolicitudesClientes() {
   const { mode, role, cargando: sesionCargando } = useAppSession();
   const router = useRouter();
-  const permitido = mode === 'authenticated' && (role === 'dueño' || role === 'supervisor');
+  const { bloquear, modal } = useRestriccionSimulacion();
+  const permitido = (mode === 'authenticated' || mode === 'simulation') && (role === 'dueño' || role === 'supervisor');
   const [tarjetas, setTarjetas] = useState<Record<number, ClientePendiente>>({});
   const [pagina, setPagina] = useState(0);
   const [total, setTotal] = useState(0);
@@ -36,6 +40,12 @@ export default function SolicitudesClientes() {
   const paginas = useMemo(() => Array.from({ length: total }, (_, i) => i), [total]);
 
   const cargar = useCallback(async (numero: number, silenciosa = false) => {
+    if (mode === 'simulation') {
+      setTarjetas(Object.fromEntries(clientesDemostracion.map((cliente, i) => [i, cliente])));
+      setTotal(clientesDemostracion.length);
+      setCargando(false);
+      return;
+    }
     const actual = ++revision.current;
     consultas.current++;
     if (!silenciosa) setCargando(true);
@@ -73,7 +83,7 @@ export default function SolicitudesClientes() {
       consultas.current--;
       if (activa.current && revision.current === actual) setCargando(false);
     }
-  }, []);
+  }, [mode]);
 
   useFocusEffect(useCallback(() => {
     activa.current = true;
@@ -102,12 +112,14 @@ export default function SolicitudesClientes() {
   }
 
   function elegirDecision(elegida: Decision | null) {
+    if (elegida && bloquear(elegida.estado === 'aceptado' ? 'aceptar clientes' : 'rechazar clientes')) return;
     modalAbierto.current = elegida !== null;
     setDecision(elegida);
   }
 
   async function confirmar() {
     if (!decision || ocupado.current || cargando) return;
+    if (bloquear(decision.estado === 'aceptado' ? 'aceptar clientes' : 'rechazar clientes') || mode !== 'authenticated') return;
     const elegida = decision;
     ocupado.current = true;
     revision.current++;
@@ -138,6 +150,7 @@ export default function SolicitudesClientes() {
 
   return <SafeAreaView style={styles.pantalla}>
     <StatusBar style="light" />
+    {modal}
     <View style={styles.cabecera}>
       <TouchableOpacity accessibilityRole="button" accessibilityLabel="Volver al inicio" disabled={cargando}
         onPress={() => router.replace('/(app)/home')} style={styles.botonIcono} activeOpacity={0.75}>
@@ -145,7 +158,7 @@ export default function SolicitudesClientes() {
       </TouchableOpacity>
       <View style={styles.titulos}>
         <Text accessibilityRole="header" style={styles.titulo}>Solicitudes</Text>
-        <Text style={styles.subtitulo}>{total} {total === 1 ? 'cliente pendiente' : 'clientes pendientes'}</Text>
+        <Text style={styles.subtitulo}>{mode === 'simulation' ? 'Simulación · ' : ''}{total} {total === 1 ? 'cliente pendiente' : 'clientes pendientes'}</Text>
       </View>
       <TouchableOpacity accessibilityRole="button" accessibilityLabel="Actualizar solicitudes" disabled={cargando}
         onPress={() => { setMensaje(''); void cargar(pagina); }} style={styles.botonIcono} activeOpacity={0.75}>

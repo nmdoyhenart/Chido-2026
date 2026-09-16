@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -14,9 +14,17 @@ export function Header({ userName, role }: HeaderProps) {
   const { cerrarSesion } = useAppSession();
   const router = useRouter();
 
-  const handleLogout = () => {
-    cerrarSesion();
-    router.replace('/');
+  const [saliendo, setSaliendo] = useState(false);
+  const [error, setError] = useState('');
+  const handleLogout = async () => {
+    if (saliendo) return;
+    setSaliendo(true);
+    try {
+      await cerrarSesion();
+      router.replace('/(auth)/login');
+    } catch {
+      setError('No se pudo salir. Intentá nuevamente.');
+    } finally { setSaliendo(false); }
   };
 
   return (
@@ -28,6 +36,7 @@ export function Header({ userName, role }: HeaderProps) {
         </View>
         <View>
           <Text className="text-chido-texto-sobre-oscuro font-bold text-lg">{userName}</Text>
+          {!!error && <Text accessibilityRole="alert" className="text-chido-texto-sobre-oscuro">{error}</Text>}
           <View className="bg-chido-acento px-2 py-0.5 rounded-full flex-row items-center self-start mt-1">
             <View className="w-2 h-2 rounded-full bg-chido-activo mr-1" />
             <Text className="text-chido-texto-sobre-oscuro text-xs">{role}</Text>
@@ -44,6 +53,8 @@ export function Header({ userName, role }: HeaderProps) {
         </TouchableOpacity>
         <TouchableOpacity
           className="w-10 h-10 rounded-full bg-chido-acento items-center justify-center"
+          disabled={saliendo}
+          accessibilityLabel="Cerrar sesión"
           onPress={handleLogout}
         >
           <Ionicons name="log-out-outline" size={20} color={colores.textoSobreOscuro} />

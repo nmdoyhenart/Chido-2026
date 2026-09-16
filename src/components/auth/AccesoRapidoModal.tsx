@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 
 import {
   Modal,
+  ScrollView,
   View,
   Text,
   Pressable,
@@ -31,7 +32,7 @@ const roles: {
     id: 'cliente registrado',
     nombre: 'Cliente',
     descripcion: 'Simular vista de cliente',
-    icono: 'business-outline',
+    icono: 'people-outline',
   },
   {
 
@@ -46,7 +47,6 @@ const roles: {
     descripcion: 'Simular supervisión del restaurante',
     icono: 'briefcase-outline',
   },
-
   {
     id: 'cliente anónimo',
     nombre: 'Cliente anónimo',
@@ -57,13 +57,13 @@ const roles: {
     id: 'metre',
     nombre: 'Metre',
     descripcion: 'Simular atención y asignación de mesas',
-    icono: 'people-outline',
+    icono: 'grid-outline',
   },
   {
     id: 'mozo',
     nombre: 'Mozo',
     descripcion: 'Simular atención de pedidos',
-    icono: 'people-outline',
+    icono: 'restaurant-outline',
   },
   {
     id: 'cocinero',
@@ -90,31 +90,43 @@ export default function AccesoRapidoModal({
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
 
-  const seleccionarRol = (rol: AppRole) => {
-    enterSimulation(rol);
+  const seleccionarRol = async (rol: AppRole) => {
+    if (ocupado.current) return;
+    ocupado.current = true;
+    setCargando(true);
+    setError('');
+    try {
+      await enterSimulation(rol);
 
-    onClose();
+      onClose();
 
-    switch (rol) {
-      case "dueño":
-      case "supervisor":
-        router.push('/supervisor/home');
-        break;
-      case "cliente registrado":
-        router.push('../cliente/home');
-        break;
-      case "cliente anónimo":
-        router.push('../cliente-anonimo/escanear')
-        break;
-      case "cocinero":
-        router.push('../productos/alta');
-        break;
-      case "cantinero":
-        router.push('/productos/alta-bebida');
-        break;
-      default:
-        router.push('/(app)/home');
-        break;
+      switch (rol) {
+        case "dueño":
+        case "supervisor":
+          router.replace('/(app)/home');
+          break;
+        case "cliente registrado":
+          router.push('../cliente/home');
+          break;
+        case "cliente anónimo":
+          router.push('../cliente-anonimo/escanear')
+          break;
+        case "cocinero":
+          router.push('../productos/alta');
+          break;
+        case "cantinero":
+          router.push('/productos/alta-bebida');
+          break;
+        default:
+          router.push('/(app)/home');
+          break;
+      }
+    } catch {
+      setError('No se pudo iniciar la demostración. Intentá nuevamente.');
+      Vibration.vibrate(180);
+    } finally {
+      ocupado.current = false;
+      setCargando(false);
     }
   };
 
@@ -123,11 +135,12 @@ export default function AccesoRapidoModal({
       visible={visible}
       transparent
       animationType="slide"
-      onRequestClose={onClose}
+      onRequestClose={() => { if (!ocupado.current) onClose(); }}
     >
       <View className="flex-1 justify-end bg-chido-cabecera/75">
 
         <View
+          style={{ maxHeight: '90%' }}
           className="
             bg-chido-cabecera
             rounded-t-[32px]
@@ -149,7 +162,7 @@ export default function AccesoRapidoModal({
               </Text>
             </View>
 
-            <Pressable onPress={onClose}>
+            <Pressable onPress={() => { if (!ocupado.current) onClose(); }}>
               <Ionicons
                 name="close"
                 size={30}
@@ -161,6 +174,7 @@ export default function AccesoRapidoModal({
 
           {!!error && <Text className="text-chido-error mb-3">{error}</Text>}
           {cargando && <ChidoLoader mensaje="Abriendo simulación…" />}
+          <ScrollView showsVerticalScrollIndicator={false}>
           {roles.map((rol) => (
             <Pressable
               key={rol.id}
@@ -216,6 +230,7 @@ export default function AccesoRapidoModal({
 
             </Pressable>
           ))}
+          </ScrollView>
 
         </View>
 

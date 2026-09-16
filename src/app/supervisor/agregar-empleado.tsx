@@ -1,7 +1,9 @@
+import { useAppSession } from '../../contexts/AppSessionContext';
+import { useRestriccionSimulacion } from '../../components/ui/RestriccionSimulacion';
 import React, { useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image, Alert, Modal, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { Stack, router } from 'expo-router';
+import { Redirect, Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { crearEmpleado } from '../../services/empleados.service';
 import { Input } from '../../components/ui/Input';
@@ -10,6 +12,9 @@ import { Header } from '../../components/Header';
 import { colores } from '../../theme/colores';
 
 export default function AgregarEmpleado() {
+  const { mode, role, usuario } = useAppSession();
+  const permitido = (mode === 'simulation' || mode === 'authenticated') && (role === 'dueño' || role === 'supervisor');
+  const { bloquear, modal } = useRestriccionSimulacion();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanningDni, setScanningDni] = useState(false);
   const [takingPhoto, setTakingPhoto] = useState(false);
@@ -70,6 +75,7 @@ export default function AgregarEmpleado() {
   };
 
   const handleSubmit = async () => {
+    if (bloquear('guardar empleados') || !permitido || mode !== 'authenticated') return;
     if (!validate()) {
       Alert.alert("Error", "Por favor, revise los campos marcados.");
       return;
@@ -142,11 +148,14 @@ export default function AgregarEmpleado() {
     setCameraFacing(current => (current === 'back' ? 'front' : 'back'));
   };
 
+  if (!permitido) return <Redirect href="/(app)/home" />;
+
   return (
     <View className="flex-1 bg-chido-fondo">
+      {modal}
       <Stack.Screen options={{ headerShown: false }} />
 
-      <Header userName="Laura Gauto Morales" role="Dueño" />
+      <Header userName={mode === 'simulation' ? (role === 'dueño' ? 'Dueño de demostración' : 'Supervisor de demostración') : usuario?.nombres ?? 'Administración'} role={mode === 'simulation' ? 'Demostración' : role ?? 'Administración'} />
 
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

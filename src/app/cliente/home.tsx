@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ImageBackground } from 'react-native';
+import { View, Text, TouchableOpacity, ImageBackground, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Header } from '../../components/Header';
 import { PrimaryButton } from '../../components/ui/Buttons';
 import { QRScanner } from '../../components/ui/QRScanner';
+import { parseQrPayload } from '../../utils/qr';
 
 export default function HomeCliente() {
   const router = useRouter();
   const [scannerVisible, setScannerVisible] = useState(false);
 
   const handleScan = async (raw: string) => {
-    // raw representaría el código de la mesa, ej. un JSON o ID
-    // Se asume que el escaneo es exitoso y se redirige a la carta
-    router.push('/cliente/menu');
+    const payload = parseQrPayload(raw);
+    if (payload?.tipo === 'mesa') {
+      router.push({ pathname: '/cliente/menu', params: { mesaId: payload.mesaId } });
+    } else {
+      Alert.alert('Error', 'El código escaneado no pertenece a una mesa.');
+    }
   };
 
   return (

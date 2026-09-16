@@ -1,59 +1,52 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useAppSession } from '../../contexts/AppSessionContext';
 import { Header } from '../../components/Header';
-import { supabase } from '../../../lib/supabase';
+import { getMensajes, enviarMensaje, suscribirMensajes, Mensaje } from '../../services/chat.service';
 import { colores } from '../../theme/colores';
-
-type Mensaje = {
-  id: string;
-  mesa: number;
-  texto: string;
-  es_mozo: boolean;
-  fecha: string;
-};
 
 export default function ChatCliente() {
   const router = useRouter();
+  const { mesaId, numero } = useLocalSearchParams<{ mesaId: string, numero: string }>();
+  const { usuario } = useAppSession();
+
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
   const [nuevoMensaje, setNuevoMensaje] = useState('');
   const scrollViewRef = useRef<ScrollView>(null);
 
-
-  const numMesa = 4;
-
   useEffect(() => {
-    setMensajes([
-      { id: '1', mesa: numMesa, texto: 'Hola, ¿pueden traer más servilletas?', es_mozo: false, fecha: new Date().toISOString() },
-      { id: '2', mesa: numMesa, texto: '¡Enseguida se las llevo!', es_mozo: true, fecha: new Date().toISOString() },
-    ]);
-  }, []);
+    if (!mesaId) return;
 
-  const handleEnviar = () => {
-    if (!nuevoMensaje.trim()) return;
-
-    const msg: Mensaje = {
-      id: Date.now().toString(),
-      mesa: numMesa,
-      texto: nuevoMensaje.trim(),
-      es_mozo: false,
-      fecha: new Date().toISOString(),
+    const cargarMensajes = async () => {
+      try {
+        const data = await getMensajes(mesaId);
+        setMensajes(data);
+      } catch (error) {
+        console.error(error);
+      }
     };
+    cargarMensajes();
 
-    setMensajes(prev => [...prev, msg]);
-    setNuevoMensaje('');
+    const desuscribir = suscribirMensajes(mesaId, (nuevoMsg) => {
+      setMensajes(prev => [...prev, nuevoMsg]);
+    });
+
+    return desuscribir;
+  }, [mesaId]);
+
+  const handleEnviar = async () => {
+    if (!nuevoMensaje.trim() || !usuario?.id || !mesaId) return;
+
+    const texto = nuevoMensaje.trim();
+    setNuevoMensaje(''); 
     
-    setTimeout(() => {
-      const mozoMsg: Mensaje = {
-        id: (Date.now() + 1).toString(),
-        mesa: numMesa,
-        texto: 'Recibido, voy para allá.',
-        es_mozo: true,
-        fecha: new Date().toISOString(),
-      };
-      setMensajes(prev => [...prev, mozoMsg]);
-    }, 2000);
+    try {
+      await enviarMensaje(mesaId, usuario.id, texto, false);
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo enviar el mensaje.');
+    }
   };
 
   const formatearHora = (isoDate: string) => {
@@ -62,8 +55,8 @@ export default function ChatCliente() {
   };
 
   return (
-    <View className="flex-1 bg-chido-fondo">
-      <Header userName="Cliente" role={`Mesa ${numMesa}`} />
+    <View className="flex-1 bg-[#d97736]">
+      <Header userName="Cliente" role={numero ? `Mesa ${numero}` : "Chat con Mozo"} />
 
       <View className="flex-row items-center p-4 bg-chido-acento">
         <TouchableOpacity
@@ -97,8 +90,8 @@ export default function ChatCliente() {
                 <Text className={`text-base ${isMe ? 'text-chido-texto-sobre-oscuro' : 'text-chido-texto-boton-outline'}`}>
                   {msg.texto}
                 </Text>
-                <Text className={`text-xs mt-2 self-end ${isMe ? 'text-chido-texto-sobre-oscuro/70' : 'text-chido-texto-boton-outline/70'}`}>
-                  {formatearHora(msg.fecha)}
+                <Text className={`text-xs mt-2 self-end ${isMe ? 'text-white/70' : 'text-[#7a2e1f]/70'}`}>
+                  {formatearHora(msg.created_at)}
                 </Text>
               </View>
             );

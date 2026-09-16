@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import React from 'react';
 
-import { Link } from 'expo-router';
+import { Link, Redirect } from 'expo-router';
 
 import { useAppSession } from '../../contexts/AppSessionContext';
 import ChidoLoader from '../../components/ui/ChidoLoader';
@@ -25,6 +25,11 @@ export default function HomeScreen() {
   if (mode === 'authenticated' && (role === 'dueño' || role === 'supervisor') && usuario) {
     return <InicioDueno key={usuario.id} usuario={usuario} saliendo={saliendo} error={error} onSalir={salir} onPendientes={() => router.push('/(app)/clientes-pendientes')} />;
   }
+  
+  if (role === 'cliente registrado' || role === 'cliente anónimo') {
+    return <Redirect href="/cliente/home" />;
+  }
+
   return <SafeAreaView className="flex-1 bg-chido-fondo">
     <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}>
       <Image source={require('../../../assets/images/logo.png')} style={{ width: 180, height: 180, alignSelf: 'center' }} resizeMode="contain" />
@@ -33,6 +38,16 @@ export default function HomeScreen() {
       <Text className="text-chido-texto-secundario-sobre-oscuro text-xl text-center mt-3 capitalize">{role}</Text>
       {mode === 'authenticated' && role === 'metre' && <Pressable onPress={() => router.push('/(auth)/registro')} disabled={saliendo} className="bg-chido-cabecera rounded-xl p-5 mt-8" accessibilityRole="button"><Text className="text-chido-texto-sobre-oscuro text-xl font-bold text-center">Registrar cliente</Text></Pressable>}
       {mode === 'authenticated' && (role === 'dueño' || role === 'supervisor') && <Pressable onPress={() => router.push('/(app)/clientes-pendientes')} disabled={saliendo} className="bg-chido-cabecera rounded-xl p-5 mt-5" accessibilityRole="button"><Text className="text-chido-texto-sobre-oscuro text-xl font-bold text-center">Clientes pendientes</Text></Pressable>}
+      {mode === 'authenticated' && role === 'mozo' && (
+        <>
+          <Pressable onPress={() => router.push('/mozo/chats')} disabled={saliendo} className="bg-chido-cabecera rounded-xl p-5 mt-5" accessibilityRole="button">
+            <Text className="text-chido-texto-sobre-oscuro text-xl font-bold text-center">Consultas de Mesas</Text>
+          </Pressable>
+          <Pressable onPress={() => router.push('/mozo/pedidos')} disabled={saliendo} className="bg-chido-cabecera rounded-xl p-5 mt-5" accessibilityRole="button">
+            <Text className="text-chido-texto-sobre-oscuro text-xl font-bold text-center">Gestión de Pedidos</Text>
+          </Pressable>
+        </>
+      )}
       {error && <Text className="text-chido-notificacion text-lg text-center mt-5" accessibilityLiveRegion="assertive">{error}</Text>}
       {saliendo ? <ChidoLoader mensaje="Cerrando sesión…" /> : <Pressable onPress={salir} className="bg-chido-cabecera rounded-xl p-5 mt-8" accessibilityRole="button"><Text className="text-chido-texto-sobre-oscuro text-xl font-bold text-center">Cerrar sesión</Text></Pressable>}
     </ScrollView>

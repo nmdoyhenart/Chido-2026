@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, Alert, FlatList, Dimensions, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useAppSession } from '../../contexts/AppSessionContext';
+import { supabase } from '../../../lib/supabase';
 import { Header } from '../../components/Header';
 import { PrimaryButton } from '../../components/ui/Buttons';
 import { Producto } from '../../types/producto';
 import { getProductos } from '../../services/productos.service';
+import { crearPedido } from '../../services/pedidos.service';
 import { colores } from '../../theme/colores';
 
 const { width } = Dimensions.get('window');
@@ -14,8 +17,12 @@ const ITEM_MARGIN = 24;
 
 export default function MenuCliente() {
   const router = useRouter();
+  const { mesaId } = useLocalSearchParams<{ mesaId: string }>();
+  const { usuario } = useAppSession();
+
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mesaNumero, setMesaNumero] = useState<number | null>(null);
   
   const [pedido, setPedido] = useState<Record<string, number>>({});
   
@@ -23,7 +30,12 @@ export default function MenuCliente() {
 
   useEffect(() => {
     cargarProductos();
-  }, []);
+    if (mesaId) {
+      supabase.from('mesas').select('numero').eq('id', mesaId).single().then(({ data }) => {
+        if (data) setMesaNumero(data.numero);
+      });
+    }
+  }, [mesaId]);
 
   const cargarProductos = async () => {
     try {
@@ -66,11 +78,12 @@ export default function MenuCliente() {
       Alert.alert('Aviso', 'Agrega productos al pedido.');
       return;
     }
+    if (!usuario?.id || !mesaId) {
+      Alert.alert('Error', 'Falta información del cliente o la mesa.');
+      return;
+    }
     
     try {
-      const mockClienteId = "00000000-0000-0000-0000-000000000000";
-      const mockMesaId = "00000000-0000-0000-0000-000000000000"; 
-      
       Alert.alert(
         'Confirmar pedido',
         `El total es $${totalImporte} y tardará aprox ${tiempoEstimado} min.`,
@@ -79,8 +92,22 @@ export default function MenuCliente() {
           { 
             text: 'Pedir', 
             onPress: async () => {
-              Alert.alert('Pedido realizado', 'Esperando confirmación del mozo...');
-              setPedido({});
+              try {
+                const detalles = Object.entries(pedido).map(([id, cant]) => ({
+                  producto_id: id,
+                  cantidad: cant,
+                  precio_unitario: productos.find(p => p.id === id)?.precio || 0
+                }));
+                
+                const nuevoPedidoId = await crearPedido(usuario.id, mesaId, totalImporte, detalles);
+                
+                Alert.alert('Pedido realizado', 'Esperando confirmación del mozo...');
+                setPedido({});
+                router.push({ pathname: '/cliente/estado-pedido', params: { pedidoId: nuevoPedidoId } });
+              } catch (e: any) {
+                console.error(e);
+                Alert.alert('Error', `No se pudo generar el pedido: ${e.message || JSON.stringify(e)}`);
+              }
             }
           }
         ]
@@ -127,13 +154,13 @@ export default function MenuCliente() {
 
   return (
     <View className="flex-1 bg-chido-fondo">
-      <Header userName="Cliente" role="Mesa 4" />
+      <Header userName="Cliente" role={mesaNumero ? `Mesa ${mesaNumero}` : "Mesa"} />
       
       <View className="flex-row items-center p-4 bg-chido-acento">
         <Text className="text-2xl font-bold text-chido-texto-sobre-oscuro mr-auto">Menú</Text>
-        <TouchableOpacity
-          className="flex-row items-center bg-chido-cabecera px-4 py-2 rounded-full"
-          onPress={() => router.push('/cliente/chat')}
+        <TouchableOpacity 
+          className="flex-row items-center bg-chido-oscuro px-4 py-2 rounded-full"
+          onPress={() => router.push({ pathname: '/cliente/chat', params: { mesaId, numero: mesaNumero } })}
         >
           <Ionicons name="chatbubbles-outline" size={20} color={colores.textoSobreOscuro} />
           <Text className="text-chido-texto-sobre-oscuro font-bold ml-2">Consultar al mozo</Text>

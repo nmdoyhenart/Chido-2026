@@ -8,7 +8,6 @@ export type AppRole =
   | 'cantinero'
   | 'cliente registrado'
   | 'cliente anónimo';
-export type { Perfil as AppRole } from '../../shared/acceso';
 
 export type SessionMode =
   | 'authenticated'

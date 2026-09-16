@@ -4,7 +4,6 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Image, Modal, Pressable, Text, View } from "react-native";
 import { useAppSession } from "../../contexts/AppSessionContext";
-import { authService } from "../../services/auth.service";
 import { colores } from "../../theme/colores";
 
 type CerrarSesionButtonProps = {
@@ -14,7 +13,7 @@ type CerrarSesionButtonProps = {
 };
 
 export function CerrarSesionButton({ className = "", variante = "predeterminada", soloIcono = false }: CerrarSesionButtonProps) {
-  const { clearSession } = useAppSession();
+  const { cerrarSesion: finalizarSesion } = useAppSession();
   const [confirmando, setConfirmando] = useState(false);
   const [cerrando, setCerrando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,8 +27,7 @@ export function CerrarSesionButton({ className = "", variante = "predeterminada"
   async function cerrarSesion() {
     setCerrando(true);
     try {
-      await authService.logout();
-      clearSession();
+      await finalizarSesion();
       router.dismissTo("/(auth)/login");
     } catch {
       try {

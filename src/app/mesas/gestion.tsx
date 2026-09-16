@@ -1,3 +1,4 @@
+import { useRestriccionSimulacion } from '../../components/ui/RestriccionSimulacion';
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router, Stack, useNavigation } from "expo-router";
@@ -16,9 +17,10 @@ import { puedeAdministrarMesas } from "../../utils/permisos";
 import { colores } from "../../theme/colores";
 
 export default function GestionMesas() {
+  const { bloquear, modal } = useRestriccionSimulacion();
   const navigation = useNavigation();
-  const { role } = useAppSession();
-  const permitido = puedeAdministrarMesas(role);
+  const { role, mode } = useAppSession();
+  const permitido = (mode === 'authenticated' || mode === 'simulation') && puedeAdministrarMesas(role);
   const { width } = useWindowDimensions();
   const saliendo = useRef(false);
   const numeroConsulta = useRef(0);
@@ -33,7 +35,7 @@ export default function GestionMesas() {
     saliendo.current = true;
     setMesaQr(null);
     setAviso(null);
-    router.dismissTo("/supervisor/home");
+    router.dismissTo("/(app)/home");
   }
 
   async function mostrarError(mensaje: string) {
@@ -79,6 +81,7 @@ export default function GestionMesas() {
   }, [navigation, permitido]);
 
   async function cambiarDisponibilidad(mesa: Mesa) {
+    if (bloquear('cambiar la disponibilidad de las mesas') || !permitido || mode !== 'authenticated') return;
     if (modificando.current || cargando) return;
     modificando.current = true;
     setActualizando(true);
@@ -111,8 +114,9 @@ export default function GestionMesas() {
 
   return (
     <View className="flex-1 bg-chido-fondo">
+      {modal}
       <Stack.Screen options={{ headerShown: false, title: "Mesas" }} />
-      <Header userName="Administración" role="Mesas" />
+      <Header userName="Administración" role={mode === 'simulation' ? 'Mesas · Demostración' : 'Mesas'} />
       <SafeAreaView edges={["left", "right", "bottom"]} className="flex-1">
         <View className="w-full max-w-2xl flex-1 self-center">
           <View className="gap-3 px-5 pt-5 pb-2">
@@ -135,7 +139,7 @@ export default function GestionMesas() {
           <View className="flex-1">
             <View className="flex-1" accessibilityElementsHidden={cargando || actualizando} importantForAccessibility={cargando || actualizando ? "no-hide-descendants" : "auto"}>
             {mesas.length > 0 ? (
-              <ListadoMesas mesas={mesas} onCambiarDisponibilidad={cambiarDisponibilidad} onVerQr={setMesaQr} />
+              <ListadoMesas mesas={mesas} onCambiarDisponibilidad={cambiarDisponibilidad} onVerQr={mesa => { if (!bloquear('generar un QR de mesa')) setMesaQr(mesa); }} />
             ) : !cargando ? (
               <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}>
                 <View className="m-5 rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-acento p-5">

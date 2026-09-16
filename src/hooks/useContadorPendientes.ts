@@ -1,12 +1,14 @@
 import { useCallback, useState } from 'react';
 import { AppState } from 'react-native';
 import { useFocusEffect } from 'expo-router';
+import { clientesDemostracion } from '../data/demostracion';
 import { contarPendientes } from '../services/aprobacion-cliente.service';
 
-export function useContadorPendientes() {
+export function useContadorPendientes(simulacion = false) {
   const [total, setTotal] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   useFocusEffect(useCallback(() => {
+    if (simulacion) return;
     let activo = true;
     let consultando = false;
     async function actualizar() {
@@ -23,6 +25,6 @@ export function useContadorPendientes() {
     const intervalo = setInterval(() => { void actualizar(); }, 10000);
     const cambios = AppState.addEventListener('change', estado => { if (estado === 'active') void actualizar(); });
     return () => { activo = false; clearInterval(intervalo); cambios.remove(); };
-  }, []));
-  return { total, error };
+  }, [simulacion]));
+  return { total: simulacion ? clientesDemostracion.length : total, error: simulacion ? null : error };
 }

@@ -1,9 +1,7 @@
-import { useAppSession } from '../../contexts/AppSessionContext';
-import { useRestriccionSimulacion } from '../../components/ui/RestriccionSimulacion';
 import React, { useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image, Alert, Modal, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { Redirect, Stack, router } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { crearEmpleado } from '../../services/empleados.service';
 import { Input } from '../../components/ui/Input';
@@ -132,11 +130,8 @@ export default function AgregarEmpleado() {
     setCameraFacing(current => (current === 'back' ? 'front' : 'back'));
   };
 
-  if (!permitido) return <Redirect href="/(app)/home" />;
-
   return (
     <View className="flex-1 bg-chido-fondo">
-      {modal}
       <Stack.Screen options={{ headerShown: false }} />
 
       <Header userName={userName} role={displayRole} />

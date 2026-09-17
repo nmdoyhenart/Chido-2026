@@ -1,3 +1,4 @@
+import { useAppSession } from '../../contexts/AppSessionContext';
 import React, { useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image, Alert, Modal, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';

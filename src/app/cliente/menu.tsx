@@ -1,6 +1,3 @@
-import { useAppSession } from '../../contexts/AppSessionContext';
-import { useRestriccionSimulacion } from '../../components/ui/RestriccionSimulacion';
-import { productosDemostracion } from '../../data/demostracion';
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, Alert, FlatList, Dimensions, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -50,10 +47,7 @@ export default function MenuCliente() {
     } finally {
       setLoading(false);
     }
-    void cargar();
-    return () => { activo = false; };
-  }, [mode]);
-
+  };
 
   const updateCantidad = (id: string, delta: number) => {
     setPedido(prev => {
@@ -80,7 +74,6 @@ export default function MenuCliente() {
   }, 0);
 
   const handleRealizarPedido = async () => {
-    if (bloquear('realizar pedidos')) return;
     if (Object.keys(pedido).length === 0) {
       Alert.alert('Aviso', 'Agrega productos al pedido.');
       return;
@@ -119,7 +112,7 @@ export default function MenuCliente() {
           }
         ]
       );
-    } catch {
+    } catch (err: any) {
       Alert.alert('Error', 'No se pudo realizar el pedido');
     }
   };
@@ -171,7 +164,7 @@ export default function MenuCliente() {
         >
           <Ionicons name="chatbubbles-outline" size={20} color={colores.textoSobreOscuro} />
           <Text className="text-chido-texto-sobre-oscuro font-bold ml-2">Consultar al mozo</Text>
-        </TouchableOpacity>}
+        </TouchableOpacity>
       </View>
 
       <View className="flex-row p-5 gap-2">
@@ -232,7 +225,7 @@ export default function MenuCliente() {
                   <Text className="text-chido-texto-secundario-sobre-oscuro"><Ionicons name="time-outline" size={16} /> {prod.tiempo_elaboracion} min</Text>
                 </View>
 
-                {!administracion && <View className="flex-row items-center justify-center gap-6 mt-auto">
+                <View className="flex-row items-center justify-center gap-6 mt-auto">
                   <TouchableOpacity
                     className="w-12 h-12 bg-chido-cabecera rounded-full items-center justify-center"
                     onPress={() => updateCantidad(prod.id, -1)}
@@ -248,14 +241,14 @@ export default function MenuCliente() {
                   >
                     <Ionicons name="add" size={28} color={colores.textoSobreOscuro} />
                   </TouchableOpacity>
-                </View>}
+                </View>
               </View>
             );
           }}
         />
       )}
 
-      {!administracion && <View className="p-5 bg-chido-cabecera rounded-t-3xl shadow-lg border-t border-chido-acento">
+      <View className="p-5 bg-chido-cabecera rounded-t-3xl shadow-lg border-t border-chido-acento">
         <View className="flex-row justify-between mb-2">
           <Text className="text-chido-texto-sobre-oscuro text-lg">Tiempo est. total:</Text>
           <Text className="text-chido-texto-sobre-oscuro text-lg font-bold">{tiempoEstimado} min</Text>
@@ -269,7 +262,7 @@ export default function MenuCliente() {
           onPress={Object.keys(pedido).length > 0 ? handleRealizarPedido : undefined}
           disabled={Object.keys(pedido).length === 0}
         />
-      </View>}
+      </View>
     </View>
   );
 }

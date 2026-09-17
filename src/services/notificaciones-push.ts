@@ -1,5 +1,5 @@
 import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Platform } from 'react-native';
 
 import { supabase } from '../lib/supabase';
@@ -7,15 +7,25 @@ import type { DatosNotificacionPush } from '../types/notificaciones';
 
 const CANAL_ANDROID = 'chido-avisos';
 let registroEnCurso: Promise<boolean> | null = null;
+let moduloNotificaciones: typeof import('expo-notifications') | null | undefined;
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+function obtenerModuloNotificaciones() {
+  // Expo Go SDK 53 no incluye el soporte de notificaciones push remotas Android.
+  if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient) return null;
+  if (moduloNotificaciones) return moduloNotificaciones;
+
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- Debe evaluarse sólo fuera de Expo Go.
+  moduloNotificaciones = require('expo-notifications') as typeof import('expo-notifications');
+  moduloNotificaciones.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+  return moduloNotificaciones;
+}
 
 type RespuestaFuncion = { ok?: boolean; mensaje?: string };
 
@@ -30,32 +40,36 @@ async function invocarFuncion(nombre: 'registrar-dispositivo-push' | 'desvincula
 }
 
 export async function configurarCanalNotificaciones() {
-  if (Platform.OS !== 'android') return;
-  await Notifications.setNotificationChannelAsync(CANAL_ANDROID, {
+  const notifications = obtenerModuloNotificaciones();
+  if (!notifications || Platform.OS !== 'android') return;
+  await notifications.setNotificationChannelAsync(CANAL_ANDROID, {
     name: 'Avisos de Chido',
-    importance: Notifications.AndroidImportance.HIGH,
+    importance: notifications.AndroidImportance.HIGH,
     vibrationPattern: [0, 250, 180, 250],
-    lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+    lockscreenVisibility: notifications.AndroidNotificationVisibility.PUBLIC,
   });
 }
 
 export async function permisoNotificacionesConcedido() {
-  if (Platform.OS !== 'android' || !Device.isDevice) return false;
-  const permiso = await Notifications.getPermissionsAsync();
+  const notifications = obtenerModuloNotificaciones();
+  if (!notifications || Platform.OS !== 'android' || !Device.isDevice) return false;
+  const permiso = await notifications.getPermissionsAsync();
   return permiso.granted;
 }
 
 export async function solicitarPermisoNotificaciones() {
-  if (Platform.OS !== 'android' || !Device.isDevice) return false;
-  const actual = await Notifications.getPermissionsAsync();
+  const notifications = obtenerModuloNotificaciones();
+  if (!notifications || Platform.OS !== 'android' || !Device.isDevice) return false;
+  const actual = await notifications.getPermissionsAsync();
   if (actual.granted) return true;
-  const solicitado = await Notifications.requestPermissionsAsync();
+  const solicitado = await notifications.requestPermissionsAsync();
   return solicitado.granted;
 }
 
 export async function obtenerTokenFirebase() {
-  if (Platform.OS !== 'android' || !Device.isDevice) return null;
-  const token = await Notifications.getDevicePushTokenAsync();
+  const notifications = obtenerModuloNotificaciones();
+  if (!notifications || Platform.OS !== 'android' || !Device.isDevice) return null;
+  const token = await notifications.getDevicePushTokenAsync();
   return token.type === 'android' && typeof token.data === 'string' && token.data.length > 0 ? token.data : null;
 }
 
@@ -83,14 +97,16 @@ export async function desvincularDispositivoPush() {
 }
 
 export function escucharRespuestasPush(onDatos: (datos: DatosNotificacionPush) => void) {
+  const notifications = obtenerModuloNotificaciones();
+  if (!notifications) return () => undefined;
   const procesar = (datos: unknown) => onDatos(datos as DatosNotificacionPush);
-  const suscripcionRespuesta = Notifications.addNotificationResponseReceivedListener((respuesta) => {
+  const suscripcionRespuesta = notifications.addNotificationResponseReceivedListener((respuesta) => {
     procesar(respuesta.notification.request.content.data);
   });
-  const suscripcionToken = Notifications.addPushTokenListener(() => {
+  const suscripcionToken = notifications.addPushTokenListener(() => {
     void registrarDispositivoPush().catch(() => undefined);
   });
-  void Notifications.getLastNotificationResponseAsync().then((respuesta) => {
+  void notifications.getLastNotificationResponseAsync().then((respuesta) => {
     if (respuesta) procesar(respuesta.notification.request.content.data);
   }).catch(() => undefined);
   return () => {

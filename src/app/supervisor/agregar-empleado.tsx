@@ -8,7 +8,6 @@ import { Input } from '../../components/ui/Input';
 import { PrimaryButton } from '../../components/ui/Buttons';
 import { Header } from '../../components/Header';
 import { colores } from '../../theme/colores';
-import { useAppSession } from '../../contexts/AppSessionContext';
 
 export default function AgregarEmpleado() {
   const { role, usuario } = useAppSession();

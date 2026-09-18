@@ -9,7 +9,12 @@ import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { colores } from '../../theme/colores';
 
+
 export default function AltaPlato() {
+
+    
+
+
     const [nombre, setNombre] = useState('');
     const [descripcion, setDescripcion] = useState('');
     const [tiempoElaboracion, setTiempoElaboracion] = useState('');

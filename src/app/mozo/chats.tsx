@@ -20,27 +20,29 @@ export default function ListaChatsMozo() {
   }, []);
 
   return (
-    <View className="flex-1 bg-[#d97736]">
+    <View className="flex-1 bg-chido-fondo">
       <Header userName="Mozo" role="Consultas de Mesas" />
       {loading ? (
         <ActivityIndicator size="large" color="#fff" style={{ marginTop: 20 }} />
       ) : (
         <FlatList 
           data={mesas}
-          keyExtractor={m => m.id}
+          keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 20 }}
           renderItem={({ item }) => (
             <TouchableOpacity 
-              className="p-4 bg-[#b35e25] mb-4 rounded-xl flex-row justify-between items-center"
+              className="p-4 bg-chido-cabecera border-2 border-white/70 mb-4 rounded-2xl flex-row justify-between items-center"
               onPress={() => router.push({ pathname: '/mozo/chat-mesa', params: { mesaId: item.id, numero: item.numero } })}
             >
-              <Text className="text-white text-xl font-bold">Mesa {item.numero}</Text>
-              <Text className="text-[#e2b99f]">Ver chat</Text>
+              <Text className="text-chido-texto-sobre-oscuro text-xl font-bold">Mesa {item.numero}</Text>
+              <Text className="text-chido-texto-secundario-sobre-oscuro">Ver chat</Text>
             </TouchableOpacity>
           )}
+          ListEmptyComponent={
+            <Text className="text-chido-texto-sobre-oscuro text-center mt-10 text-lg">No hay mesas activas con chats.</Text>
+          }
         />
       )}
     </View>
   );
 }
-

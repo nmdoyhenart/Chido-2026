@@ -129,7 +129,7 @@ export async function liberarMesa(mesaId: string): Promise<Mesa> {
   return data as Mesa;
 }
 
-async function obtenerMesaAsignada(usuarioId: string): Promise<MesaQr | null> {
+export async function obtenerMesaAsignada(usuarioId: string): Promise<MesaQr | null> {
   const { data, error } = await supabase
     .from("mesas")
     .select(

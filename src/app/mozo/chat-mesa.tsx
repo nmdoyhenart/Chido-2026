@@ -6,9 +6,11 @@ import { useAppSession } from '../../contexts/AppSessionContext';
 import { Header } from '../../components/Header';
 import { getMensajes, enviarMensaje, suscribirMensajes, Mensaje } from '../../services/chat.service';
 import { colores } from '../../theme/colores';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ChatMesaMozo() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { mesaId, numero } = useLocalSearchParams<{ mesaId: string, numero: string }>();
   const { usuario } = useAppSession();
 
@@ -56,40 +58,44 @@ export default function ChatMesaMozo() {
   };
 
   return (
-    <View className="flex-1 bg-[#d97736]">
+    <View className="flex-1 bg-chido-fondo">
       <Header userName="Mozo" role={`Chat - Mesa ${numero}`} />
 
-      <View className="flex-row items-center p-4 bg-[#b35e25]">
+      <View className="flex-row items-center px-4 py-2 bg-transparent">
         <TouchableOpacity
-          className="flex-row items-center mr-auto"
+          className="flex-row items-center bg-chido-acento border-2 border-white/70 px-3 py-1 rounded-full"
           onPress={() => router.back()}
         >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-          <Text className="text-white font-bold ml-2">Volver</Text>
+          <Ionicons name="arrow-back" size={20} color={colores.textoSobreOscuro} />
+          <Text className="text-chido-texto-sobre-oscuro font-bold ml-1">Volver</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView 
         className="flex-1 p-5"
         ref={scrollViewRef}
+        onLayout={() => scrollViewRef.current?.scrollToEnd({ animated: false })}
         onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
       >
         {mensajes.length === 0 ? (
-          <Text className="text-white text-center mt-10">No hay mensajes en esta mesa.</Text>
+          <Text className="text-chido-texto-sobre-oscuro text-center mt-10">No hay mensajes en esta mesa.</Text>
         ) : (
-          mensajes.map((msg) => {
+          mensajes.map(msg => {
             const isMe = msg.es_mozo;
             return (
               <View 
-                key={msg.id}
-                className={`p-3 rounded-2xl mb-4 max-w-[80%] ${
-                  isMe ? 'bg-[#9c5120] self-end rounded-br-none' : 'bg-white self-start rounded-bl-none'
+                key={msg.id} 
+                className={`p-4 rounded-2xl mb-4 max-w-[80%] border border-white/30 ${
+                  isMe ? 'bg-chido-superficie self-end rounded-tr-sm' : 'bg-chido-cabecera self-start rounded-tl-sm'
                 }`}
               >
-                <Text className={`text-base ${isMe ? 'text-white' : 'text-[#7a2e1f]'}`}>
+                <Text className={`font-bold mb-1 ${isMe ? 'text-chido-texto-boton-outline' : 'text-chido-aviso'}`}>
+                  {isMe ? 'Yo' : 'Cliente'}
+                </Text>
+                <Text className={`text-base ${isMe ? 'text-chido-texto-sobre-claro' : 'text-chido-texto-sobre-oscuro'}`}>
                   {msg.texto}
                 </Text>
-                <Text className={`text-xs mt-2 self-end ${isMe ? 'text-white/70' : 'text-[#7a2e1f]/70'}`}>
+                <Text className={`text-xs mt-2 self-end ${isMe ? 'text-chido-texto-secundario-sobre-claro' : 'text-chido-texto-secundario-sobre-oscuro'}`}>
                   {formatearHora(msg.created_at)}
                 </Text>
               </View>
@@ -101,18 +107,22 @@ export default function ChatMesaMozo() {
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View className="flex-row items-center p-4 bg-[#b35e25]">
+        <View 
+          className="flex-row items-center p-4 bg-chido-cabecera border-t border-white/30"
+          style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+        >
           <TextInput 
-            className="flex-1 bg-white p-3 rounded-full mr-2 text-[#7a2e1f]"
+            className="flex-1 bg-chido-cabecera border-2 border-white/70 rounded-2xl px-4 py-3 mr-3 text-chido-texto-sobre-oscuro"
             placeholder="Escribe una respuesta..."
-            placeholderTextColor="#9c5120"
+            placeholderTextColor={colores.textoSecundarioAlternativo}
             value={nuevoMensaje}
             onChangeText={setNuevoMensaje}
             onSubmitEditing={handleEnviar}
           />
           <TouchableOpacity 
-            className="w-12 h-12 bg-[#9c5120] rounded-full items-center justify-center"
+            className="w-12 h-12 bg-chido-botonPrincipal border-2 border-white/70 rounded-full items-center justify-center"
             onPress={handleEnviar}
+            disabled={!nuevoMensaje.trim()}
           >
             <Ionicons name="send" size={20} color="#fff" />
           </TouchableOpacity>

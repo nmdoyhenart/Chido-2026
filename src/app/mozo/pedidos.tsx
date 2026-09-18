@@ -39,19 +39,19 @@ export default function PedidosMozo() {
     if (error) Alert.alert('Error', 'No se pudo actualizar el pedido.');
   };
 
-  const getStatusColor = (estado: string) => {
+  const getStatusBgColor = (estado: string) => {
     switch (estado) {
-      case 'pendiente_mozo': return 'text-orange-300';
-      case 'confirmado': return 'text-green-300';
-      case 'en_preparacion': return 'text-blue-300';
-      case 'entregado': return 'text-white';
-      case 'rechazado': return 'text-red-300';
-      default: return 'text-white';
+      case 'pendiente_mozo': return 'bg-chido-aviso';
+      case 'confirmado': return 'bg-chido-exito';
+      case 'en_preparacion': return 'bg-chido-botonPrincipal';
+      case 'entregado': return 'bg-chido-superficieTerracota';
+      case 'rechazado': return 'bg-chido-error';
+      default: return 'bg-chido-superficieTerracota';
     }
   };
 
   return (
-    <View className="flex-1 bg-[#d97736]">
+    <View className="flex-1 bg-chido-fondo">
       <Header userName="Mozo" role="Gestión de Pedidos" />
       {loading ? (
         <ActivityIndicator size="large" color="#fff" style={{ marginTop: 20 }} />
@@ -61,38 +61,41 @@ export default function PedidosMozo() {
           keyExtractor={p => p.id}
           contentContainerStyle={{ padding: 20 }}
           renderItem={({ item }) => (
-            <View className="p-4 bg-[#b35e25] mb-4 rounded-xl">
-              <Text className="text-white text-xl font-bold mb-1">
+            <View className="p-4 bg-chido-cabecera border-2 border-white/70 mb-4 rounded-2xl">
+              <Text className="text-chido-texto-sobre-oscuro text-xl font-bold mb-1">
                 Mesa {item.mesas?.numero} - {item.usuarios?.nombres}
               </Text>
-              <Text className="text-white font-bold mb-2 text-lg">${item.total}</Text>
-              <Text className={`font-bold mb-4 ${getStatusColor(item.estado)}`}>
-                Estado: {item.estado.replace('_', ' ').toUpperCase()}
-              </Text>
+              <Text className="text-chido-texto-sobre-oscuro font-bold mb-2 text-lg">${item.total}</Text>
+              
+              <View className={`mb-4 ${getStatusBgColor(item.estado)} px-3 py-1.5 rounded-full self-start border border-white/40`}>
+                <Text className="font-bold text-white text-sm">
+                  Estado: {item.estado.replace('_', ' ').toUpperCase()}
+                </Text>
+              </View>
 
               {item.estado === 'pendiente_mozo' && (
                 <View className="flex-row gap-2 mt-2">
                   <TouchableOpacity 
-                    className="flex-1 bg-green-600 p-3 rounded-xl items-center"
+                    className="flex-1 bg-chido-exito border-2 border-white/70 p-4 rounded-2xl items-center"
                     onPress={() => cambiarEstado(item.id, 'confirmado')}
                   >
-                    <Text className="text-white font-bold text-base">Aceptar</Text>
+                    <Text className="text-chido-texto-sobre-oscuro font-bold text-base">Aceptar</Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
-                    className="flex-1 bg-red-600 p-3 rounded-xl items-center"
+                    className="flex-1 bg-chido-error border-2 border-white/70 p-4 rounded-2xl items-center"
                     onPress={() => cambiarEstado(item.id, 'rechazado')}
                   >
-                    <Text className="text-white font-bold text-base">Rechazar</Text>
+                    <Text className="text-chido-texto-sobre-oscuro font-bold text-base">Rechazar</Text>
                   </TouchableOpacity>
                 </View>
               )}
               {item.estado === 'confirmado' && (
                 <View className="flex-row gap-2 mt-2">
                   <TouchableOpacity 
-                    className="flex-1 bg-blue-600 p-3 rounded-xl items-center"
+                    className="flex-1 bg-chido-botonPrincipal border-2 border-white/70 p-4 rounded-2xl items-center"
                     onPress={() => cambiarEstado(item.id, 'entregado')}
                   >
-                    <Text className="text-white font-bold text-base">Marcar Entregado</Text>
+                    <Text className="text-chido-texto-sobre-oscuro font-bold text-base">Marcar Entregado</Text>
                   </TouchableOpacity>
                 </View>
               )}

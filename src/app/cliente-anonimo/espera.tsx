@@ -14,6 +14,10 @@ export default function EsperaClienteAnonimo() {
         router.replace('/(auth)/login');
     };
 
+    const verEncuestasPrevias = () => {
+        router.push('/encuestas/previas');
+    };
+
     return (
         <View className="flex-1 bg-chido-fondo items-center justify-center p-6">
             <Stack.Screen options={{ headerShown: false }} />
@@ -30,6 +34,14 @@ export default function EsperaClienteAnonimo() {
             <Text className="text-chido-texto-secundario-alternativo text-xl text-center mb-10">
                 Estás en la lista de espera. En cuanto el metre te asigne una mesa, vas a poder ingresar.
             </Text>
+
+            <TouchableOpacity
+                onPress={verEncuestasPrevias}
+                className="bg-chido-acento w-full px-8 py-6 rounded-2xl flex-row items-center justify-center mb-4"
+            >
+                <Ionicons name="stats-chart-outline" size={28} color={colores.textoSobreOscuro} />
+                <Text className="text-chido-texto-sobre-oscuro font-bold text-2xl ml-2">Ver encuestas anteriores</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
                 onPress={salirDelLocal}

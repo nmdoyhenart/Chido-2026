@@ -117,6 +117,9 @@ export default function AccesoRapidoModal({
         case "cantinero":
           router.push('/productos/alta-bebida');
           break;
+        case "metre":
+          router.push('../metre/home');
+          break;
         default:
           router.push('/(app)/home');
           break;

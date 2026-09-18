@@ -11,61 +11,60 @@ interface HeaderProps {
 }
 
 export function Header({ userName, role }: HeaderProps) {
-  const { cerrarSesion, usuario } = useAppSession();
-  const router = useRouter();
+    const { cerrarSesion, usuario } = useAppSession();
+    const router = useRouter();
 
-  const [saliendo, setSaliendo] = useState(false);
-  const [error, setError] = useState('');
-  const handleLogout = async () => {
-    if (saliendo) return;
-    setSaliendo(true);
-    try {
-      await cerrarSesion();
-      router.replace('/(auth)/login');
-    } catch {
-      setError('No se pudo salir. Intentá nuevamente.');
-    } finally { setSaliendo(false); }
-  };
+    const [saliendo, setSaliendo] = useState(false);
+    const [error, setError] = useState('');
+    const handleLogout = async () => {
+        if (saliendo) return;
+        setSaliendo(true);
+        try {
+        await cerrarSesion();
+        router.replace('/(auth)/login');
+        } catch {
+        setError('No se pudo salir. Intentá nuevamente.');
+        } finally { setSaliendo(false); }
+    };
 
-  const fotoValida = usuario?.foto_perfil && /^https:\/\//i.test(usuario.foto_perfil);
+    const fotoValida = usuario?.foto_perfil && /^https:\/\//i.test(usuario.foto_perfil);
 
-  return (
-    <View className="bg-chido-cabecera px-4 pt-12 pb-4 flex-row items-center justify-between">
-      {/* Profile Info */}
-      <View className="flex-row items-center">
-        <View className="w-12 h-12 rounded-full bg-chido-fondo items-center justify-center border border-chido-acento mr-3 overflow-hidden">
-          {fotoValida ? (
-            <Image source={{ uri: usuario.foto_perfil }} className="w-full h-full" />
-          ) : (
-            <Ionicons name="person" size={24} color={colores.textoSobreOscuro} />
-          )}
+    return (
+        <View className="bg-chido-cabecera px-5 pt-14 pb-6 flex-row items-center justify-between">
+        {/* Profile Info */}
+        <View className="flex-row items-center flex-1">
+            <View className="w-16 h-16 rounded-full bg-chido-fondo items-center justify-center border-2 border-chido-acento mr-4 overflow-hidden">
+            {fotoValida ? (
+                <Image source={{ uri: usuario.foto_perfil }} className="w-full h-full" />
+            ) : (
+                <Ionicons name="person" size={32} color={colores.textoSobreOscuro} />
+            )}
+            </View>
+            <View className="flex-1">
+            <Text className="text-chido-texto-sobre-oscuro font-bold text-2xl" numberOfLines={1}>{userName}</Text>
+            {!!error && <Text accessibilityRole="alert" className="text-chido-texto-sobre-oscuro text-sm">{error}</Text>}
+            <View className="bg-chido-acento px-3 py-1 rounded-full flex-row items-center self-start mt-2">
+                <View className="w-2.5 h-2.5 rounded-full bg-chido-activo mr-1.5" />
+                <Text className="text-chido-texto-sobre-oscuro text-sm font-medium">{role}</Text>
+            </View>
+            </View>
         </View>
-        <View>
-          <Text className="text-chido-texto-sobre-oscuro font-bold text-lg">{userName}</Text>
-          {!!error && <Text accessibilityRole="alert" className="text-chido-texto-sobre-oscuro">{error}</Text>}
-          <View className="bg-chido-acento px-2 py-0.5 rounded-full flex-row items-center self-start mt-1">
-            <View className="w-2 h-2 rounded-full bg-chido-activo mr-1" />
-            <Text className="text-chido-texto-sobre-oscuro text-xs">{role}</Text>
-          </View>
-        </View>
-      </View>
 
-      {/* Actions */}
-      <View className="flex-row items-center gap-2">
-        <TouchableOpacity className="w-10 h-10 rounded-full bg-chido-acento items-center justify-center">
-          <Ionicons name="notifications-outline" size={20} color={colores.textoSobreOscuro} />
-          {/* Notification dot */}
-          <View className="absolute top-2 right-2 w-2 h-2 rounded-full bg-chido-notificacion" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="w-10 h-10 rounded-full bg-chido-acento items-center justify-center"
-          disabled={saliendo}
-          accessibilityLabel="Cerrar sesión"
-          onPress={handleLogout}
-        >
-          <Ionicons name="log-out-outline" size={20} color={colores.textoSobreOscuro} />
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
+        {/* Actions */}
+        <View className="flex-row items-center gap-3">
+            <TouchableOpacity className="w-14 h-14 rounded-full bg-chido-acento items-center justify-center">
+            <Ionicons name="notifications-outline" size={26} color={colores.textoSobreOscuro} />
+            <View className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-chido-notificacion" />
+            </TouchableOpacity>
+            <TouchableOpacity
+            className="w-14 h-14 rounded-full bg-chido-acento items-center justify-center"
+            disabled={saliendo}
+            accessibilityLabel="Cerrar sesión"
+            onPress={handleLogout}
+            >
+            <Ionicons name="log-out-outline" size={26} color={colores.textoSobreOscuro} />
+            </TouchableOpacity>
+        </View>
+        </View>
+    );
 }

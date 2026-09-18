@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { Image, Pressable, ScrollView, Text, Vibration } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import React from 'react';
+import { useRouter, Redirect } from 'expo-router';
 
-import { Link, Redirect } from 'expo-router';
 
 import { useAppSession } from '../../contexts/AppSessionContext';
 import ChidoLoader from '../../components/ui/ChidoLoader';
 import InicioDueno from '../../components/dueno/InicioDueno';
+import PantallaMozo from '../../components/mozo/PantallaMozo';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -30,6 +29,7 @@ export default function HomeScreen() {
     return <Redirect href="/cliente/home" />;
   }
 
+  if ((mode === 'simulation' || mode === 'authenticated') && role === 'mozo') return <PantallaMozo key={usuario?.id ?? 'demo-mozo'} />;
   return <SafeAreaView className="flex-1 bg-chido-fondo">
     <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}>
       <Image source={require('../../../assets/images/logo.png')} style={{ width: 180, height: 180, alignSelf: 'center' }} resizeMode="contain" />

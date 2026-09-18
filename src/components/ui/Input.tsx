@@ -13,8 +13,8 @@ export function Input({ label, error, containerClassName = '', ...props }: Input
     <View className={`mb-4 ${containerClassName}`}>
       <Text className="text-chido-texto-sobre-oscuro text-sm mb-1 ml-1">{label}</Text>
       <TextInput
-        className="bg-chido-cabecera text-chido-texto-sobre-oscuro p-3 rounded-xl border border-chido-acento"
-        placeholderTextColor={colores.textoSecundarioSobreOscuro}
+        className="bg-chido-cabecera text-chido-texto-sobre-oscuro p-3 rounded-xl border border-chido-texto-boton-outline"
+        placeholderTextColor={colores.textoSecundarioAlternativo}
         {...props}
       />
       {error ? <Text className="text-chido-error text-sm mt-1 ml-1">{error}</Text> : null}

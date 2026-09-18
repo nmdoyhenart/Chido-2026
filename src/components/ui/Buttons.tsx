@@ -72,7 +72,7 @@ interface PrimaryButtonProps {
 export function PrimaryButton({ title, onPress, className = "", isLoading, disabled }: PrimaryButtonProps) {
   return (
     <TouchableOpacity
-      className={`bg-chido-texto-boton-outline p-4 rounded-xl items-center flex-row justify-center ${disabled ? 'opacity-50' : ''} ${className}`}
+      className={`bg-chido-cabecera p-4 rounded-xl items-center flex-row justify-center ${disabled ? 'opacity-50' : ''} ${className}`}
       onPress={onPress}
       disabled={isLoading || disabled}
     >

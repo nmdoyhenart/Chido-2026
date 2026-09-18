@@ -233,3 +233,8 @@ export async function obtenerMesaDesdeQr(
 
   return data as MesaQr;
 }
+export const getMesasMozo = async (): Promise<Mesa[]> => {
+  const { data, error } = await supabase.from('mesas').select('*').order('numero', { ascending: true });
+  if (error) throw error;
+  return data as Mesa[];
+};

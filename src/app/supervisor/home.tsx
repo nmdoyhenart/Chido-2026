@@ -26,7 +26,7 @@ export default function HomeScreen() {
         <View className="flex-1 gap-4 mb-4">
           <TouchableOpacity 
             onPress={() => router.push('/supervisor/agregar-empleado')}
-            className="flex-1 bg-chido-acento rounded-2xl justify-center items-center flex-row px-6"
+            className="flex-1 bg-chido-cabecera/70 border-2 border-chido-texto-secundario-alternativo rounded-2xl justify-center items-center flex-row px-6"
           >
             <Ionicons name="person-add-outline" size={32} color={colores.textoSobreOscuro} className="mr-4" />
             <Text className="text-chido-texto-sobre-oscuro font-bold text-xl flex-1 ml-4">Alta de empleado</Text>
@@ -35,7 +35,7 @@ export default function HomeScreen() {
           
           <TouchableOpacity 
             onPress={() => router.push('/mesas/alta')}
-            className="flex-1 bg-chido-acento rounded-2xl justify-center items-center flex-row px-6"
+            className="flex-1 bg-chido-cabecera/70 border-2 border-chido-texto-secundario-alternativo rounded-2xl justify-center items-center flex-row px-6"
           >
             <Ionicons name="tablet-landscape-outline" size={32} color={colores.textoSobreOscuro} className="mr-4" />
             <Text className="text-chido-texto-sobre-oscuro font-bold text-xl flex-1 ml-4">Alta de mesa</Text>
@@ -44,7 +44,7 @@ export default function HomeScreen() {
 
           <TouchableOpacity 
             onPress={() => router.push('/mesas/gestion')}
-            className="flex-1 bg-chido-acento rounded-2xl justify-center items-center flex-row px-6"
+            className="flex-1 bg-chido-cabecera/70 border-2 border-chido-texto-secundario-alternativo rounded-2xl justify-center items-center flex-row px-6"
           >
             <Ionicons name="grid-outline" size={32} color={colores.textoSobreOscuro} className="mr-4" />
             <View className="flex-1 ml-4">
@@ -55,7 +55,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
           
           <TouchableOpacity 
-            className="flex-1 bg-chido-acento rounded-2xl justify-center items-center flex-row px-6"
+            className="flex-1 bg-chido-cabecera/70 border-2 border-chido-texto-secundario-alternativo rounded-2xl justify-center items-center flex-row px-6"
           >
             <Ionicons name="people-outline" size={32} color={colores.textoSobreOscuro} className="mr-4" />
             <Text className="text-chido-texto-sobre-oscuro font-bold text-xl flex-1 ml-4">Clientes pendientes</Text>
@@ -65,7 +65,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity 
-            className="flex-1 bg-chido-acento rounded-2xl justify-center items-center flex-row px-6"
+            className="flex-1 bg-chido-cabecera/70 border-2 border-chido-texto-secundario-alternativo rounded-2xl justify-center items-center flex-row px-6"
           >
             <Ionicons name="book-outline" size={32} color={colores.textoSobreOscuro} className="mr-4" />
             <Text className="text-chido-texto-sobre-oscuro font-bold text-xl flex-1 ml-4">Ver la carta</Text>

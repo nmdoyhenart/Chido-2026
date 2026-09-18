@@ -12,7 +12,7 @@ export default function ChatMesaMozo() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { mesaId, numero } = useLocalSearchParams<{ mesaId: string, numero: string }>();
-  const { usuario } = useAppSession();
+  const { usuario, role } = useAppSession();
 
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
   const [nuevoMensaje, setNuevoMensaje] = useState('');
@@ -57,9 +57,12 @@ export default function ChatMesaMozo() {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const userName = usuario ? `${usuario.nombres} ${usuario.apellidos}` : "Mozo";
+  const displayRole = role ? role.charAt(0).toUpperCase() + role.slice(1) : "Mozo";
+
   return (
     <View className="flex-1 bg-chido-fondo">
-      <Header userName="Mozo" role={`Chat - Mesa ${numero}`} />
+      <Header userName={userName} role={`${displayRole} - Chat Mesa ${numero}`} />
 
       <View className="flex-row items-center px-4 py-2 bg-transparent">
         <TouchableOpacity

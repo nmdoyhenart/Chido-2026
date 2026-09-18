@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/Header';
 import { getEstadoPedido, suscribirEstadoPedido } from '../../services/pedidos.service';
+import { colores } from '../../theme/colores';
 
 export default function EstadoPedido() {
   const router = useRouter();
@@ -32,35 +33,36 @@ export default function EstadoPedido() {
   }, [pedidoId]);
 
   return (
-    <View className="flex-1 bg-[#d97736]">
+    <View className="flex-1 bg-chido-fondo">
       <Header userName="Cliente" role="Tu Pedido" />
       
       <View className="flex-1 p-5 items-center justify-center">
         <Ionicons 
           name={estado === 'pendiente_mozo' ? "time-outline" : "restaurant-outline"} 
           size={80} 
-          color="#fff" 
+          color={colores.textoSobreOscuro} 
         />
         
-        <Text className="text-3xl font-bold text-white mt-6 mb-2 text-center">
+        <Text className="text-3xl font-bold text-chido-texto-sobre-oscuro mt-6 mb-2 text-center">
           Estado del Pedido
         </Text>
         
-        <Text className="text-xl text-[#e2b99f] font-bold mt-4 text-center">
+        <Text className="text-xl text-chido-texto-secundario-sobre-oscuro font-bold mt-4 text-center">
           {estado === 'pendiente_mozo' && 'Esperando confirmación del mozo...'}
           {estado === 'confirmado' && '¡Pedido confirmado! En preparación...'}
           {estado === 'entregado' && '¡Tu pedido ha sido entregado! ¡Que lo disfrutes!'}
           {estado === 'rechazado' && 'Tu pedido ha sido rechazado. Por favor, realiza uno nuevo o consulta al mozo.'}
         </Text>
 
-        <TouchableOpacity 
-          className="bg-[#9c5120] p-4 rounded-xl mt-10 w-full"
-          onPress={() => router.back()}
-        >
-          <Text className="text-white text-center font-bold text-lg">Volver al Menú</Text>
-        </TouchableOpacity>
+        {(estado === 'entregado' || estado === 'rechazado') && (
+          <TouchableOpacity 
+            className="bg-chido-cabecera p-4 rounded-xl mt-10 w-full"
+            onPress={() => router.replace('/cliente/home')}
+          >
+            <Text className="text-chido-texto-sobre-oscuro text-center font-bold text-lg">Volver al Menú</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
 }
-

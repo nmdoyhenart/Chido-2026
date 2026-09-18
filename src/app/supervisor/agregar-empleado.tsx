@@ -1,8 +1,9 @@
 import { useAppSession } from '../../contexts/AppSessionContext';
 import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, Alert, Modal, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, Alert, Modal, StyleSheet, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Stack, router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { crearEmpleado } from '../../services/empleados.service';
 import { Input } from '../../components/ui/Input';
@@ -136,14 +137,15 @@ export default function AgregarEmpleado() {
 
       <Header userName={userName} role={displayRole} />
 
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
-      >
-        <ScrollView className="flex-1 p-5">
-          {/* Top bar with back button and title */}
-          <View className="flex-row items-center mb-8 relative">
-            <TouchableOpacity
+      <SafeAreaView edges={["left", "right", "bottom"]} className="flex-1">
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          className="flex-1"
+        >
+          <ScrollView className="flex-1 p-5" contentContainerStyle={{ flexGrow: 1 }}>
+            {/* Top bar with back button and title */}
+            <View className="flex-row items-center mb-8 relative">
+              <TouchableOpacity
               onPress={() => router.back()}
               className="w-10 h-10 rounded-xl bg-chido-acento items-center justify-center absolute left-0 z-10"
             >
@@ -152,33 +154,29 @@ export default function AgregarEmpleado() {
             <Text className="text-2xl font-bold text-chido-texto-sobre-oscuro text-center flex-1">Alta de empleado</Text>
           </View>
 
-          {/* Camera Button */}
-          <View className="items-center mb-6">
-            <TouchableOpacity 
-              onPress={() => {
-                if (!permission?.granted) requestPermission();
-                else setTakingPhoto(true);
-              }}
-              className="w-32 h-32 rounded-full border-2 border-dashed border-chido-texto-secundario-alternativo items-center justify-center mb-2"
-            >
+          <Pressable className="mb-6 items-center" onPress={() => {
+            if (!permission?.granted) requestPermission();
+            else setTakingPhoto(true);
+          }}>
+            <View className="h-32 w-32 overflow-hidden rounded-full border-2 border-dashed border-chido-texto-secundario-alternativo bg-chido-acento items-center justify-center">
               {formData.fotoUri ? (
-                <Image source={{uri: formData.fotoUri}} className="w-full h-full rounded-full" />
+                <Image source={{uri: formData.fotoUri}} className="w-full h-full" resizeMode="cover" />
               ) : (
-                <Ionicons name="camera-outline" size={40} color={colores.textoSobreOscuro} />
+                <Ionicons name="person-outline" size={40} color={colores.textoSobreOscuro} />
               )}
-
-              {/* Small camera icon badge */}
-              <View className="absolute bottom-0 right-0 bg-chido-cabecera w-10 h-10 rounded-full items-center justify-center border-2 border-chido-fondo">
-                <Ionicons name="camera" size={20} color={colores.textoSobreOscuro} />
-              </View>
-            </TouchableOpacity>
-            <Text className="text-chido-texto-sobre-oscuro text-sm">Tomar foto con la cámara</Text>
-            {errors.fotoBase64 && <Text className="text-chido-error text-sm mt-1">{errors.fotoBase64}</Text>}
-          </View>
+            </View>
+            <View className="mt-3 min-h-12 flex-row items-center justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo bg-chido-acento px-5 py-2">
+              <Ionicons name="camera-outline" size={22} color={colores.textoSobreOscuro} />
+              <Text className="ml-2 text-base font-bold text-chido-texto-sobre-oscuro">
+                {formData.fotoUri ? "Volver a tomar la foto" : "Tomar foto de empleado"}
+              </Text>
+            </View>
+            {errors.fotoBase64 && <Text className="text-chido-error text-sm mt-2">{errors.fotoBase64}</Text>}
+          </Pressable>
 
           {/* Scan DNI Button */}
           <TouchableOpacity
-            className="bg-chido-acento flex-row justify-center items-center p-4 rounded-2xl mb-6"
+            className="flex-row justify-center items-center p-4 rounded-2xl mb-6 border-2 border-chido-texto-secundario-alternativo bg-chido-acento"
             onPress={() => {
               if (!permission?.granted) requestPermission();
               else {
@@ -257,16 +255,14 @@ export default function AgregarEmpleado() {
                 <TouchableOpacity
                   key={rol}
                   onPress={() => setFormData(prev => ({...prev, perfil: rol}))}
-                  className={`px-4 py-2 rounded-full mr-2 border-2 ${
+                  className={`px-4 py-3 rounded-xl mr-2 border ${
                     formData.perfil === rol
-                      ? 'bg-chido-texto-secundario-alternativo border-chido-texto-secundario-alternativo'
-                      : 'bg-chido-acento border-chido-cabecera'
+                      ? 'border-chido-texto-secundario-alternativo bg-chido-cabecera'
+                      : 'border-chido-texto-boton-outline bg-chido-acento'
                   }`}
                 >
                   <Text
-                    className={`font-bold ${
-                      formData.perfil === rol ? 'text-chido-cabecera' : 'text-chido-texto-sobre-oscuro'
-                    }`}
+                    className={`font-bold text-chido-texto-sobre-oscuro text-center text-base`}
                   >
                     {rol.charAt(0).toUpperCase() + rol.slice(1)}
                   </Text>
@@ -284,6 +280,7 @@ export default function AgregarEmpleado() {
           />
         </ScrollView>
       </KeyboardAvoidingView>
+      </SafeAreaView>
 
       {/* Modal Scanner DNI */}
       <Modal visible={scanningDni} animationType="slide">

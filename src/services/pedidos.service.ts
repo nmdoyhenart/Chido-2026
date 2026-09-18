@@ -60,3 +60,24 @@ export const suscribirEstadoPedido = (pedidoId: string, callback: (estado: strin
   };
 };
 
+export const getEstadisticasPedidos = async () => {
+  const { data, error } = await supabase
+    .from('pedidos')
+    .select('estado, created_at')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+};
+export const getPedidosMozo = async () => {
+  const { data, error } = await supabase
+    .from('pedidos')
+    .select('*, mesas(numero, tipo, cantidad_comensales), usuarios(nombres, apellidos)')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+};
+
+export const actualizarEstadoPedido = async (id: string, nuevoEstado: string) => {
+  const { error } = await supabase.from('pedidos').update({ estado: nuevoEstado }).eq('id', id);
+  if (error) throw error;
+};

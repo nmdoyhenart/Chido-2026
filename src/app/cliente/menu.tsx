@@ -10,6 +10,7 @@ import { Producto } from '../../types/producto';
 import { getProductos } from '../../services/productos.service';
 import { crearPedido } from '../../services/pedidos.service';
 import { colores } from '../../theme/colores';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 const ITEM_HEIGHT = 440;
@@ -17,6 +18,7 @@ const ITEM_MARGIN = 24;
 
 export default function MenuCliente() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { mesaId } = useLocalSearchParams<{ mesaId: string }>();
   const { usuario } = useAppSession();
 
@@ -103,7 +105,7 @@ export default function MenuCliente() {
                 
                 Alert.alert('Pedido realizado', 'Esperando confirmación del mozo...');
                 setPedido({});
-                router.push({ pathname: '/cliente/estado-pedido', params: { pedidoId: nuevoPedidoId } });
+                router.replace({ pathname: '/cliente/estado-pedido', params: { pedidoId: nuevoPedidoId } });
               } catch (e: any) {
                 console.error(e);
                 Alert.alert('Error', `No se pudo generar el pedido: ${e.message || JSON.stringify(e)}`);
@@ -159,7 +161,7 @@ export default function MenuCliente() {
       <View className="flex-row items-center p-4 bg-chido-acento">
         <Text className="text-2xl font-bold text-chido-texto-sobre-oscuro mr-auto">Menú</Text>
         <TouchableOpacity 
-          className="flex-row items-center bg-chido-oscuro px-4 py-2 rounded-full"
+          className="flex-row items-center bg-chido-cabecera border-2 border-white/70 px-4 py-2 rounded-full"
           onPress={() => router.push({ pathname: '/cliente/chat', params: { mesaId, numero: mesaNumero } })}
         >
           <Ionicons name="chatbubbles-outline" size={20} color={colores.textoSobreOscuro} />
@@ -192,24 +194,25 @@ export default function MenuCliente() {
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color={colores.textoSobreOscuro} />
         </View>
-      ) : productosFiltrados.length === 0 ? (
-        <View className="flex-1 px-5">
-          <Text className="text-chido-texto-sobre-oscuro text-center text-lg mt-10">No hay productos en esta categoría.</Text>
-        </View>
       ) : (
-        <FlatList
+        <FlatList 
           data={productosFiltrados}
-          keyExtractor={item => item.id}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ padding: 20 }}
           snapToAlignment="start"
           decelerationRate="fast"
           snapToInterval={ITEM_HEIGHT + ITEM_MARGIN}
           showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View className="flex-1 px-5">
+              <Text className="text-chido-texto-sobre-oscuro text-center text-lg mt-10">No hay productos en esta categoría.</Text>
+            </View>
+          }
           renderItem={({ item: prod }) => {
             const cant = pedido[prod.id] || 0;
             return (
-              <View
-                className="bg-chido-acento p-4 rounded-2xl"
+              <View 
+                className="bg-chido-acento border-2 border-white/70 p-4 rounded-2xl"
                 style={{ height: ITEM_HEIGHT, marginBottom: ITEM_MARGIN }}
               >
                 <Text className="text-xl font-bold text-chido-texto-sobre-oscuro mb-2" numberOfLines={1}>{prod.nombre}</Text>
@@ -227,16 +230,15 @@ export default function MenuCliente() {
 
                 <View className="flex-row items-center justify-center gap-6 mt-auto">
                   <TouchableOpacity
-                    className="w-12 h-12 bg-chido-cabecera rounded-full items-center justify-center"
+                    className="w-12 h-12 bg-chido-botonPrincipal border-2 border-white/70 rounded-full items-center justify-center"
                     onPress={() => updateCantidad(prod.id, -1)}
                   >
-                    <Ionicons name="remove" size={28} color={colores.textoSobreOscuro} />
+                    <Ionicons name="remove" size={24} color={colores.textoSobreOscuro} />
                   </TouchableOpacity>
-
                   <Text className="text-chido-texto-sobre-oscuro text-2xl font-bold w-8 text-center">{cant}</Text>
 
                   <TouchableOpacity
-                    className="w-12 h-12 bg-chido-cabecera rounded-full items-center justify-center"
+                    className="w-12 h-12 bg-chido-botonPrincipal border-2 border-white/70 rounded-full items-center justify-center"
                     onPress={() => updateCantidad(prod.id, 1)}
                   >
                     <Ionicons name="add" size={28} color={colores.textoSobreOscuro} />
@@ -248,22 +250,30 @@ export default function MenuCliente() {
         />
       )}
 
-      <View className="p-5 bg-chido-cabecera rounded-t-3xl shadow-lg border-t border-chido-acento">
-        <View className="flex-row justify-between mb-2">
-          <Text className="text-chido-texto-sobre-oscuro text-lg">Tiempo est. total:</Text>
-          <Text className="text-chido-texto-sobre-oscuro text-lg font-bold">{tiempoEstimado} min</Text>
+      {/* Cart Summary Bottom Bar */}
+      <View 
+        className="w-full"
+      >
+        <View 
+          className="p-5 bg-chido-cabecera rounded-t-3xl shadow-lg border-t border-chido-acento"
+          style={{ paddingBottom: Math.max(insets.bottom, 20) }}
+        >
+          <View className="flex-row justify-between mb-2">
+            <Text className="text-chido-texto-sobre-oscuro text-lg">Tiempo est. total:</Text>
+            <Text className="text-chido-texto-sobre-oscuro text-lg font-bold">{tiempoEstimado} min</Text>
+          </View>
+          <View className="flex-row justify-between mb-4">
+            <Text className="text-chido-texto-sobre-oscuro text-2xl font-bold">Total a pagar:</Text>
+            <Text className="text-chido-texto-sobre-oscuro text-2xl font-bold">${totalImporte}</Text>
+          </View>
+          <PrimaryButton 
+            className="border-2 border-white/70 rounded-2xl"
+            title={Object.keys(pedido).length > 0 ? "Realizar pedido" : "Seleccione un producto"}
+            onPress={Object.keys(pedido).length > 0 ? handleRealizarPedido : undefined}
+            disabled={Object.keys(pedido).length === 0}
+          />
         </View>
-        <View className="flex-row justify-between mb-4">
-          <Text className="text-chido-texto-sobre-oscuro text-2xl font-bold">Total a pagar:</Text>
-          <Text className="text-chido-texto-sobre-oscuro text-2xl font-bold">${totalImporte}</Text>
-        </View>
-        <PrimaryButton 
-          title={Object.keys(pedido).length > 0 ? "Realizar pedido" : "Seleccione un producto"}
-          onPress={Object.keys(pedido).length > 0 ? handleRealizarPedido : undefined}
-          disabled={Object.keys(pedido).length === 0}
-        />
       </View>
     </View>
   );
 }
-

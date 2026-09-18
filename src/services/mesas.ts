@@ -129,7 +129,7 @@ export async function liberarMesa(mesaId: string): Promise<Mesa> {
   return data as Mesa;
 }
 
-async function obtenerMesaAsignada(usuarioId: string): Promise<MesaQr | null> {
+export async function obtenerMesaAsignada(usuarioId: string): Promise<MesaQr | null> {
   const { data, error } = await supabase
     .from("mesas")
     .select(
@@ -233,3 +233,8 @@ export async function obtenerMesaDesdeQr(
 
   return data as MesaQr;
 }
+export const getMesasMozo = async (): Promise<Mesa[]> => {
+  const { data, error } = await supabase.from('mesas').select('*').order('numero', { ascending: true });
+  if (error) throw error;
+  return data as Mesa[];
+};

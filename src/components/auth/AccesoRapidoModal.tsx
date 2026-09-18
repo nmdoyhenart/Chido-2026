@@ -103,6 +103,7 @@ export default function AccesoRapidoModal({
       switch (rol) {
         case "dueño":
         case "supervisor":
+        case "mozo":
           router.replace('/(app)/home');
           break;
         case "cliente registrado":

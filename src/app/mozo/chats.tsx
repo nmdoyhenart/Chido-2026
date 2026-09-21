@@ -1,19 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Header } from '../../components/Header';
 import { getMesasMozo } from '../../services/mesas';
 import { Mesa } from '../../types/mesa';
 import { useAppSession } from '../../contexts/AppSessionContext';
+import { colores } from '../../theme/colores';
 
 const ITEM_HEIGHT = 140;
 const ITEM_MARGIN = 16;
+const LIST_PADDING = 20;
+const MESAS_POR_PAGINA = 3;
 
 export default function ListaChatsMozo() {
   const router = useRouter();
   const { usuario, role } = useAppSession();
   const [mesas, setMesas] = useState<Mesa[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pagina, setPagina] = useState(0);
+  const [altoLista, setAltoLista] = useState(0);
+  const insets = useSafeAreaInsets();
+  const totalPaginas = Math.max(1, Math.ceil(mesas.length / MESAS_POR_PAGINA));
+  const paginaActual = Math.min(pagina, totalPaginas - 1);
+  const inicio = paginaActual * MESAS_POR_PAGINA;
+  const mesasVisibles = mesas.slice(inicio, inicio + MESAS_POR_PAGINA);
+  // Mantiene el tamaño de una página de tres mesas aunque queden menos.
+  // La altura mínima permite seguir scrolleando en pantallas pequeñas.
+  const altoTarjeta = Math.max(ITEM_HEIGHT,
+    (altoLista - LIST_PADDING * 2 - ITEM_MARGIN * (MESAS_POR_PAGINA - 1))
+      / MESAS_POR_PAGINA);
 
   useEffect(() => {
     const fetchMesas = async () => {
@@ -38,18 +54,23 @@ export default function ListaChatsMozo() {
       {loading ? (
         <ActivityIndicator size="large" color="#fff" style={{ marginTop: 20 }} />
       ) : (
-        <FlatList 
-          data={mesas}
+        <View style={styles.contenido}>
+        <FlatList
+          key={paginaActual}
+          style={styles.lista}
+          onLayout={({ nativeEvent }) => setAltoLista(nativeEvent.layout.height)}
+          data={mesasVisibles}
+          extraData={altoTarjeta}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: 20 }}
-          snapToAlignment="start"
-          decelerationRate="fast"
-          snapToInterval={ITEM_HEIGHT + ITEM_MARGIN}
-          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ padding: LIST_PADDING }}
+          ItemSeparatorComponent={() => <View style={{ height: ITEM_MARGIN }} />}
+          showsVerticalScrollIndicator
           renderItem={({ item }) => (
             <TouchableOpacity 
               className="p-5 bg-chido-cabecera border-2 border-white/70 rounded-2xl flex-row justify-between items-center"
-              style={{ height: ITEM_HEIGHT, marginBottom: ITEM_MARGIN }}
+              style={{ minHeight: altoTarjeta, gap: 12 }}
+              accessibilityRole="button"
+              accessibilityLabel={`Ver chat de la mesa ${item.numero}`}
               onPress={() => router.push({ pathname: '/mozo/chat-mesa', params: { mesaId: item.id, numero: item.numero } })}
             >
               <View className="flex-1">
@@ -71,7 +92,44 @@ export default function ListaChatsMozo() {
             <Text className="text-chido-texto-sobre-oscuro text-center mt-10 text-lg">No hay mesas activas con chats.</Text>
           }
         />
+        {mesas.length > 0 && <View style={[styles.paginacion, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+          <Text style={styles.resumen} accessibilityLiveRegion="polite">
+            Mesas {inicio + 1}–{inicio + mesasVisibles.length} de {mesas.length} · Página {paginaActual + 1} de {totalPaginas}
+          </Text>
+          <View style={styles.botones}>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Página anterior de mesas"
+              accessibilityState={{ disabled: paginaActual === 0 }}
+              disabled={paginaActual === 0}
+              onPress={() => setPagina(Math.max(0, paginaActual - 1))}
+              activeOpacity={0.8}
+              style={[styles.boton, paginaActual === 0 && styles.deshabilitado]}
+            ><Text style={styles.textoBoton}>‹ Anterior</Text></TouchableOpacity>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Página siguiente de mesas"
+              accessibilityState={{ disabled: paginaActual === totalPaginas - 1 }}
+              disabled={paginaActual === totalPaginas - 1}
+              onPress={() => setPagina(Math.min(totalPaginas - 1, paginaActual + 1))}
+              activeOpacity={0.8}
+              style={[styles.boton, paginaActual === totalPaginas - 1 && styles.deshabilitado]}
+            ><Text style={styles.textoBoton}>Siguiente ›</Text></TouchableOpacity>
+          </View>
+        </View>}
+        </View>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  contenido: { flex: 1 },
+  lista: { flex: 1 },
+  paginacion: { paddingHorizontal: 20, paddingTop: 12, backgroundColor: colores.fondo, borderTopWidth: 1, borderTopColor: colores.textoSecundarioAlternativo },
+  resumen: { color: colores.textoSobreOscuro, fontSize: 14, textAlign: 'center', marginBottom: 12 },
+  botones: { flexDirection: 'row', gap: 12 },
+  boton: { flex: 1, minHeight: 48, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: colores.textoSecundarioAlternativo, backgroundColor: colores.cabecera, alignItems: 'center', justifyContent: 'center' },
+  textoBoton: { color: colores.textoSobreOscuro, fontSize: 16, fontWeight: '700', textAlign: 'center' },
+  deshabilitado: { opacity: 0.4 },
+});

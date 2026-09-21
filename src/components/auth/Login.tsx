@@ -34,11 +34,7 @@ export default function Login() {
 
   useEffect(() => {
     if (mode === 'authenticated' && !cargando) {
-      if (role === 'supervisor') {
-        router.replace('/supervisor/home');
-      } else {
-        router.replace('/(app)/home');
-      }
+      router.replace('/(app)/home');
     }
   }, [mode, role, cargando, router]);
 

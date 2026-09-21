@@ -9,7 +9,7 @@ import {
   Vibration,
 } from 'react-native';
 
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 import { useAppSession } from '../../contexts/AppSessionContext';
@@ -26,7 +26,7 @@ const roles: {
   id: AppRole;
   nombre: string;
   descripcion: string;
-  icono: keyof typeof Ionicons.glyphMap;
+  icono: keyof typeof Ionicons.glyphMap | 'room-service-outline';
 }[] = [
   {
     id: 'cliente registrado',
@@ -63,7 +63,7 @@ const roles: {
     id: 'mozo',
     nombre: 'Mozo',
     descripcion: 'Simular atención de pedidos',
-    icono: 'restaurant-outline',
+    icono: 'room-service-outline',
   },
   {
     id: 'cocinero',
@@ -207,11 +207,15 @@ export default function AccesoRapidoModal({
                   mr-4
                 "
               >
-                <Ionicons
+                {rol.icono === 'room-service-outline' ? <MaterialCommunityIcons
+                  name="room-service-outline"
+                  size={28}
+                  color={colores.textoSobreClaro}
+                /> : <Ionicons
                   name={rol.icono}
                   size={28}
                   color={colores.textoSobreClaro}
-                />
+                />}
               </View>
 
               <View className="flex-1">

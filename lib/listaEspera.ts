@@ -43,3 +43,15 @@ export function suscribirseALista(nombreCanal: string, alCambiar: () => void) {
         supabase.removeChannel(canal);
     };
 }
+
+export async function eliminarDeLista(id: string) {
+    const { error } = await supabase
+    .from('lista_espera')
+    .update({ estado: 'eliminado' })
+    .eq('id', id);
+
+    if (error) {
+    console.error('Error al eliminar de la lista de espera:', error.message);
+    throw error;
+    }
+}

@@ -109,7 +109,7 @@ export default function AccesoRapidoModal({
           router.push('../cliente/home');
           break;
         case "cliente anónimo":
-          router.push('../cliente-anonimo/escanear')
+          router.push('../cliente-anonimo/alta')
           break;
         case "cocinero":
           router.push('../productos/alta');

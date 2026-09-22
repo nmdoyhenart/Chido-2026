@@ -5,13 +5,15 @@ import { Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Crypto from 'expo-crypto';
 import { Input } from '../../components/ui/Input';
-import { supabase } from '../../../lib/supabase';
 import { subirFotoCliente } from '../../../lib/clientesAnonimos';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 import { colores } from '../../theme/colores';
 
 const CLIENTE_ANONIMO_ID_KEY = 'cliente_anonimo_id';
+const CLIENTE_ANONIMO_NOMBRE_KEY = 'cliente_anonimo_nombre';
+const CLIENTE_ANONIMO_FOTO_KEY = 'cliente_anonimo_foto_url';
 
 export default function AltaClienteAnonimo() {
 
@@ -52,20 +54,18 @@ export default function AltaClienteAnonimo() {
         setGuardando(true);
 
         try {
-            const identificador = await AsyncStorage.getItem(CLIENTE_ANONIMO_ID_KEY);
+            let identificador = await AsyncStorage.getItem(CLIENTE_ANONIMO_ID_KEY);
+            if (!identificador) {
+                identificador = Crypto.randomUUID();
+                await AsyncStorage.setItem(CLIENTE_ANONIMO_ID_KEY, identificador);
+            }
+
             const fotoUrl = await subirFotoCliente(foto);
 
-            const { error: errorInsert } = await supabase.from('lista_espera').insert({
-                identificador,
-                nombre: nombre.trim(),
-                foto_url: fotoUrl,
-                tipo_cliente: 'anonimo',
-                estado: 'esperando',
-            });
+            await AsyncStorage.setItem(CLIENTE_ANONIMO_NOMBRE_KEY, nombre.trim());
+            await AsyncStorage.setItem(CLIENTE_ANONIMO_FOTO_KEY, fotoUrl);
 
-            if (errorInsert) throw errorInsert;
-
-            router.push('/cliente-anonimo/espera');
+            router.push('/cliente-anonimo/escanear');
         } catch (err) {
             console.error(err);
             setError('Ocurrió un error al guardar. Intentá de nuevo.');
@@ -92,7 +92,7 @@ export default function AltaClienteAnonimo() {
 
                     <View className="flex-1 justify-around">
                         <Text className="text-chido-texto-sobre-oscuro text-3xl font-bold text-center">
-                            Anotate en la lista de espera
+                            Registrate para ingresar
                         </Text>
 
                         <View className="items-center">

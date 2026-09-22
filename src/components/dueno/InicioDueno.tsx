@@ -41,7 +41,7 @@ export default function InicioDueno({ usuario, simulacion = false, saliendo, err
     { titulo: 'Alta de mesa', icono: 'tablet-landscape-outline', abrir: () => router.push('/mesas/alta') },
     { titulo: 'Gestión de mesas', icono: 'grid-outline', detalle: 'Consultar disponibilidad', abrir: () => router.push('/mesas/gestion') },
     { titulo: 'Clientes pendientes', icono: 'people-outline', pendientes: true, abrir: onPendientes },
-    { titulo: 'Ver la carta', icono: 'book-outline', abrir: () => router.push('/cliente/menu') },
+    { titulo: 'Gestionar la carta', icono: 'book-outline', abrir: () => router.push('/(app)/carta-admin') },
   ] satisfies { titulo: string; icono: keyof typeof Ionicons.glyphMap; detalle?: string; pendientes?: boolean; abrir: () => void }[];
 
   return <View style={styles.pantalla}>

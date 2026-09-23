@@ -38,7 +38,9 @@ type FotoTomada = {
 
 export default function AgregarMesa() {
   const { bloquear, modal } = useRestriccionSimulacion();
-  const { role, mode } = useAppSession();
+  const { role, mode, usuario } = useAppSession();
+  const perfilVisible = role ? role.charAt(0).toUpperCase() + role.slice(1) : '';
+  const nombreVisible = [usuario?.nombres, usuario?.apellidos].filter(Boolean).join(' ').trim() || perfilVisible;
   const permitido = (mode === 'authenticated' || mode === 'simulation') && puedeAdministrarMesas(role);
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
@@ -246,7 +248,7 @@ export default function AgregarMesa() {
     <View className="flex-1 bg-chido-fondo">
       {modal}
       <Stack.Screen options={{ headerShown: false }} />
-      <Header userName="Administración" role={mode === 'simulation' ? 'Mesas · Demostración' : 'Mesas'} />
+      <Header userName={nombreVisible} role={perfilVisible} />
       <SafeAreaView edges={["left", "right", "bottom"]} className="flex-1">
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
           <ScrollView className="flex-1 p-5" contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" accessibilityElementsHidden={ocupada} importantForAccessibility={ocupada ? "no-hide-descendants" : "auto"}>

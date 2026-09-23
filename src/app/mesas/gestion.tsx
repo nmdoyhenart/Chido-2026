@@ -19,7 +19,9 @@ import { colores } from "../../theme/colores";
 export default function GestionMesas() {
   const { bloquear, modal } = useRestriccionSimulacion();
   const navigation = useNavigation();
-  const { role, mode } = useAppSession();
+  const { role, mode, usuario } = useAppSession();
+  const perfilVisible = role ? role.charAt(0).toUpperCase() + role.slice(1) : '';
+  const nombreVisible = [usuario?.nombres, usuario?.apellidos].filter(Boolean).join(' ').trim() || perfilVisible;
   const permitido = (mode === 'authenticated' || mode === 'simulation') && puedeAdministrarMesas(role);
   const { width } = useWindowDimensions();
   const saliendo = useRef(false);
@@ -116,7 +118,7 @@ export default function GestionMesas() {
     <View className="flex-1 bg-chido-fondo">
       {modal}
       <Stack.Screen options={{ headerShown: false, title: "Mesas" }} />
-      <Header userName="Administración" role={mode === 'simulation' ? 'Mesas · Demostración' : 'Mesas'} />
+      <Header userName={nombreVisible} role={perfilVisible} />
       <SafeAreaView edges={["left", "right", "bottom"]} className="flex-1">
         <View className="w-full max-w-2xl flex-1 self-center">
           <View className="gap-3 px-5 pt-5 pb-2">

@@ -1,7 +1,8 @@
 import { useAppSession } from '../../contexts/AppSessionContext';
 import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, Alert, Modal, StyleSheet, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, Alert, Modal, StyleSheet, KeyboardAvoidingView, Keyboard, Platform, Pressable } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { Stack, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,9 +11,23 @@ import { Input } from '../../components/ui/Input';
 import { PrimaryButton } from '../../components/ui/Buttons';
 import { Header } from '../../components/Header';
 import { colores } from '../../theme/colores';
+import { useRestriccionSimulacion } from '../../components/ui/RestriccionSimulacion';
+import { ResultadoModal } from '../../components/ui/ResultadoModal';
 
 export default function AgregarEmpleado() {
-  const { role, usuario } = useAppSession();
+  const { role, usuario, mode } = useAppSession();
+  const { bloquear, modal: modalSimulacion } = useRestriccionSimulacion();
+  const enviando = useRef(false);
+  const capturando = useRef(false);
+  const [errorRegistro, setErrorRegistro] = useState('');
+  const [avisoRegistro, setAvisoRegistro] = useState<'exito' | 'error' | null>(null);
+  const empleadoGuardado = useRef(false);
+
+  const mostrarErrorRegistro = (mensaje: string) => {
+    Keyboard.dismiss();
+    setErrorRegistro(mensaje);
+    setAvisoRegistro('error');
+  };
   const userName = usuario ? `${usuario.nombres} ${usuario.apellidos}` : "Supervisor";
   const displayRole = role ? role.charAt(0).toUpperCase() + role.slice(1) : "Supervisor";
 
@@ -55,7 +70,15 @@ export default function AgregarEmpleado() {
   };
 
   const handleSubmit = async () => {
+    if (enviando.current || empleadoGuardado.current || avisoRegistro || bloquear('registrar empleados')) return;
+    if (mode !== 'authenticated' || !['dueño', 'supervisor'].includes(role ?? '')) {
+      mostrarErrorRegistro('Ingresá con una cuenta de dueño o supervisor para registrar empleados.');
+      return;
+    }
+    enviando.current = true;
+    Keyboard.dismiss();
     setGuardando(true);
+    setErrorRegistro('');
     setErrors({});
     try {
       const resultado = await crearEmpleado({
@@ -71,15 +94,16 @@ export default function AgregarEmpleado() {
 
       if (!resultado.ok) {
         if (resultado.campos) setErrors(resultado.campos);
-        Alert.alert("Error", resultado.mensaje);
+        mostrarErrorRegistro(resultado.mensaje);
         return;
       }
 
-      Alert.alert("Éxito", "Empleado guardado correctamente.");
-      router.back();
-    } catch (err: any) {
-      Alert.alert("Error", err.message || "No se pudo guardar el empleado");
+      empleadoGuardado.current = true;
+      setAvisoRegistro('exito');
+    } catch {
+      mostrarErrorRegistro('No se pudo confirmar el alta. Revisá si el empleado se creó antes de volver a enviarlo.');
     } finally {
+      enviando.current = false;
       setGuardando(false);
     }
   };
@@ -115,16 +139,23 @@ export default function AgregarEmpleado() {
   };
 
   const takePicture = async () => {
-    if (cameraRef.current) {
-      const photo = await cameraRef.current.takePictureAsync({
-        base64: true,
-        quality: 0.5,
-      });
-      // La Edge function usa una firma tipo JPG
-      const base64Format = photo.base64 ? `/9j/${photo.base64.substring(0, photo.base64.length).replace(/^\/9j\//, '')}` : '';
-      setFormData(prev => ({ ...prev, fotoUri: photo.uri, fotoBase64: base64Format }));
+    if (!cameraRef.current || capturando.current) return;
+    capturando.current = true;
+    try {
+      const photo = await cameraRef.current.takePictureAsync({ quality: 0.85 });
+      if (!photo?.uri) throw new Error('FOTO_VACIA');
+      const contexto = ImageManipulator.manipulate(photo.uri);
+      let imagen: Awaited<ReturnType<typeof contexto.renderAsync>> | undefined;
+      try {
+        if (photo.width > 960 || photo.height > 960) contexto.resize(photo.width >= photo.height ? { width: 960 } : { height: 960 });
+        imagen = await contexto.renderAsync();
+        const foto = await imagen.saveAsync({ format: SaveFormat.JPEG, compress: 0.75, base64: true });
+        if (!foto.base64) throw new Error('FOTO_VACIA');
+        setFormData(prev => ({ ...prev, fotoUri: foto.uri, fotoBase64: foto.base64! }));
+      } finally { imagen?.release(); contexto.release(); }
       setTakingPhoto(false);
-    }
+    } catch { Alert.alert('Foto no disponible', 'No se pudo procesar la foto. Volvé a tomarla.'); }
+    finally { capturando.current = false; }
   };
 
   const toggleCameraFacing = () => {
@@ -272,6 +303,7 @@ export default function AgregarEmpleado() {
           </View>
 
           {/* Guardar */}
+          {!!errorRegistro && <View className="bg-chido-cabecera rounded-xl p-4 mb-3" accessibilityLiveRegion="assertive"><Text className="text-chido-texto-sobre-oscuro text-base">{errorRegistro}</Text></View>}
           <PrimaryButton 
             title="Guardar Empleado"
             onPress={handleSubmit}
@@ -330,6 +362,18 @@ export default function AgregarEmpleado() {
           </View>
         </View>
       </Modal>
+      {modalSimulacion}
+      <ResultadoModal
+        visible={avisoRegistro !== null}
+        tipo={avisoRegistro ?? 'error'}
+        titulo={avisoRegistro === 'exito' ? 'Empleado registrado' : 'Revisá el registro'}
+        mensaje={avisoRegistro === 'exito' ? 'El empleado se guardó correctamente y ya puede ingresar con su correo y contraseña.' : errorRegistro}
+        accion={avisoRegistro === 'exito' ? 'Volver al inicio' : 'Volver al formulario'}
+        onClose={() => {
+          if (avisoRegistro === 'exito') router.back();
+          else setAvisoRegistro(null);
+        }}
+      />
     </View>
   );
 }

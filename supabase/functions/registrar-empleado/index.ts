@@ -23,9 +23,9 @@ Deno.serve(async (request: Request) => {
     
     const { data: perfil, error: perfilError } = await admin.from('usuarios').select('perfil, estado_registro').eq('auth_id', userData.user.id).maybeSingle();
     if (perfilError) throw perfilError;
-    if (perfil?.perfil !== 'supervisor' || perfil.estado_registro !== 'aceptado') {
+    if (!perfil || !['dueño', 'supervisor'].includes(perfil.perfil) || perfil.estado_registro !== 'aceptado') {
 
-      throw new FalloRegistro('PERMISO', 'Solo un supervisor puede registrar empleados.', 403);
+      throw new FalloRegistro('PERMISO', 'Solo un dueño o supervisor aceptado puede registrar empleados.', 403);
     }
 
     const input = await leerJsonLimitado(request);

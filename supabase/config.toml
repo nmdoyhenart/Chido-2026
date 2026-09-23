@@ -1,0 +1,3 @@
+[functions.registrar-empleado]
+# La función verifica el JWT con auth.getUser y exige dueño/supervisor aceptado.
+verify_jwt = false

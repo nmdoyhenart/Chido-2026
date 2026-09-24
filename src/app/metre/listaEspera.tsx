@@ -1,20 +1,32 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, FlatList, Image, TouchableOpacity } from 'react-native';
+import { View, Text, ActivityIndicator, FlatList, Image, TouchableOpacity, Modal, Alert } from 'react-native';
 import { Stack } from 'expo-router';
 import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/Header';
 import { colores } from '../../theme/colores';
-import { obtenerListaEspera, suscribirseALista, eliminarDeLista, ClienteEnEspera } from '../../../lib/listaEspera';
+import { obtenerListaEspera, suscribirseALista, eliminarDeLista, asignarMesaACliente, ClienteEnEspera } from '../../../lib/listaEspera';
+import { useMesas } from '../../hooks/useMesas';
+
+function obtenerMensajeError(err: unknown): string {
+    if (err instanceof Error) return err.message;
+    if (err && typeof err === 'object' && 'message' in err) return String((err as { message: unknown }).message);
+    return 'No se pudo asignar la mesa.';
+}
 
 export default function ListaEsperaMetre() {
     const [lista, setLista] = useState<ClienteEnEspera[]>([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState('');
     const [eliminando, setEliminando] = useState<string | null>(null);
+    const [asignando, setAsignando] = useState<string | null>(null);
+    const [clienteParaAsignar, setClienteParaAsignar] = useState<ClienteEnEspera | null>(null);
+
+    const { mesas, recargar: recargarMesas } = useMesas();
 
     useEffect(() => {
         cargarLista();
+        recargarMesas();
         const desuscribirse = suscribirseALista('metre-lista-espera-pantalla', cargarLista);
         return desuscribirse;
     }, []);
@@ -22,6 +34,7 @@ export default function ListaEsperaMetre() {
     useFocusEffect(
         useCallback(() => {
             cargarLista();
+            recargarMesas();
         }, [])
     );
 
@@ -49,6 +62,29 @@ export default function ListaEsperaMetre() {
             setEliminando(null);
         }
     }
+
+    function abrirSelectorMesa(cliente: ClienteEnEspera) {
+        recargarMesas(true);
+        setClienteParaAsignar(cliente);
+    }
+
+    async function confirmarAsignacion(mesaId: string) {
+        if (!clienteParaAsignar) return;
+        setAsignando(clienteParaAsignar.id);
+        try {
+            await asignarMesaACliente(clienteParaAsignar, mesaId);
+            setClienteParaAsignar(null);
+            // no hace falta sacar el item a mano del estado local: Realtime refresca la lista_espera solo
+        } catch (err) {
+            console.error('Error al asignar mesa:', err);
+            Alert.alert('No se pudo asignar', obtenerMensajeError(err));
+            recargarMesas(true);
+        } finally {
+            setAsignando(null);
+        }
+    }
+
+    const mesasDisponibles = mesas.filter((mesa) => mesa.disponibilidad === 'vacía');
 
     return (
         <View className="flex-1" style={{ backgroundColor: colores.fondo }}>
@@ -104,22 +140,91 @@ export default function ListaEsperaMetre() {
                                         {item.tipo_cliente === 'anonimo' ? 'Cliente anónimo' : 'Cliente registrado'}
                                     </Text>
                                 </View>
-                                <TouchableOpacity
-                                    onPress={() => eliminarCliente(item.id)}
-                                    disabled={eliminando === item.id}
-                                    style={{ padding: 8 }}
-                                >
-                                    {eliminando === item.id ? (
-                                        <ActivityIndicator size="small" color={colores.textoSobreOscuro} />
-                                    ) : (
-                                        <Ionicons name="trash-outline" size={28} color={colores.notificacion} />
-                                    )}
-                                </TouchableOpacity>
+                                <View className="flex-row items-center">
+                                    <TouchableOpacity
+                                        onPress={() => abrirSelectorMesa(item)}
+                                        disabled={asignando === item.id || eliminando === item.id}
+                                        style={{ padding: 8, marginRight: 4 }}
+                                    >
+                                        {asignando === item.id ? (
+                                            <ActivityIndicator size="small" color={colores.textoSobreOscuro} />
+                                        ) : (
+                                            <Ionicons name="restaurant-outline" size={26} color={colores.textoSobreOscuro} />
+                                        )}
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => eliminarCliente(item.id)}
+                                        disabled={eliminando === item.id || asignando === item.id}
+                                        style={{ padding: 8 }}
+                                    >
+                                        {eliminando === item.id ? (
+                                            <ActivityIndicator size="small" color={colores.textoSobreOscuro} />
+                                        ) : (
+                                            <Ionicons name="trash-outline" size={28} color={colores.notificacion} />
+                                        )}
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         )}
                     />
                 )}
             </View>
+
+            <Modal
+                visible={clienteParaAsignar !== null}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setClienteParaAsignar(null)}
+            >
+                <View
+                    className="flex-1 items-center justify-center px-6"
+                    style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+                >
+                    <View
+                        className="w-full rounded-2xl p-5"
+                        style={{ backgroundColor: colores.fondo, maxHeight: '70%' }}
+                    >
+                        <Text className="text-xl font-bold mb-4" style={{ color: colores.textoSobreOscuro }}>
+                            Asignar mesa a {clienteParaAsignar?.nombre}
+                        </Text>
+
+                        {mesasDisponibles.length === 0 && (
+                            <Text className="text-base mb-4" style={{ color: colores.textoSecundarioAlternativo }}>
+                                No hay mesas disponibles en este momento.
+                            </Text>
+                        )}
+
+                        <FlatList
+                            data={mesasDisponibles}
+                            keyExtractor={(mesa) => mesa.id}
+                            renderItem={({ item: mesa }) => (
+                                <TouchableOpacity
+                                    onPress={() => confirmarAsignacion(mesa.id)}
+                                    disabled={asignando !== null}
+                                    className="flex-row items-center justify-between rounded-xl p-4 mb-3"
+                                    style={{ backgroundColor: colores.superficieTerracota }}
+                                >
+                                    <Text className="text-lg font-semibold" style={{ color: colores.textoSobreOscuro }}>
+                                        Mesa {mesa.numero}
+                                    </Text>
+                                    <Text className="text-sm" style={{ color: colores.textoSecundarioSobreOscuro }}>
+                                        {mesa.cantidad_comensales} comensales
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
+                        />
+
+                        <TouchableOpacity
+                            onPress={() => setClienteParaAsignar(null)}
+                            style={{ marginTop: 8, alignSelf: 'center' }}
+                        >
+                            <Text className="text-base" style={{ color: colores.textoSecundarioAlternativo }}>
+                                Cancelar
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }

@@ -1,7 +1,7 @@
 import type { NotificacionPush, RutaNotificacion } from '../types/notificaciones';
 
 const RUTA_CLIENTES_PENDIENTES: RutaNotificacion = '/(app)/clientes-pendientes';
-const RUTA_LISTA_ESPERA_METRE: RutaNotificacion = '/metre/lista-espera';
+const RUTA_LISTA_ESPERA_METRE: RutaNotificacion = '/metre/listaEspera';
 const RUTAS_VALIDAS = new Set<string>([RUTA_CLIENTES_PENDIENTES, RUTA_LISTA_ESPERA_METRE]);
 
 export function crearAvisoClienteRegistrado(): NotificacionPush {

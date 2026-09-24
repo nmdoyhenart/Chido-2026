@@ -1,6 +1,6 @@
 export const RUTAS_NOTIFICACION = {
     clientesPendientes: '/(app)/clientes-pendientes',
-    listaEsperaMetre: '/metre/lista-espera',
+    listaEsperaMetre: '/metre/listaEspera',
 } as const;
 
 export type RutaNotificacion = typeof RUTAS_NOTIFICACION[keyof typeof RUTAS_NOTIFICACION];

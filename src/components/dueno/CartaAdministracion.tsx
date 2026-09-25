@@ -1,30 +1,20 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Redirect, useRouter } from 'expo-router';
+import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, RefreshControl, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { colores as c } from '../../theme/colores';
 import ChidoLoader from '../ui/ChidoLoader';
+import { getProductos } from '../../services/productos.service';
 
-// Datos visuales de ejemplo. Esta pantalla no consulta ni modifica productos.
-const platosEjemplo = [
-  { id: 'tacos', nombre: 'Tacos al pastor', descripcion: 'Cerdo marinado, ananá, cilantro y cebolla sobre tortillas de maíz.', categoria: 'Principal', precio: 12500, minutos: 20, disponible: true, icono: 'restaurant-outline' },
-  { id: 'nachos', nombre: 'Nachos Chido', descripcion: 'Totopos crujientes con queso fundido, guacamole y pico de gallo.', categoria: 'Entrada', precio: 8900, minutos: 15, disponible: true, icono: 'flame-outline' },
-  { id: 'burrito', nombre: 'Burrito de vegetales', descripcion: 'Vegetales asados, arroz, porotos negros y salsa de la casa.', categoria: 'Principal', precio: 11000, minutos: 25, disponible: false, icono: 'leaf-outline' },
-  { id: 'churros', nombre: 'Churros con chocolate', descripcion: 'Churros tibios con azúcar y canela, acompañados de chocolate.', categoria: 'Postre', precio: 6500, minutos: 10, disponible: true, icono: 'cafe-outline' },
-] satisfies { id: string; nombre: string; descripcion: string; categoria: string; precio: number; minutos: number; disponible: boolean; icono: keyof typeof Ionicons.glyphMap }[];
 type TipoProducto = 'plato' | 'bebida';
-type Producto = Omit<typeof platosEjemplo[number], 'icono'> & { tipoProducto: TipoProducto; icono: keyof typeof Ionicons.glyphMap };
-const productos: Producto[] = [
-  ...platosEjemplo.map(plato => ({ ...plato, tipoProducto: 'plato' as const })),
-  { id: 'limonada', tipoProducto: 'bebida', nombre: 'Limonada con menta', descripcion: 'Limón recién exprimido, menta fresca y hielo.', categoria: 'Sin alcohol', precio: 4500, minutos: 5, disponible: true, icono: 'leaf-outline' },
-  { id: 'margarita', tipoProducto: 'bebida', nombre: 'Margarita clásica', descripcion: 'Tequila, licor de naranja y lima, con borde de sal.', categoria: 'Cóctel', precio: 7800, minutos: 8, disponible: true, icono: 'wine-outline' },
-  { id: 'horchata', tipoProducto: 'bebida', nombre: 'Agua de horchata', descripcion: 'Bebida de arroz con canela y un toque de vainilla.', categoria: 'Sin alcohol', precio: 4200, minutos: 5, disponible: false, icono: 'cafe-outline' },
-];
+type Producto = {
+  id: string; nombre: string; descripcion: string; precio: number; minutos: number;
+  foto?: string; tipoProducto: TipoProducto; icono: keyof typeof Ionicons.glyphMap;
+};
 type Accion = { tipo: 'agregar'; tipoProducto: TipoProducto } | { tipo: 'editar' | 'eliminar'; plato: Producto };
-const filtros = ['Todos', 'Disponibles', 'Pausados'] as const;
 const tipos = ['Todos', 'Platos', 'Bebidas'] as const;
 const PRODUCTOS_POR_PAGINA = 3;
 const normalizar = (texto: string) => texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -32,16 +22,45 @@ const normalizar = (texto: string) => texto.normalize('NFD').replace(/[\u0300-\u
 export default function CartaAdministracion() {
   const router = useRouter();
   const { role, mode, cargando } = useAppSession();
+  const simulacion = mode === 'simulation';
+  const autorizado = role === 'dueño' || role === 'supervisor';
+  const [productosReales, setProductosReales] = useState<Producto[]>([]);
+  const [cargandoProductos, setCargandoProductos] = useState(true);
+  const [errorProductos, setErrorProductos] = useState<string | null>(null);
+  const [revision, setRevision] = useState(0);
+  useFocusEffect(useCallback(() => {
+    if (cargando || (mode !== 'authenticated' && mode !== 'simulation') || !autorizado) return;
+    let activo = true;
+    setCargandoProductos(true);
+    setErrorProductos(null);
+    void getProductos().then(datos => {
+      if (!activo) return;
+      setProductosReales(datos.map((p): Producto => ({
+        id: p.id, nombre: p.nombre, descripcion: p.descripcion ?? '',
+        precio: Number(p.precio), minutos: Number(p.tiempo_elaboracion),
+        tipoProducto: p.tipo === 'bebida' ? 'bebida' : 'plato',
+        foto: p.fotos?.find(foto => typeof foto === 'string' && foto.length > 0),
+        icono: p.tipo === 'bebida' ? 'wine-outline' : 'restaurant-outline',
+      })).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es') || a.id.localeCompare(b.id)));
+    }).catch(() => {
+      if (activo) {
+        setProductosReales([]);
+        setErrorProductos('No pudimos cargar la carta. Revisá la conexión y los permisos de tu cuenta e intentá nuevamente.');
+      }
+    }).finally(() => { if (activo) setCargandoProductos(false); });
+    return () => { activo = false; };
+  // La revisión permite volver a consultar al deslizar o pulsar Reintentar.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autorizado, cargando, mode, revision]));
+  const productos = productosReales;
   const [busqueda, setBusqueda] = useState('');
-  const [filtro, setFiltro] = useState<typeof filtros[number]>('Todos');
   const [tipo, setTipo] = useState<typeof tipos[number]>('Todos');
   const [accion, setAccion] = useState<Accion | null>(null);
   const [pagina, setPagina] = useState(0);
-  const [altoControles, setAltoControles] = useState(0);
   const [altoLista, setAltoLista] = useState(0);
+  const [altoControles, setAltoControles] = useState(0);
   const visibles = productos.filter(p => normalizar(p.nombre + ' ' + p.descripcion).includes(normalizar(busqueda.trim()))
-    && (tipo === 'Todos' || p.tipoProducto === (tipo === 'Platos' ? 'plato' : 'bebida'))
-    && (filtro === 'Todos' || (filtro === 'Disponibles' ? p.disponible : !p.disponible)));
+    && (tipo === 'Todos' || p.tipoProducto === (tipo === 'Platos' ? 'plato' : 'bebida')));
   const bebida = (accion?.tipo === 'agregar' ? accion.tipoProducto : accion?.plato.tipoProducto) === 'bebida';
   const nombreTipo = bebida ? 'bebida' : 'plato';
   const totalPaginas = 1 + Math.ceil(Math.max(0, visibles.length - 1) / PRODUCTOS_POR_PAGINA);
@@ -50,9 +69,10 @@ export default function CartaAdministracion() {
   const productosPagina = visibles.slice(inicio, inicio + (paginaActual === 0 ? 1 : PRODUCTOS_POR_PAGINA));
   // La portada contiene un producto; el resto se recorre de a tres sin repetirlo.
   // La altura de las siguientes tarjetas reserva tres lugares incluso si quedan menos.
-  const altoTarjeta = Math.max(180, paginaActual === 0
-    ? altoLista - altoControles - 32
-    : (altoLista - 24 - 16) / PRODUCTOS_POR_PAGINA);
+  const altoTarjeta = paginaActual === 0
+    ? Math.max(180, altoLista - altoControles - 32)
+    : Math.max(180, (altoLista - 24 - 16) / PRODUCTOS_POR_PAGINA);
+  const fotoPortada = Math.max(44, Math.min(64, altoTarjeta * 0.2));
 
   if (cargando) return <ChidoLoader mensaje="Cargando carta…" />;
   if (!['authenticated', 'simulation'].includes(mode ?? '') || (role !== 'dueño' && role !== 'supervisor')) return <Redirect href="/(app)/home" />;
@@ -63,19 +83,17 @@ export default function CartaAdministracion() {
       <TouchableOpacity accessibilityRole="button" accessibilityLabel="Volver al inicio" onPress={() => router.replace('/(app)/home')} style={s.volver}>
         <Ionicons name="arrow-back" size={24} color={c.textoSobreOscuro} />
       </TouchableOpacity>
-      <View style={s.flex}><Text style={s.encabezado}>Gestionar carta</Text><Text style={s.subtitulo}>{role === 'dueño' ? 'Dueño' : 'Supervisor'} · Vista previa</Text></View>
+      <View style={s.flex}><Text style={s.encabezado}>Gestionar carta</Text><Text style={s.subtitulo}>{role === 'dueño' ? 'Dueño' : 'Supervisor'} · {simulacion ? 'Solo lectura' : 'Productos'}</Text></View>
       <Ionicons name="book-outline" size={28} color={c.textoSecundarioAlternativo} />
     </View>
     <SafeAreaView edges={['bottom']} style={s.cuerpo}>
-      <ScrollView key={paginaActual} keyboardShouldPersistTaps="handled" style={s.lista} onLayout={({ nativeEvent }) => setAltoLista(nativeEvent.layout.height)} contentContainerStyle={s.contenido}>
+      <ScrollView key={paginaActual} refreshControl={<RefreshControl refreshing={cargandoProductos} onRefresh={() => setRevision(r => r + 1)} tintColor={c.textoSobreOscuro} />} keyboardShouldPersistTaps="handled" style={s.lista} onLayout={({ nativeEvent }) => setAltoLista(nativeEvent.layout.height)} contentContainerStyle={s.contenido}>
         {paginaActual === 0 && <View style={s.controles} onLayout={({ nativeEvent }) => setAltoControles(nativeEvent.layout.height)}>
           <View><Text style={s.titulo}>Carta de Chido</Text><Text style={s.intro}>Agregá, editá y organizá platos y bebidas.</Text></View>
         <View style={s.resumen}>
           {([
             { titulo: 'Platos', icono: 'restaurant-outline', cantidad: productos.filter(p => p.tipoProducto === 'plato').length },
             { titulo: 'Bebidas', icono: 'wine-outline', cantidad: productos.filter(p => p.tipoProducto === 'bebida').length },
-            { titulo: 'Disponibles', icono: 'checkmark-circle-outline', cantidad: productos.filter(p => p.disponible).length },
-            { titulo: 'Pausados', icono: 'pause-circle-outline', cantidad: productos.filter(p => !p.disponible).length },
           ] as const).map(item => <View key={item.titulo} style={s.contador} accessible accessibilityLabel={`${item.cantidad} ${item.titulo.toLowerCase()}`}>
             <View style={s.contadorNumero}><Ionicons name={item.icono} size={18} color={c.textoSobreOscuro} /><Text style={s.numero}>{item.cantidad}</Text></View>
             <Text style={s.resumenTexto}>{item.titulo}</Text>
@@ -95,28 +113,28 @@ export default function CartaAdministracion() {
           {!!busqueda && <TouchableOpacity accessibilityRole="button" accessibilityLabel="Limpiar búsqueda" onPress={() => { setBusqueda(''); setPagina(0); }} style={s.limpiar}><Ionicons name="close-circle" size={22} color={c.textoSecundarioSobreOscuro} /></TouchableOpacity>}
         </View>
         <View style={s.tipos}>{tipos.map(item => <TouchableOpacity key={item} accessibilityRole="button" accessibilityLabel={`Mostrar ${item.toLowerCase()}`} accessibilityState={{ selected: tipo === item }} onPress={() => { setTipo(item); setPagina(0); }} style={[s.tipo, tipo === item && s.tipoActivo]}><Text style={[s.filtroTexto, tipo === item && s.filtroTextoActivo]}>{item}</Text></TouchableOpacity>)}</View>
-        <Text style={s.etiquetaFiltro}>Disponibilidad</Text>
-        <View style={s.filtros}>{filtros.map(item => <TouchableOpacity key={item} accessibilityRole="button" accessibilityLabel={`Disponibilidad: ${item.toLowerCase()}`} accessibilityState={{ selected: filtro === item }} onPress={() => { setFiltro(item); setPagina(0); }} style={[s.filtro, filtro === item && s.filtroActivo]}><Text style={[s.filtroTexto, filtro === item && s.filtroTextoActivo]}>{item}</Text></TouchableOpacity>)}</View>
+
         </View>}
-        {productosPagina.map(plato => <View key={plato.id} style={[s.tarjeta, { minHeight: altoTarjeta }]}>
+        {cargandoProductos && <ChidoLoader mensaje="Cargando productos…" />}
+        {!cargandoProductos && errorProductos && <View style={s.vacio}><Text style={s.intro} accessibilityLiveRegion="polite">{errorProductos}</Text><TouchableOpacity accessibilityRole="button" onPress={() => setRevision(r => r + 1)} style={s.agregar}><Text style={s.botonTexto}>Reintentar</Text></TouchableOpacity></View>}
+        {(!cargandoProductos && !errorProductos) && productosPagina.map(plato => <View key={plato.id} style={[s.tarjeta, { minHeight: altoTarjeta }, paginaActual === 0 && s.tarjetaPortada]}>
           <View style={s.fila}>
-            <View style={s.ilustracion}><Ionicons name={plato.icono} size={26} color={c.textoSobreOscuro} /></View>
-            <View style={s.flex}><Text style={s.categoria}>{plato.tipoProducto === 'bebida' ? 'Bebida' : 'Plato'} · {plato.categoria}</Text><Text style={s.nombreTarjeta}>{plato.nombre}</Text></View>
+            <View style={[s.ilustracion, paginaActual === 0 && { width: fotoPortada, height: fotoPortada }]}>{plato.foto ? <Image source={{ uri: plato.foto }} accessibilityLabel={plato.nombre} style={{ width: paginaActual === 0 ? fotoPortada : 36, height: paginaActual === 0 ? fotoPortada : 36, borderRadius: 8 }} resizeMode="cover" /> : <Ionicons name={plato.icono} size={paginaActual === 0 ? 36 : 26} color={c.textoSobreOscuro} />}</View>
+            <View style={s.flex}><Text style={s.categoria}>{plato.tipoProducto === 'bebida' ? 'Bebida' : 'Plato'}</Text><Text style={s.nombreTarjeta}>{plato.nombre}</Text></View>
           </View>
           <Text style={s.descripcionTarjeta}>{plato.descripcion}</Text>
           <View style={s.datos}>
             <Text style={s.precio}>$ {plato.precio.toLocaleString('es-AR')}</Text>
             <View style={s.tiempo}><Ionicons name="time-outline" size={17} color={c.textoSecundarioSobreOscuro} /><Text style={s.descripcionTarjeta}>{plato.minutos} min</Text></View>
-            <View style={s.estado}><View style={[s.puntoEstado, { backgroundColor: plato.disponible ? c.activo : c.superficieNaranja }]} /><Text style={s.estadoTexto}>{plato.disponible ? 'Disponible' : 'Pausado'}</Text></View>
           </View>
-          <View style={s.acciones}>
+          <View style={[s.acciones, paginaActual === 0 && { marginTop: 0 }]}>
             <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Editar ${plato.nombre}`} onPress={() => setAccion({ tipo: 'editar', plato })} style={s.editar}><Ionicons name="create-outline" size={21} color={c.textoSobreClaro} /><Text style={s.editarTexto}>Editar</Text></TouchableOpacity>
             <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Eliminar ${plato.nombre}`} onPress={() => setAccion({ tipo: 'eliminar', plato })} style={s.eliminar}><Ionicons name="trash-outline" size={19} color={c.textoSobreOscuro} /><Text style={s.eliminarTexto}>Eliminar</Text></TouchableOpacity>
           </View>
         </View>)}
-        {!visibles.length && <View style={s.vacio}><Ionicons name="search-outline" size={32} color={c.textoSobreOscuro} /><Text style={s.intro}>No encontramos productos con esos filtros.</Text><TouchableOpacity accessibilityRole="button" onPress={() => { setBusqueda(''); setFiltro('Todos'); setTipo('Todos'); setPagina(0); }} style={s.volver}><Text style={s.botonTexto}>Ver todos</Text></TouchableOpacity></View>}
+        {(!cargandoProductos && !errorProductos) && !visibles.length && <View style={s.vacio}><Ionicons name="search-outline" size={32} color={c.textoSobreOscuro} /><Text style={s.intro}>{productos.length ? 'No encontramos productos con esos filtros.' : 'Todavía no hay productos en la carta.'}</Text><TouchableOpacity accessibilityRole="button" onPress={() => { setBusqueda(''); setTipo('Todos'); setPagina(0); }} style={s.volver}><Text style={s.botonTexto}>Ver todos</Text></TouchableOpacity></View>}
       </ScrollView>
-      {!!visibles.length && <View style={s.paginacion}>
+      {(!cargandoProductos && !errorProductos) && !!visibles.length && <View style={s.paginacion}>
         <Text style={s.paginaTexto} accessibilityLiveRegion="polite">{paginaActual === 0 ? 'Producto 1' : `Productos ${inicio + 1}–${inicio + productosPagina.length}`} de {visibles.length} · Página {paginaActual + 1} de {totalPaginas}</Text>
         <View style={s.fila}>
           <TouchableOpacity accessibilityRole="button" disabled={paginaActual === 0} accessibilityState={{ disabled: paginaActual === 0 }} onPress={() => setPagina(paginaActual - 1)} style={[s.botonPagina, paginaActual === 0 && s.deshabilitado]}><Text style={s.botonTexto}>‹ Anterior</Text></TouchableOpacity>
@@ -164,6 +182,7 @@ const s = StyleSheet.create({
   paginaTexto: { color: c.textoSobreOscuro, fontSize: 12, textAlign: 'center' },
   botonPagina: { flex: 1, minHeight: 44, padding: 10, borderRadius: 12, backgroundColor: c.cabecera, borderWidth: 1, borderColor: c.textoSecundarioAlternativo, justifyContent: 'center' },
   controles: { gap: 10 },
+  tarjetaPortada: { justifyContent: 'space-between', padding: 16, gap: 14 },
   abrirOpciones: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, paddingHorizontal: 12, backgroundColor: c.cabecera, borderRadius: 12, borderWidth: 1, borderColor: c.textoSecundarioAlternativo },
   lista: { flex: 1 },
   contenido: { paddingHorizontal: 16, paddingVertical: 12, gap: 8 },

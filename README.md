@@ -1,7 +1,7 @@
 # Chido - 2026
 
 <p align="center">
-  <img width="300" alt="logo" src="https://github.com/user-attachments/assets/7aaa525a-d1e8-42e6-8abd-d13b044b31ae" />
+  <img width="300" alt="logo" src="https://github.com/user-attachments/assets/d195830b-d438-4f97-8d4c-3cd90a1a6a35" />
 </p>
 
 <p align="center">
@@ -33,12 +33,23 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 
 ## Sprints
 
-### Sprint 1 (29/08 | 05/09)
+### Sprint 1 (29/08 | 12/09)
 - Silvi: Alta platos, alta bebidas y pantalla del cliente anonimo (punto 2, 3 y 9)
 - Nico: Registrar un usuario y aprobar el registro del mismo [Dueño/Supervisor] (punto 1 y 6)
 - Emma: Gestión y alta de mesa (punto 4)
 - Juan: Registro de empleado y menú cliente (punto 1 y 11)
 
+### Sprint 1 (12/09 | 26/09)
+- Silvi: Continuación pantalla cliente anonimo, vista Metre y asignación de mesas (punto 9 y 10)
+- Nico: Unificación estilos pantallas: Mozo, Dueño y Supervisor (punto 13 y 14)
+- Emma: Vista Cliente registrado
+- Juan: Chat entre Cliente y Mozo, generar un pedido + aceptación [Mozo] (punto 11 y 12)
+
+## QR's de la aplicación
+
+| QR entrada (Cliente anonimo) | QR Metre | QR Mesa 1 |
+| :---: | :---: | :---: |
+| <img width="240" alt="QR entrada cliente anon" src="https://github.com/user-attachments/assets/5856b4fc-5415-4f24-a755-da17cb92ef42" /> | <img width="240" alt="QR Metre" src="https://github.com/user-attachments/assets/6eafd324-c060-4506-9e25-7780d6b9790e" /> | <img width="240" alt="QR Asignar M1" src="https://github.com/user-attachments/assets/85c70490-6799-4809-98c6-6bbdf3a054a1" /> |
 
 ## Pantallas de la aplicación
 
@@ -52,11 +63,11 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 
 | Home | Alta de empleado | Alta de mesa |
 | :---: | :---: | :---: |
-| <img width="240" alt="Home Dueño" src="https://github.com/user-attachments/assets/a020736d-f831-4e00-81f8-2042dc990a07" /> | <img width="240" alt="Alta de Empleado" src="https://github.com/user-attachments/assets/1cd0dff9-6a5b-4979-942b-d054dc896905" /> | <img width="240" alt="Alta de Mesa" src="https://github.com/user-attachments/assets/7ddd4695-ec68-41b9-bf54-4518029f36bb" /> |
+| <img width="240" alt="Home Dueño" src="https://github.com/user-attachments/assets/03889fe2-8472-4af8-be04-4a1918c455e5" /> | <img width="240" alt="Alta de Empleado" src="https://github.com/user-attachments/assets/1cd0dff9-6a5b-4979-942b-d054dc896905" /> | <img width="240" alt="Alta de Mesa" src="https://github.com/user-attachments/assets/7ddd4695-ec68-41b9-bf54-4518029f36bb" /> |
 
-| Gestión de mesas | Clientes pendientes |
-| :---: | :---: |
-| <img width="240" alt="Gestión de Mesas" src="https://github.com/user-attachments/assets/71aa769c-ad66-4fcc-89fb-a2887159c0ae" /> | <img width="240" alt="Clientes Pendientes" src="https://github.com/user-attachments/assets/e519088c-144f-4941-aaca-8fba76cb441a" /> |
+| Gestión de mesas | Clientes pendientes | Gestionar la carta |
+| :---: | :---: | :---: |
+| <img width="240" alt="Gestión de Mesas" src="https://github.com/user-attachments/assets/71aa769c-ad66-4fcc-89fb-a2887159c0ae" /> | <img width="240" alt="Clientes Pendientes" src="https://github.com/user-attachments/assets/8c3ec34a-03df-4c89-aaef-5c64c1072817" /> | <img width="240" alt="Gestionar la Carta" src="https://github.com/user-attachments/assets/f0cce5bc-62d7-4863-b155-4abb65feb9a5" /> |
 
 ---
 
@@ -64,11 +75,11 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 
 | Home | Alta de empleado | Alta de mesa |
 | :---: | :---: | :---: |
-| <img width="240" alt="Home Supervisor" src="https://github.com/user-attachments/assets/959f94d0-ca93-4772-885b-2ba337347687" /> | <img width="240" alt="Alta de Empleado" src="https://github.com/user-attachments/assets/fd38b56f-e9a1-4247-9548-58f8b3a7d588" /> | <img width="240" alt="Alta de Mesa" src="https://github.com/user-attachments/assets/8dfaf113-d302-42e3-92f8-b6da3fd7dad1" /> |
+| <img width="240" alt="Home Supervisor" src="https://github.com/user-attachments/assets/fa04b3bc-92bf-4f2b-9949-d5c53fd254d0" /> | <img width="240" alt="Alta de Empleado" src="https://github.com/user-attachments/assets/fd38b56f-e9a1-4247-9548-58f8b3a7d588" /> | <img width="240" alt="Alta de Mesa" src="https://github.com/user-attachments/assets/8dfaf113-d302-42e3-92f8-b6da3fd7dad1" /> |
 
-| Gestión de mesas | Clientes pendientes |
-| :---: | :---: |
-| <img width="240" alt="Gestión de Mesas" src="https://github.com/user-attachments/assets/641d445d-41b9-41da-ad40-d2dd2410da24" /> | <img width="240" alt="Clientes Pendientes" src="https://github.com/user-attachments/assets/e519088c-144f-4941-aaca-8fba76cb441a" /> |
+| Gestión de mesas | Clientes pendientes | Gestionar la carta |
+| :---: | :---: | :---: |
+| <img width="240" alt="Gestión de Mesas" src="https://github.com/user-attachments/assets/641d445d-41b9-41da-ad40-d2dd2410da24" /> | <img width="240" alt="Clientes Pendientes" src="https://github.com/user-attachments/assets/3ad22f6f-bdef-4418-89a7-f5d9a3381e2c" /> | <img width="240" alt="Gestionar la Carta" src="https://github.com/user-attachments/assets/0206936c-e608-489b-9759-bcf519a77c45" /> |
 
 ---
 
@@ -84,7 +95,7 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 
 | Home | Lista de espera | Disponibilidad del salón |
 | :---: | :---: | :---: |
-| <img width="240" alt="Home Metre" src="https://github.com/user-attachments/assets/4a3973bc-5db2-4e05-8b5f-649018d5d8e8" /> | <img width="240" alt="Lista de Espera" src="https://github.com/user-attachments/assets/6f0ea750-782e-4eff-9271-981295776486" /> | <img width="240" alt="Mapa del Salon" src="https://github.com/user-attachments/assets/f80d7fcc-0853-471f-aac0-ddde43139ba7" /> |
+| <img width="240" alt="Home Metre" src="https://github.com/user-attachments/assets/6e445605-c018-4ad7-8256-39d53e7268e6" /> | <img width="240" alt="Lista de Espera" src="https://github.com/user-attachments/assets/e7fcc0a5-1958-4ffe-a7ba-8f4ca9b90220" /> | <img width="240" alt="Mapa del Salon" src="https://github.com/user-attachments/assets/f80d7fcc-0853-471f-aac0-ddde43139ba7" /> |
 
 ---
 

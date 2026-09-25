@@ -36,7 +36,10 @@ export default function Login() {
     if (mode === 'authenticated' && !cargando) {
       if (role === 'supervisor') {
         router.replace('/supervisor/home');
-      } else {
+      } 
+      if (role === 'metre') {
+        router.replace('/metre/home');
+      }else {
         router.replace('/(app)/home');
       }
     }

@@ -5,11 +5,12 @@ const RUTA_CLIENTES_PENDIENTES: RutaNotificacion = '/(app)/clientes-pendientes';
 const RUTA_LISTA_ESPERA_METRE: RutaNotificacion = '/metre/listaEspera';
 
 const RUTAS_VALIDAS = new Set<string>([
-  '/(app)/clientes-pendientes',
   '/mozo/chats',
   '/mozo/pedidos',
   '/cliente/chat',
-  '/mozo/chat-mesa'
+  '/mozo/chat-mesa',
+  RUTA_LISTA_ESPERA_METRE,
+  RUTA_CLIENTES_PENDIENTES
 ]);
 
 export function crearAvisoClienteRegistrado(): NotificacionPush {

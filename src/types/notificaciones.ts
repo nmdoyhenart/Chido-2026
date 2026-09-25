@@ -1,10 +1,10 @@
 export const RUTAS_NOTIFICACION = {
     clientesPendientes: '/(app)/clientes-pendientes',
     listaEsperaMetre: '/metre/listaEspera',
-  mozoChats: '/mozo/chats',
-  mozoChatMesa: '/mozo/chat-mesa',
-  mozoPedidos: '/mozo/pedidos',
-  clienteChat: '/cliente/chat',
+    mozoChats: '/mozo/chats',
+    mozoChatMesa: '/mozo/chat-mesa',
+    mozoPedidos: '/mozo/pedidos',
+    clienteChat: '/cliente/chat',
 } as const;
 
 export type RutaNotificacion = typeof RUTAS_NOTIFICACION[keyof typeof RUTAS_NOTIFICACION];

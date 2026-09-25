@@ -1,40 +1,47 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, FlatList, Image } from 'react-native';
-import { Stack } from 'expo-router';
+import { View, Text, ActivityIndicator, FlatList, Image, TouchableOpacity } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/Header';
 import { colores } from '../../theme/colores';
 import { obtenerListaEspera, suscribirseALista, ClienteEnEspera } from '../../../lib/listaEspera';
+import { useAppSession } from '../../contexts/AppSessionContext';
 
 export default function ListaEsperaMetre() {
+  const router = useRouter();
+  const { usuario } = useAppSession();
+  const nombre = [usuario?.nombres, usuario?.apellidos].filter(Boolean).join(' ') || 'Metre';
   const [lista, setLista] = useState<ClienteEnEspera[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    cargarLista();
-    const desuscribirse = suscribirseALista('metre-lista-espera-pantalla', cargarLista);
-    return desuscribirse;
-  }, []);
-
-  async function cargarLista() {
-    setError('');
-    try {
-      const data = await obtenerListaEspera();
-      setLista(data);
-    } catch (err) {
-      console.error('Error al traer la lista de espera:', err);
-      setError('No se pudo cargar la lista de espera.');
-    } finally {
-      setCargando(false);
+    async function cargarLista() {
+      setError('');
+      try {
+        const data = await obtenerListaEspera();
+        setLista(data);
+      } catch (err) {
+        console.error('Error al traer la lista de espera:', err);
+        setError('No se pudo cargar la lista de espera.');
+      } finally {
+        setCargando(false);
+      }
     }
-  }
+    void cargarLista();
+    return suscribirseALista('metre-lista-espera-pantalla', cargarLista);
+  }, []);
 
   return (
     <View className="flex-1" style={{ backgroundColor: colores.fondo }}>
       <Stack.Screen options={{ headerShown: false }} />
-      <Header userName="Juan Ignacio Antunez" role="Metre" />
+      <Header userName={nombre} role="Metre" />
 
       <View className="flex-1 px-5 pt-5">
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Volver al inicio del metre"
+          onPress={() => router.dismissTo('/metre/home')} className="self-start rounded-xl p-3 mb-3" style={{ backgroundColor: colores.cabecera }}>
+          <Ionicons name="arrow-back" size={24} color={colores.textoSobreOscuro} />
+        </TouchableOpacity>
         <Text className="text-3xl font-bold mb-5" style={{ color: colores.textoSobreOscuro }}>
           Lista de espera
         </Text>

@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
 import { Ionicons } from '@expo/vector-icons';
 import { colores } from '../../theme/colores';
+import { CerrarSesionButton } from '../../components/auth/CerrarSesionButton';
 
 const QR_ENTRADA = 'ENTRADA_LOCAL';
 const CLIENTE_ANONIMO_ID_KEY = 'cliente_anonimo_id';
@@ -52,6 +53,7 @@ export default function EscanearEntrada() {
     return (
         <View className="flex-1 bg-chido-fondo items-center justify-center px-6">
             <Stack.Screen options={{ headerShown: false }} />
+            <View className="w-full mb-6 items-end"><CerrarSesionButton /></View>
 
             <Text className="text-chido-texto-sobre-oscuro text-3xl font-bold mb-3 text-center">
                 Escanear QR de entrada

@@ -25,16 +25,17 @@ import ChidoLoader from '../ui/ChidoLoader';
 import { validarCorreo } from '../../../shared/registro-cliente';
 import AccesoRapidoModal from './AccesoRapidoModal';
 import { colores } from '../../theme/colores';
+import { ENTRADA_APP } from '../../utils/inicioPorPerfil';
 
 export default function Login() {
   const router = useRouter();
-  const { iniciarSesion: autenticar, enterGuest, mode, role, cargando, avisoSesion, limpiarAviso } = useAppSession();
+  const { iniciarSesion: autenticar, mode, role, cargando, avisoSesion, limpiarAviso } = useAppSession();
   const [mensaje, setMensaje] = useState<string | null>(null);
   const operacion = useRef(false);
 
   useEffect(() => {
     if (mode === 'authenticated' && !cargando) {
-      router.replace('/(app)/home');
+      router.replace(ENTRADA_APP);
     }
   }, [mode, role, cargando, router]);
 

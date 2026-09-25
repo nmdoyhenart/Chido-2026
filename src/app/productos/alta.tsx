@@ -8,12 +8,14 @@ import { Input } from '../../components/ui/Input';
 import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { colores } from '../../theme/colores';
+import { useAppSession } from '../../contexts/AppSessionContext';
+import { useRestriccionSimulacion } from '../../components/ui/RestriccionSimulacion';
 
 
 export default function AltaPlato() {
-
-    
-
+    const { usuario } = useAppSession();
+    const { bloquear, modal } = useRestriccionSimulacion();
+    const nombreUsuario = [usuario?.nombres, usuario?.apellidos].filter(Boolean).join(' ') || 'Cocinero';
 
     const [nombre, setNombre] = useState('');
     const [descripcion, setDescripcion] = useState('');
@@ -61,6 +63,7 @@ export default function AltaPlato() {
     }
 
     async function handleGuardar() {
+        if (bloquear('agregar platos')) return;
         setError('');
         setExito(false);
 
@@ -175,19 +178,20 @@ export default function AltaPlato() {
     return (
         <View className="flex-1 bg-chido-fondo ">
             <Stack.Screen options={{ headerShown: false }} />
-            <Header userName='Emmanuel Martín' role='Cocinero'/>
+            {modal}
+            <Header userName={nombreUsuario} role='Cocinero'/>
             <KeyboardAvoidingView
                 className="flex-1"
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >
                 <ScrollView className="flex-1 p-5" keyboardShouldPersistTaps="handled">
                     <View className="flex-row items-center mb-8 relative">
-                        <Pressable
+                        {router.canGoBack() && <Pressable
                             onPress={() => router.back()}
                             className="w-10 h-10 rounded-xl bg-chido-acento items-center justify-center absolute left-0 z-10"
                         >
                         <Ionicons name="arrow-back" size={20} color={colores.textoSobreOscuro} />
-                        </Pressable>
+                        </Pressable>}
                         <Text className="text-2xl font-bold text-chido-texto-sobre-oscuro text-center flex-1">Alta de plato</Text>
                     </View>
 

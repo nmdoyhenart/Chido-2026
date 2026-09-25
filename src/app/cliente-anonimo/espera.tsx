@@ -1,17 +1,29 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Stack, router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { colores } from '../../theme/colores';
+import { useAppSession } from '../../contexts/AppSessionContext';
 
 const CLIENTE_ANONIMO_ID_KEY = 'cliente_anonimo_id';
 
 export default function EsperaClienteAnonimo() {
+    const { cerrarSesion } = useAppSession();
+    const [saliendo, setSaliendo] = useState(false);
+    const [error, setError] = useState('');
 
     const salirDelLocal = async () => {
-        await AsyncStorage.removeItem(CLIENTE_ANONIMO_ID_KEY);
-        router.replace('/(auth)/login');
+        if (saliendo) return;
+        setSaliendo(true);
+        setError('');
+        try {
+            await cerrarSesion();
+            await AsyncStorage.removeItem(CLIENTE_ANONIMO_ID_KEY);
+            router.replace('/(auth)/login');
+        } catch {
+            setError('No pudimos cerrar la sesión. Intentá nuevamente.');
+        } finally { setSaliendo(false); }
     };
 
     const verEncuestasPrevias = () => {
@@ -45,11 +57,13 @@ export default function EsperaClienteAnonimo() {
 
             <TouchableOpacity
                 onPress={salirDelLocal}
+                disabled={saliendo}
                 className="bg-chido-cabecera w-full px-8 py-6 rounded-2xl flex-row items-center justify-center"
             >
                 <Ionicons name="exit-outline" size={28} color={colores.textoSobreOscuro} />
-                <Text className="text-chido-texto-sobre-oscuro font-bold text-2xl ml-2">Salir del local</Text>
+                <Text className="text-chido-texto-sobre-oscuro font-bold text-2xl ml-2">{saliendo ? 'Saliendo…' : 'Salir del local'}</Text>
             </TouchableOpacity>
+            {!!error && <Text accessibilityLiveRegion="assertive" className="text-chido-texto-sobre-oscuro text-center mt-4">{error}</Text>}
         </View>
     )
 }

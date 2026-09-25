@@ -16,6 +16,7 @@ import { useAppSession } from '../../contexts/AppSessionContext';
 import { AppRole } from '../../types/roles';
 import ChidoLoader from '../ui/ChidoLoader';
 import { colores } from '../../theme/colores';
+import { ENTRADA_APP } from '../../utils/inicioPorPerfil';
 
 type Props = {
   visible: boolean;
@@ -100,31 +101,7 @@ export default function AccesoRapidoModal({
 
       onClose();
 
-      switch (rol) {
-        case "dueño":
-        case "supervisor":
-        case "mozo":
-          router.replace('/(app)/home');
-          break;
-        case "cliente registrado":
-          router.push('../cliente/home');
-          break;
-        case "cliente anónimo":
-          router.push('../cliente-anonimo/escanear')
-          break;
-        case "cocinero":
-          router.push('../productos/alta');
-          break;
-        case "cantinero":
-          router.push('/productos/alta-bebida');
-          break;
-        case "metre":
-          router.push('../metre/home');
-          break;
-        default:
-          router.push('/(app)/home');
-          break;
-      }
+      router.replace(ENTRADA_APP);
     } catch {
       setError('No se pudo iniciar la demostración. Intentá nuevamente.');
       Vibration.vibrate(180);

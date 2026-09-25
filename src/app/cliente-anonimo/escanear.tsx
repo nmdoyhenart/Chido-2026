@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
-import { View, Text, TouchableOpacity, Modal, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, StyleSheet, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -51,9 +52,10 @@ export default function EscanearEntrada() {
     };
 
     return (
-        <View className="flex-1 bg-chido-fondo items-center justify-center px-6">
+        <SafeAreaView className="flex-1 bg-chido-fondo">
             <Stack.Screen options={{ headerShown: false }} />
-            <View className="w-full mb-6 items-end"><CerrarSesionButton /></View>
+            <View className="items-end px-6 pt-3 pb-3"><CerrarSesionButton /></View>
+            <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 24 }}>
 
             <Text className="text-chido-texto-sobre-oscuro text-3xl font-bold mb-3 text-center">
                 Escanear QR de entrada
@@ -75,6 +77,7 @@ export default function EscanearEntrada() {
                     {mensaje}
                 </Text>
             )}
+            </ScrollView>
 
             <Modal visible={escaneando} animationType="slide">
                 <View className="flex-1 bg-black">
@@ -93,6 +96,6 @@ export default function EscanearEntrada() {
                     </View>
                 </View>
             </Modal>
-        </View>
+        </SafeAreaView>
     )
 }

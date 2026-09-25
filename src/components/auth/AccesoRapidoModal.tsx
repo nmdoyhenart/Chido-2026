@@ -101,7 +101,31 @@ export default function AccesoRapidoModal({
 
       onClose();
 
-      router.replace(ENTRADA_APP);
+      switch (rol) {
+        case "dueño":
+        case "supervisor":
+        case "mozo":
+          router.replace('/(app)/home');
+          break;
+        case "cliente registrado":
+          router.push('../cliente/home');
+          break;
+        case "cliente anónimo":
+          router.push('../cliente-anonimo/alta')
+          break;
+        case "cocinero":
+          router.push('../productos/alta');
+          break;
+        case "cantinero":
+          router.push('/productos/alta-bebida');
+          break;
+        case "metre":
+          router.push('../metre/home');
+          break;
+        default:
+          router.push('/(app)/home');
+          break;
+      }
     } catch {
       setError('No se pudo iniciar la demostración. Intentá nuevamente.');
       Vibration.vibrate(180);

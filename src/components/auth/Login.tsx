@@ -35,7 +35,14 @@ export default function Login() {
 
   useEffect(() => {
     if (mode === 'authenticated' && !cargando) {
-      router.replace(ENTRADA_APP);
+      if (role === 'supervisor') {
+        router.replace('/supervisor/home');
+      } 
+      if (role === 'metre') {
+        router.replace('/metre/home');
+      }else {
+        router.replace('/(app)/home');
+      }
     }
   }, [mode, role, cargando, router]);
 

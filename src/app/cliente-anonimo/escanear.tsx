@@ -4,10 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Crypto from 'expo-crypto';
 import { Ionicons } from '@expo/vector-icons';
 import { colores } from '../../theme/colores';
 import { CerrarSesionButton } from '../../components/auth/CerrarSesionButton';
+import { obtenerClienteEnListaPorId } from '../../../lib/clientesAnonimos';
 
 const QR_ENTRADA = 'ENTRADA_LOCAL';
 const CLIENTE_ANONIMO_ID_KEY = 'cliente_anonimo_id';
@@ -40,14 +40,23 @@ export default function EscanearEntrada() {
             return;
         }
 
-        const idExistente = await AsyncStorage.getItem(CLIENTE_ANONIMO_ID_KEY);
+        const identificador = await AsyncStorage.getItem(CLIENTE_ANONIMO_ID_KEY);
 
-        if (idExistente) {
-            router.push('/cliente-anonimo/espera');
-        } else {
-            const nuevoId = Crypto.randomUUID();
-            await AsyncStorage.setItem(CLIENTE_ANONIMO_ID_KEY, nuevoId);
+        if (!identificador) {
             router.push('/cliente-anonimo/alta');
+            return;
+        }
+
+        try {
+            const clienteEnLista = await obtenerClienteEnListaPorId(identificador);
+            if (clienteEnLista) {
+                router.push('/cliente-anonimo/espera');
+            } else {
+                router.push('/cliente-anonimo/elegir');
+            }
+        } catch (err) {
+            console.error(err);
+            setMensaje('No se pudo verificar tu estado. Intentá de nuevo.');
         }
     };
 
@@ -61,7 +70,7 @@ export default function EscanearEntrada() {
                 Escanear QR de entrada
             </Text>
             <Text className="text-chido-texto-secundario-alternativo text-xl text-center mb-10">
-                Buscá el código QR de la entrada del local para anotarte en la lista de espera.
+                Buscá el código QR de la entrada del local para continuar.
             </Text>
 
             <TouchableOpacity

@@ -21,3 +21,65 @@ export async function subirFotoCliente(uri: string) {
 
     return data.publicUrl;
 }
+
+export async function obtenerClienteEnListaPorId(identificador: string) {
+    const { data, error } = await supabase
+        .from('lista_espera')
+        .select('*')
+        .eq('identificador', identificador)
+        .in('estado', ['esperando', 'asignado'])
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+    if (error) {
+        console.error('Error al verificar el estado del cliente:', error.message);
+        throw error;
+    }
+
+    return data && data.length > 0 ? data[0] : null;
+}
+
+export async function anotarseEnListaDeEspera({
+    identificador,
+    nombre,
+    fotoUrl,
+}: {
+    identificador: string;
+    nombre: string;
+    fotoUrl: string;
+}) {
+    const { error } = await supabase.from('lista_espera').insert({
+        identificador,
+        nombre,
+        foto_url: fotoUrl,
+        tipo_cliente: 'anonimo',
+        estado: 'esperando',
+    });
+
+    if (error) {
+        console.error('Error al anotarse en la lista de espera:', error.message);
+        throw error;
+    }
+}
+
+export function suscribirseAMiEstado(identificador: string, alCambiar: (fila: any) => void) {
+    const canal = supabase
+        .channel(`cliente-estado-${identificador}`)
+        .on(
+            'postgres_changes',
+            {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'lista_espera',
+                filter: `identificador=eq.${identificador}`,
+            },
+            (payload) => {
+                alCambiar(payload.new);
+            }
+        )
+        .subscribe();
+
+    return () => {
+        supabase.removeChannel(canal);
+    };
+}

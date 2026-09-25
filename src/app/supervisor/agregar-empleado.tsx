@@ -12,6 +12,7 @@ import { PrimaryButton } from '../../components/ui/Buttons';
 import { Header } from '../../components/Header';
 import { colores } from '../../theme/colores';
 import { useRestriccionSimulacion } from '../../components/ui/RestriccionSimulacion';
+import CamaraRegistro from '../../components/auth/CamaraRegistro';
 import { ResultadoModal } from '../../components/ui/ResultadoModal';
 
 export default function AgregarEmpleado() {
@@ -52,7 +53,7 @@ export default function AgregarEmpleado() {
   const cameraRef = useRef<any>(null);
 
   const [cameraFacing, setCameraFacing] = useState<'front' | 'back'>('back');
-  const isScanningDniRef = useRef(false);
+  const [avisoDni, setAvisoDni] = useState(false);
 
   const formatName = (name: string) => {
     let cleaned = name.replace(/XX/g, 'Ñ').replace(/xx/g, 'ñ');
@@ -105,36 +106,6 @@ export default function AgregarEmpleado() {
     } finally {
       enviando.current = false;
       setGuardando(false);
-    }
-  };
-
-  const handleBarcodeScanned = ({ data }: { data: string }) => {
-    if (isScanningDniRef.current) return;
-    isScanningDniRef.current = true;
-
-    setScanningDni(false);
-    const parts = data.split('@');
-    if (parts.length >= 8) {
-      let dniIndex = parts.findIndex(p => p.length === 7 || (p.length === 8 && !isNaN(Number(p))));
-      let apellidos = parts[1] || '';
-      let nombres = parts[2] || '';
-      let dni = parts[dniIndex] || parts[4] || '';
-
-      if (isNaN(Number(parts[4])) && !isNaN(Number(parts[1]))) {
-        dni = parts[1];
-        apellidos = parts[4];
-        nombres = parts[5];
-      }
-
-      setFormData(prev => ({
-        ...prev,
-        apellidos: formatName(apellidos),
-        nombres: formatName(nombres),
-        dni: dni.replace(/\D/g, '')
-      }));
-      Alert.alert("DNI escaneado", "Datos cargados correctamente");
-    } else {
-      Alert.alert("Error", "Formato de DNI no reconocido.");
     }
   };
 
@@ -207,18 +178,18 @@ export default function AgregarEmpleado() {
 
           {/* Scan DNI Button */}
           <TouchableOpacity
-            className="flex-row justify-center items-center p-4 rounded-2xl mb-6 border-2 border-chido-texto-secundario-alternativo bg-chido-acento"
-            onPress={() => {
-              if (!permission?.granted) requestPermission();
-              else {
-                isScanningDniRef.current = false;
-                setScanningDni(true);
-              }
-            }}
+            className="flex-row justify-center items-center p-4 rounded-xl mb-3 border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera"
+            disabled={guardando}
+            accessibilityRole="button"
+            onPress={() => { Keyboard.dismiss(); setScanningDni(true); }}
           >
-            <Ionicons name="qr-code-outline" size={20} color={colores.textoSobreOscuro} className="mr-2" />
-            <Text className="text-chido-texto-sobre-oscuro font-bold text-lg ml-2">Escanear QR del DNI</Text>
+            <Ionicons name="scan-outline" size={28} color={colores.textoSobreOscuro} className="mr-2" />
+            <Text className="text-chido-texto-sobre-oscuro font-bold text-lg ml-2">Leer DNI con la cámara</Text>
           </TouchableOpacity>
+
+          <Text className="text-chido-texto-secundario-sobre-oscuro text-base mb-5" accessibilityLiveRegion="polite">
+            {avisoDni ? 'Datos del DNI cargados. Revisalos antes de continuar.' : 'La lectura del DNI es opcional. También podés escribir los datos.'}
+          </Text>
 
           {/* Form Fields */}
           <View className="flex-row gap-4">
@@ -314,24 +285,22 @@ export default function AgregarEmpleado() {
       </KeyboardAvoidingView>
       </SafeAreaView>
 
-      {/* Modal Scanner DNI */}
-      <Modal visible={scanningDni} animationType="slide">
-        <View className="flex-1 bg-black">
-          {permission?.granted && (
-            <CameraView 
-              style={StyleSheet.absoluteFill}
-              onBarcodeScanned={handleBarcodeScanned}
-              barcodeScannerSettings={{ barcodeTypes: ['pdf417', 'qr'] }}
-            />
-          )}
-          <View className="absolute bottom-10 left-0 right-0 items-center">
-            <Text className="text-chido-texto-sobre-oscuro bg-black/50 p-2 mb-4 rounded text-center">Apunte al código del DNI</Text>
-            <TouchableOpacity className="bg-chido-error px-6 py-4 rounded-full" onPress={() => setScanningDni(false)}>
-              <Text className="text-chido-texto-sobre-oscuro font-bold text-lg">Cancelar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      {scanningDni && <CamaraRegistro
+        modo="dni"
+        onClose={() => setScanningDni(false)}
+        onFoto={() => {}}
+        onDni={datos => {
+          setFormData(actual => ({ ...actual, ...datos }));
+          setErrors(actual => {
+            const siguientes = { ...actual };
+            delete siguientes.nombres;
+            delete siguientes.apellidos;
+            delete siguientes.dni;
+            return siguientes;
+          });
+          setAvisoDni(true);
+        }}
+      />}
 
       {/* Modal Tomar Foto */}
       <Modal visible={takingPhoto} animationType="slide">

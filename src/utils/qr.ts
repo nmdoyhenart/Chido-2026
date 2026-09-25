@@ -1,3 +1,4 @@
+import { leerDni } from '../../shared/registro-cliente';
 import {
   PORCENTAJES_PROPINA,
   type DatosDni,
@@ -12,17 +13,6 @@ const MESA_QR_PATTERN = new RegExp(
   "i",
 );
 const PROPINA_QR_PATTERN = /^chido:propina:(0|5|10|15|20):v1$/i;
-
-function limpiarNombre(value: string | undefined): string {
-  return (value ?? "")
-    .replace(/[^\p{L}\s'-]/gu, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function esDniValido(value: string | undefined): value is string {
-  return /^\d{7,8}$/.test(value ?? "");
-}
 
 export function createIngresoQr(): string {
   return "chido:ingreso:v1";
@@ -63,36 +53,7 @@ export function parseQrPayload(raw: string): QrPayload | null {
   return null;
 }
 
+// Alias de compatibilidad: todos los lectores usan la validación del registro.
 export function parseDniPdf417(raw: string): DatosDni | null {
-  const fields = raw.split("@").map((field) => field.trim());
-
-  const formatoEstandar = {
-    apellidos: limpiarNombre(fields[1]),
-    nombres: limpiarNombre(fields[2]),
-    dni: fields[4] ?? "",
-  };
-
-  if (
-    formatoEstandar.apellidos &&
-    formatoEstandar.nombres &&
-    esDniValido(formatoEstandar.dni)
-  ) {
-    return formatoEstandar;
-  }
-
-  const formatoAlternativo = {
-    apellidos: limpiarNombre(fields[4]),
-    nombres: limpiarNombre(fields[5]),
-    dni: fields[1] ?? "",
-  };
-
-  if (
-    formatoAlternativo.apellidos &&
-    formatoAlternativo.nombres &&
-    esDniValido(formatoAlternativo.dni)
-  ) {
-    return formatoAlternativo;
-  }
-
-  return null;
+  return leerDni(raw);
 }

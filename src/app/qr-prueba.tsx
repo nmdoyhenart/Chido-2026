@@ -1,3 +1,4 @@
+import CamaraRegistro from '../components/auth/CamaraRegistro';
 import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { QRDisplay } from "../components/ui/QRDisplay";
@@ -10,7 +11,6 @@ import {
   createIngresoQr,
   createMesaQr,
   createPropinaQr,
-  parseDniPdf417,
   parseQrPayload,
 } from "../utils/qr";
 
@@ -34,18 +34,6 @@ export default function PruebaQr() {
   };
 
   const procesarEscaneo = (raw: string) => {
-    if (proposito === "dni") {
-      const dni = parseDniPdf417(raw);
-      if (!dni) {
-        throw new Error("El código leído no tiene un formato de DNI reconocido.");
-      }
-
-      setResultado(
-        `DNI válido\nNombres: ${dni.nombres}\nApellidos: ${dni.apellidos}\nDNI: ${dni.dni}`,
-      );
-      return;
-    }
-
     const payload = parseQrPayload(raw);
     if (!payload) {
       throw new Error("El código leído no pertenece al protocolo QR de Chido.");
@@ -106,12 +94,17 @@ export default function PruebaQr() {
         ))}
       </ScrollView>
 
-      <QRScanner
+      {proposito === 'dni' ? <CamaraRegistro
+        modo="dni"
+        onFoto={() => {}}
+        onClose={() => setProposito(null)}
+        onDni={datos => setResultado(`DNI válido\nNombres: ${datos.nombres}\nApellidos: ${datos.apellidos}\nDNI: ${datos.dni}`)}
+      /> : <QRScanner
         visible={proposito !== null}
         proposito={proposito ?? "ingreso"}
         onScan={procesarEscaneo}
         onClose={() => setProposito(null)}
-      />
+      />}
     </View>
   );
 }

@@ -15,13 +15,12 @@ import { colores } from "../../theme/colores";
 
 type QRScannerProps = {
   visible: boolean;
-  proposito: PropositoScannerQr;
+  proposito: Exclude<PropositoScannerQr, "dni">;
   onScan: (raw: string) => Promise<void> | void;
   onClose: () => void;
 };
 
-const instrucciones: Record<PropositoScannerQr, string> = {
-  dni: "Apuntá al código PDF417 del DNI.",
+const instrucciones: Record<Exclude<PropositoScannerQr, "dni">, string> = {
   ingreso: "Apuntá al código QR de ingreso al local.",
   mesa: "Apuntá al código QR de la mesa asignada.",
   propina: "Apuntá al código QR de la propina elegida.",
@@ -122,7 +121,7 @@ export function QRScanner({
               style={StyleSheet.absoluteFill}
               facing="back"
               barcodeScannerSettings={{
-                barcodeTypes: proposito === "dni" ? ["pdf417"] : ["qr"],
+                barcodeTypes: ["qr"],
               }}
               onBarcodeScanned={processing ? undefined : ({ data }) => handleScan(data)}
             />

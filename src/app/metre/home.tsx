@@ -95,6 +95,21 @@ export default function HomeMetre() {
                         </View>
                         <Ionicons name="chevron-forward" size={28} color={colores.textoSobreOscuro} />
                     </TouchableOpacity>
+
+                    {/* Registrar un cliente — reutiliza FormularioRegistroCliente vía (auth)/registro en modo metre */}
+                    <TouchableOpacity
+                        onPress={() => router.push('/(auth)/registro')}
+                        className="flex-1 bg-chido-cabecera border-2 border-white/70 rounded-2xl justify-center items-center flex-row px-6"
+                    >
+                        <Ionicons name="person-add-outline" size={36} color={colores.textoSobreOscuro} className="mr-4" />
+                        <View className="flex-1 ml-4">
+                            <Text className="text-chido-texto-sobre-oscuro font-bold text-2xl">Registrar un cliente</Text>
+                            <Text className="text-chido-texto-secundario-sobre-oscuro text-base mt-1">
+                                Dar de alta un nuevo cliente
+                            </Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={28} color={colores.textoSobreOscuro} />
+                    </TouchableOpacity>
                 </View>
             </View>
         </View>

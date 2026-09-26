@@ -47,9 +47,9 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 
 ## QR's de la aplicación
 
-| QR entrada (Cliente anonimo) | QR Mesa 1 | QR Mesa 2 | QR Mesa 3 |
-| :---: | :---: | :---: | :---: |
-| <img width="240" alt="QR entrada cliente anon" src="https://github.com/user-attachments/assets/5856b4fc-5415-4f24-a755-da17cb92ef42" /> | <img width="240" alt="QR Asignar M1" src="https://github.com/user-attachments/assets/85c70490-6799-4809-98c6-6bbdf3a054a1" /> | <img width="240" alt="Código QR asigna M2" src="https://github.com/user-attachments/assets/a4bc1d29-be12-4ca5-8762-0f4b4464bc9b" /> | <img width="240" alt="QR asigna M3" src="https://github.com/user-attachments/assets/8a548ebe-1cb4-482c-840c-96669cde471b" /> |
+| QR entrada (Cliente anonimo) | QR Mesa 1 | QR Mesa 2 | QR Mesa 3 | QR Mesa 4 | QR Mesa 5 | QR Mesa 6 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| <img width="240" alt="QR entrada cliente anon" src="https://github.com/user-attachments/assets/5856b4fc-5415-4f24-a755-da17cb92ef42" /> | <img width="240" alt="Código QR de la mesa 1" src="https://github.com/user-attachments/assets/85c70490-6799-4809-98c6-6bbdf3a054a1" /> | <img width="240" alt="Código QR de la mesa 2" src="https://github.com/user-attachments/assets/5c0217cf-5fda-44a7-b92b-49529bead1ac" /> | <img width="240" alt="Código QR de la mesa 3" src="https://github.com/user-attachments/assets/da55862f-72c2-48fe-8d00-e88c9b63ac3e" /> | <img width="240" alt="QR de la mesa 4" src="https://github.com/user-attachments/assets/61e48eb8-5b67-447a-b4e6-2b64d4bde87c" /> | <img width="240" alt="QR de la mesa 5" src="https://github.com/user-attachments/assets/44501b60-282c-43f2-b9e4-0fded0dc7959" /> | <img width="240" alt="QR de la mesa 6" src="https://github.com/user-attachments/assets/d3c98f13-a1fe-45a9-baf7-04ae5a76ba10" /> |
 
 ## Pantallas de la aplicación
 

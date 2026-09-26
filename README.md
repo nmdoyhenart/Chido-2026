@@ -39,17 +39,17 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 - Emma: Gestión y alta de mesa (punto 4)
 - Juan: Registro de empleado y menú cliente (punto 1 y 11)
 
-### Sprint 1 (12/09 | 26/09)
+### Sprint 2 (12/09 | 26/09)
 - Silvi: Continuación pantalla cliente anonimo, vista Metre y asignación de mesas (punto 9 y 10)
 - Nico: Unificación estilos pantallas: Mozo, Dueño y Supervisor (punto 13 y 14)
-- Emma: Vista Cliente registrado
+- Emma: Vista Cliente registrado, push notifications y envios correos
 - Juan: Chat entre Cliente y Mozo, generar un pedido + aceptación [Mozo] (punto 11 y 12)
 
 ## QR's de la aplicación
 
-| QR entrada (Cliente anonimo) | QR Metre | QR Mesa 1 |
-| :---: | :---: | :---: |
-| <img width="240" alt="QR entrada cliente anon" src="https://github.com/user-attachments/assets/5856b4fc-5415-4f24-a755-da17cb92ef42" /> | <img width="240" alt="QR Metre" src="https://github.com/user-attachments/assets/6eafd324-c060-4506-9e25-7780d6b9790e" /> | <img width="240" alt="QR Asignar M1" src="https://github.com/user-attachments/assets/85c70490-6799-4809-98c6-6bbdf3a054a1" /> |
+| QR entrada (Cliente anonimo) | QR Mesa 1 | QR Mesa 2 | QR Mesa 3 |
+| :---: | :---: | :---: | :---: |
+| <img width="240" alt="QR entrada cliente anon" src="https://github.com/user-attachments/assets/5856b4fc-5415-4f24-a755-da17cb92ef42" /> | <img width="240" alt="QR Asignar M1" src="https://github.com/user-attachments/assets/85c70490-6799-4809-98c6-6bbdf3a054a1" /> | <img width="240" alt="Código QR asigna M2" src="https://github.com/user-attachments/assets/a4bc1d29-be12-4ca5-8762-0f4b4464bc9b" /> | <img width="240" alt="QR asigna M3" src="https://github.com/user-attachments/assets/8a548ebe-1cb4-482c-840c-96669cde471b" /> |
 
 ## Pantallas de la aplicación
 

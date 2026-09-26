@@ -38,11 +38,8 @@ export default function HomeMetre() {
     return (
         <View className="flex-1 bg-chido-fondo">
             <Stack.Screen options={{ headerShown: false }} />
-            <Header userName="Juan Ignacio Antunez" role="Metre" />
-  return (
-    <View className="flex-1" style={{ backgroundColor: colores.fondo }}>
-      <Stack.Screen options={{ headerShown: false }} />
-      <Header userName={nombre} role="Metre" />
+            <Header userName={nombre} role="Metre" />
+
 
             <View className="flex-1 p-5 pt-6">
                 <Text className="text-3xl font-bold text-chido-texto-sobre-oscuro mb-6">

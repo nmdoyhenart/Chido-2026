@@ -12,8 +12,12 @@ const CLIENTE_ANONIMO_NOMBRE_KEY = 'cliente_anonimo_nombre';
 const CLIENTE_ANONIMO_FOTO_KEY = 'cliente_anonimo_foto_url';
 
 export default function EsperaClienteAnonimo() {
+    
+    const { cerrarSesion } = useAppSession();
     const [fueEliminado, setFueEliminado] = useState(false);
     const [mesaAsignada, setMesaAsignada] = useState<string | null>(null);
+    const [saliendo, setSaliendo] = useState(false);
+    const [error, setError] = useState('');
 
     useEffect(() => {
         let desuscribirse: (() => void) | undefined;

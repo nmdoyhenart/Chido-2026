@@ -19,5 +19,5 @@ export const colores = {
   notificacion: "#ff6b57",
   aviso: "#e07a3c",
   exito: "#4a9b6e",
-  error: "#c94f4f",
+  error: "#4a0505",
 } as const;

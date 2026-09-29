@@ -55,7 +55,11 @@ export default function ChatCliente() {
   }, [mesaId]);
 
   const handleEnviar = async () => {
-    if (!nuevoMensaje.trim() || !usuario?.id || !mesaId) return;
+    if (!nuevoMensaje.trim() || !usuario?.id) return;
+    if (!mesaId) {
+      Alert.alert('Aviso', 'No puedes enviar mensajes porque no estás asignado a ninguna mesa.');
+      return;
+    }
 
     const texto = nuevoMensaje.trim();
     setNuevoMensaje(''); 

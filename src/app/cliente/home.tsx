@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 
-
+import { useAppSession } from '../../contexts/AppSessionContext';
+import { supabase } from '../../lib/supabase';
 import { Header } from '../../components/Header';
 import { QRScanner } from '../../components/ui/QRScanner';
 import { colores } from '../../theme/colores';
@@ -21,8 +22,37 @@ export default function HomeCliente() {
  const [scannerVisible, setScannerVisible] = useState(false);
 
 
- function handleScan() {
-   router.push('/cliente/menu');
+ const { usuario } = useAppSession();
+
+ async function handleScan(raw: string) {
+   if (!usuario) return;
+   try {
+     const regex = /chido:mesa:([^:]+):v1/i;
+     const match = raw.match(regex);
+     if (!match) {
+       Alert.alert('Error', 'El código QR no corresponde a una mesa.');
+       return;
+     }
+     const mesaId = match[1].toLowerCase();
+
+     const { error } = await supabase
+       .from('mesas')
+       .update({
+         cliente_id: usuario.id,
+         disponibilidad: 'ocupada',
+         qr_confirmado_at: new Date().toISOString()
+       })
+       .eq('id', mesaId);
+
+     if (error) {
+       console.log('Error asignando mesa:', error);
+     }
+
+     setScannerVisible(false);
+     router.push({ pathname: '/cliente/menu', params: { mesaId } });
+   } catch (e: any) {
+     Alert.alert('Error', e.message);
+   }
  }
 
 

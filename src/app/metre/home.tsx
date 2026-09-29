@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { useFocusEffect } from 'expo-router';
+import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import { Header } from '../../components/Header';
 import { Ionicons } from '@expo/vector-icons';
 import { colores } from '../../theme/colores';
@@ -10,7 +9,10 @@ import { useAppSession } from '../../contexts/AppSessionContext';
 
 export default function HomeMetre() {
     const router = useRouter();
+    const { usuario } = useAppSession();
     const [cantidadEsperando, setCantidadEsperando] = useState(0);
+    const nombreUsuario = [usuario?.nombres, usuario?.apellidos].filter(Boolean).join(' ').trim() || 'Metre';
+    const primerNombre = usuario?.nombres?.trim().split(/\s+/)[0] || 'Metre';
 
     useEffect(() => {
         cargarCantidad();
@@ -36,29 +38,25 @@ export default function HomeMetre() {
     return (
         <View className="flex-1" style={{ backgroundColor: colores.fondo }}>
             <Stack.Screen options={{ headerShown: false }} />
-            <Header userName="Juan Ignacio Antunez" role="Metre" />
-  return (
-    <View className="flex-1" style={{ backgroundColor: colores.fondo }}>
-      <Stack.Screen options={{ headerShown: false }} />
-      <Header userName={nombre} role="Metre" />
+            <Header userName={nombreUsuario} role="Metre" />
 
-      <View className="flex-1 px-5 pt-5 pb-6">
-        <Text
-          className="text-4xl font-bold mb-5"
-          style={{ color: colores.textoSobreOscuro }}
-        >
-          {usuario?.nombres ? `Hola, ${usuario.nombres.trim().split(/\s+/)[0]}` : 'Hola, Metre'}
-        </Text>
+            <View className="flex-1 px-5 pt-5 pb-6">
+                <Text
+                    className="text-4xl font-bold mb-5"
+                    style={{ color: colores.textoSobreOscuro }}
+                >
+                    Hola, {primerNombre}
+                </Text>
 
-        <TouchableOpacity
-          accessibilityRole="button"
-          onPress={() => router.push('/(auth)/registro')}
-          className="rounded-2xl px-4 py-3 mb-5 flex-row items-center justify-center"
-          style={{ backgroundColor: colores.botonPrincipal, borderWidth: 1, borderColor: colores.textoSecundarioAlternativo, minHeight: 48 }}
-        >
-          <Ionicons name="person-add-outline" size={24} color={colores.textoSobreOscuro} />
-          <Text className="text-lg font-bold ml-3" style={{ color: colores.textoSobreOscuro }}>Registrar cliente</Text>
-        </TouchableOpacity>
+                <TouchableOpacity
+                    accessibilityRole="button"
+                    onPress={() => router.push('/(auth)/registro')}
+                    className="rounded-2xl px-4 py-3 mb-5 flex-row items-center justify-center"
+                    style={{ backgroundColor: colores.botonPrincipal, borderWidth: 1, borderColor: colores.textoSecundarioAlternativo, minHeight: 48 }}
+                >
+                    <Ionicons name="person-add-outline" size={24} color={colores.textoSobreOscuro} />
+                    <Text className="text-lg font-bold ml-3" style={{ color: colores.textoSobreOscuro }}>Registrar cliente</Text>
+                </TouchableOpacity>
 
                 {/* Mesas ocupadas — número fijo por ahora, pendiente conectar a datos reales */}
                 <View

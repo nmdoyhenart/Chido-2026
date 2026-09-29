@@ -9,10 +9,8 @@ import { obtenerListaEspera, suscribirseALista } from '../../../lib/listaEspera'
 import { useAppSession } from '../../contexts/AppSessionContext';
 
 export default function HomeMetre() {
-  const router = useRouter();
-  const { usuario } = useAppSession();
-  const nombre = [usuario?.nombres, usuario?.apellidos].filter(Boolean).join(' ') || 'Metre';
-  const [cantidadEsperando, setCantidadEsperando] = useState(0);
+    const router = useRouter();
+    const [cantidadEsperando, setCantidadEsperando] = useState(0);
 
     useEffect(() => {
         cargarCantidad();

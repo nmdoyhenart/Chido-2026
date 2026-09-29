@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, Pressable, ActivityIndicator, ScrollView, Image, Modal, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, Image, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { crearProducto, TipoProducto, subirFotos, existeProducto } from '../../../lib/productos';
 import { Header } from '../../components/Header';
 import { Stack, useRouter } from 'expo-router';
@@ -21,7 +21,7 @@ export default function AltaPlato() {
     const [descripcion, setDescripcion] = useState('');
     const [tiempoElaboracion, setTiempoElaboracion] = useState('');
     const [precio, setPrecio] = useState('');
-    const [tipo, setTipo] = useState<TipoProducto>('plato');
+    const [tipo] = useState<TipoProducto>('plato');
     const [cargando, setCargando] = useState(false);
     const [error, setError] = useState('');
     const [fotos, setFotos] = useState<(string| null)[]>([null,null,null])
@@ -184,7 +184,7 @@ export default function AltaPlato() {
                 className="flex-1"
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >
-                <ScrollView className="flex-1 p-5" keyboardShouldPersistTaps="handled">
+                <View className="flex-1 p-5">
                     <View className="flex-row items-center mb-8 relative">
                         {router.canGoBack() && <Pressable
                             onPress={() => router.back()}
@@ -252,7 +252,7 @@ export default function AltaPlato() {
 
                     <View className="flex-row gap-4">
                         <Input
-                            label="Tiempo (min)"
+                            label="Tiempo (minutos)"
                             value={tiempoElaboracion}
                             onChangeText={setTiempoElaboracion}
                             keyboardType="numeric"
@@ -314,7 +314,7 @@ export default function AltaPlato() {
                             </View>
                         </View>
                     </Modal>
-                </ScrollView>
+                </View>
             </KeyboardAvoidingView>
         </View>
     );

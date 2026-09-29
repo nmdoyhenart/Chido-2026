@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, Pressable, ActivityIndicator, ScrollView, Image, Modal, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, Image, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { crearProducto, TipoProducto, subirFotos, existeProducto } from '../../../lib/productos';
 import { Header } from '../../components/Header';
 import { Stack, useRouter } from 'expo-router';
@@ -182,7 +182,7 @@ export default function AltaBebida() {
                 className="flex-1"
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >
-                <ScrollView className="flex-1 p-5" keyboardShouldPersistTaps="handled">
+                <View className="flex-1 p-5">
                     <View className="flex-row items-center mb-8 relative">
                         {router.canGoBack() && <Pressable
                             onPress={() => router.back()}
@@ -312,7 +312,7 @@ export default function AltaBebida() {
                             </View>
                         </View>
                     </Modal>
-                </ScrollView>
+                </View>
             </KeyboardAvoidingView>
         </View>
     );

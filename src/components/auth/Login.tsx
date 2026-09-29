@@ -7,6 +7,7 @@ import {
   Pressable,
   Image,
   ImageBackground,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -32,6 +33,18 @@ export default function Login() {
   const { iniciarSesion: autenticar, mode, role, cargando, avisoSesion, limpiarAviso } = useAppSession();
   const [mensaje, setMensaje] = useState<string | null>(null);
   const operacion = useRef(false);
+  const [tecladoVisible, setTecladoVisible] = useState(false);
+  const [altoDisponible, setAltoDisponible] = useState(0);
+  const [altoContenidoBase, setAltoContenidoBase] = useState(0);
+  const escala = altoDisponible > 0 && altoContenidoBase > 0
+    ? Math.min(1, altoDisponible / altoContenidoBase)
+    : 1;
+
+  useEffect(() => {
+    const mostrar = Keyboard.addListener('keyboardDidShow', () => setTecladoVisible(true));
+    const ocultar = Keyboard.addListener('keyboardDidHide', () => setTecladoVisible(false));
+    return () => { mostrar.remove(); ocultar.remove(); };
+  }, []);
 
   useEffect(() => {
     if (mode === 'authenticated' && !cargando) {
@@ -106,41 +119,49 @@ export default function Login() {
               : undefined
           }
           className="flex-1"
+          onLayout={(evento) => setAltoDisponible(evento.nativeEvent.layout.height)}
         >
 
           <ScrollView
             contentContainerStyle={{
               flexGrow: 1,
               justifyContent: 'center',
+              paddingHorizontal: 28 * escala,
+              paddingVertical: 20 * escala,
+            }}
+            scrollEnabled={tecladoVisible}
+            onContentSizeChange={(_, alto) => {
+              const nuevoAltoBase = alto / escala;
+              setAltoContenidoBase((anterior) => Math.abs(anterior - nuevoAltoBase) > 1 ? nuevoAltoBase : anterior);
             }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
 
-            <View className="px-7 py-8">
+            <View>
 
               {/* LOGO */}
-              <View className="items-center mb-7">
+              <View className="items-center" style={{ marginBottom: 28 * escala }}>
 
                 <Image
                   source={require('../../../assets/images/logo.png')}
                   resizeMode="contain"
                   style={{
-                    width: 210,
-                    height: 210,
+                    width: 210 * escala,
+                    height: 210 * escala,
                   }}
                 />
 
-                <Text className="text-chido-texto-secundario-sobre-oscuro text-xl text-center mt-2 font-medium">
+                <Text className="text-chido-texto-secundario-sobre-oscuro text-center font-medium" style={{ fontSize: 20 * escala, lineHeight: 26 * escala, marginTop: 8 * escala }}>
                   Deja de buscar, la mejor comida mexicana está acá
                 </Text>
 
               </View>
 
               {/* EMAIL */}
-              <View className="mb-5">
+              <View style={{ marginBottom: 20 * escala }}>
 
-                <Text className="text-chido-texto-sobre-oscuro text-lg font-bold mb-2">
+                <Text className="text-chido-texto-sobre-oscuro font-bold" style={{ fontSize: 18 * escala, marginBottom: 8 * escala }}>
                   Correo electrónico
                 </Text>
 
@@ -153,27 +174,18 @@ export default function Login() {
                   autoCapitalize="none"
                   autoCorrect={false}
                   editable={!loading}
-                  className="
-                    h-16
-                    px-5
-                    rounded-2xl
-                    border-2
-                    border-chido-texto-secundario-alternativo/70
-                    bg-chido-cabecera/55
-                    text-chido-texto-sobre-oscuro
-                    text-xl
-                    font-semibold
-                  "
+                  className="rounded-2xl border-2 border-chido-texto-secundario-alternativo/70 bg-chido-cabecera/55 text-chido-texto-sobre-oscuro font-semibold"
+                  style={{ height: 64 * escala, paddingHorizontal: 20 * escala, fontSize: 20 * escala, borderRadius: 16 * escala }}
                 />
 
               </View>
 
               {/* CONTRASEÑA */}
-              <View className="mb-7">
+              <View style={{ marginBottom: 28 * escala }}>
 
-                <View className="flex-row items-center justify-between mb-2">
+                <View className="flex-row items-center justify-between" style={{ marginBottom: 8 * escala }}>
 
-                  <Text className="text-chido-texto-sobre-oscuro text-lg font-bold">
+                  <Text className="text-chido-texto-sobre-oscuro font-bold" style={{ fontSize: 18 * escala }}>
                     Contraseña
                   </Text>
 
@@ -186,7 +198,7 @@ export default function Login() {
                     }
                   >
 
-                    <Text className="text-chido-texto-sobre-oscuro text-base font-bold underline">
+                    <Text className="text-chido-texto-sobre-oscuro font-bold underline" style={{ fontSize: 16 * escala }}>
                       ¿Olvidaste tu contraseña?
                     </Text>
 
@@ -195,15 +207,8 @@ export default function Login() {
                 </View>
 
                 <View
-                  className="
-                    h-16
-                    flex-row
-                    items-center
-                    rounded-2xl
-                    border-2
-                    border-chido-texto-secundario-alternativo/70
-                    bg-chido-cabecera/55
-                  "
+                  className="flex-row items-center rounded-2xl border-2 border-chido-texto-secundario-alternativo/70 bg-chido-cabecera/55"
+                  style={{ height: 64 * escala, borderRadius: 16 * escala }}
                 >
 
                   <TextInput
@@ -214,14 +219,8 @@ export default function Login() {
                     secureTextEntry={!mostrarPassword}
                     autoCapitalize="none"
                     editable={!loading}
-                    className="
-                      flex-1
-                      h-full
-                      px-5
-                      text-chido-texto-sobre-oscuro
-                      text-xl
-                      font-semibold
-                    "
+                    className="flex-1 h-full text-chido-texto-sobre-oscuro font-semibold"
+                    style={{ paddingHorizontal: 20 * escala, fontSize: 20 * escala }}
                   />
 
                   <Pressable
@@ -231,12 +230,8 @@ export default function Login() {
                       )
                     }
                     disabled={loading}
-                    className="
-                      px-5
-                      h-full
-                      items-center
-                      justify-center
-                    "
+                    className="h-full items-center justify-center"
+                    style={{ paddingHorizontal: 20 * escala }}
                   >
 
                     <Ionicons
@@ -245,7 +240,7 @@ export default function Login() {
                           ? 'eye-outline'
                           : 'eye-off-outline'
                       }
-                      size={28}
+                      size={28 * escala}
                       color={colores.textoSecundarioAlternativo}
                     />
 
@@ -256,7 +251,7 @@ export default function Login() {
               </View>
 
               {/* LOGIN */}
-              {(mensaje || avisoSesion) && <View className="bg-chido-error rounded-xl p-4 mb-5" accessibilityLiveRegion="assertive"><Text className="text-chido-texto-sobre-oscuro text-lg">{mensaje || avisoSesion}</Text></View>}
+              {(mensaje || avisoSesion) && <View className="bg-chido-error rounded-xl p-4 mb-5" accessibilityLiveRegion="assertive"><Text className="text-chido-texto-sobre-oscuro" style={{ fontSize: 18 * escala }}>{mensaje || avisoSesion}</Text></View>}
               {loading && <ChidoLoader mensaje="Verificando acceso…" />}
               <TouchableOpacity
                 onPress={iniciarSesion}
@@ -264,10 +259,10 @@ export default function Login() {
                 accessibilityRole="button"
                 accessibilityState={{ disabled: loading, busy: loading }}
                 activeOpacity={0.85}
-                style={[styles.boton, styles.iniciarSesion, loading && styles.deshabilitado]}
+                style={[styles.boton, { minHeight: 64 * escala, paddingVertical: 16 * escala, paddingHorizontal: 20 * escala, borderRadius: 16 * escala }, styles.iniciarSesion, loading && styles.deshabilitado]}
               >
 
-                <Text style={styles.textoClaro}>
+                <Text style={[styles.textoClaro, { fontSize: 20 * escala, lineHeight: 26 * escala }]}>
                   {
                     loading
                       ? 'Ingresando...'
@@ -278,11 +273,11 @@ export default function Login() {
               </TouchableOpacity>
 
               {/* SEPARADOR */}
-              <View className="flex-row items-center my-7">
+              <View className="flex-row items-center" style={{ marginVertical: 28 * escala }}>
 
                 <View className="flex-1 h-[1px] bg-chido-texto-secundario-alternativo/50" />
 
-                <Text className="mx-4 text-chido-texto-sobre-oscuro text-lg font-bold">
+                <Text className="text-chido-texto-sobre-oscuro font-bold" style={{ marginHorizontal: 16 * escala, fontSize: 18 * escala }}>
                   o
                 </Text>
 
@@ -299,10 +294,10 @@ export default function Login() {
                 accessibilityRole="button"
                 accessibilityState={{ disabled: loading }}
                 activeOpacity={0.85}
-                style={[styles.boton, styles.registrarse, loading && styles.deshabilitado]}
+                style={[styles.boton, { minHeight: 64 * escala, paddingVertical: 16 * escala, paddingHorizontal: 20 * escala, borderRadius: 16 * escala, marginBottom: 16 * escala }, styles.registrarse, loading && styles.deshabilitado]}
               >
 
-                <Text style={styles.textoClaro}>
+                <Text style={[styles.textoClaro, { fontSize: 20 * escala, lineHeight: 26 * escala }]}>
                   Registrarse
                 </Text>
 
@@ -339,10 +334,10 @@ export default function Login() {
                 accessibilityRole="button"
                 accessibilityState={{ disabled: loading }}
                 activeOpacity={0.85}
-                style={[styles.boton, styles.accesoRapido, loading && styles.deshabilitado]}
+                style={[styles.boton, { minHeight: 64 * escala, paddingVertical: 16 * escala, paddingHorizontal: 20 * escala, borderRadius: 16 * escala }, styles.accesoRapido, loading && styles.deshabilitado]}
               >
 
-                <Text style={styles.textoClaro}>
+                <Text style={[styles.textoClaro, { fontSize: 20 * escala, lineHeight: 26 * escala }]}>
                   Acceso rápido
                 </Text>
 
@@ -370,17 +365,13 @@ export default function Login() {
 
 const styles = StyleSheet.create({
   boton: {
-    minHeight: 64,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 16,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   iniciarSesion: { backgroundColor: colores.botonPrincipal, borderColor: '#ffb3ae' },
-  registrarse: { backgroundColor: colores.botonPrincipal, borderColor: '#ffb3ae', marginBottom: 16 },
+  registrarse: { backgroundColor: colores.botonPrincipal, borderColor: '#ffb3ae' },
   accesoRapido: { backgroundColor: colores.botonPrincipal, borderColor: '#ffb3ae' },
-  textoClaro: { color: colores.textoSobreOscuro, fontSize: 20, lineHeight: 26, fontWeight: '800', textAlign: 'center' },
+  textoClaro: { color: colores.textoSobreOscuro, fontWeight: '800', textAlign: 'center' },
   deshabilitado: { opacity: 0.55 },
 });

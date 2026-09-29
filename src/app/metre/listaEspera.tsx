@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, FlatList, Image, TouchableOpacity, TouchableOpacity, Modal, Alert } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from 'expo-router';
+import { View, Text, ActivityIndicator, FlatList, Image, TouchableOpacity, Modal, Alert } from 'react-native';
+import { Stack, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/Header';
 import { colores } from '../../theme/colores';

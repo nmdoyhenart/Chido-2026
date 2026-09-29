@@ -76,57 +76,55 @@ export default function HomeMetre() {
                     </View>
                 </View>
 
-                {/* Lista de espera — conectada a Realtime, navega a lista-espera.tsx */}
-                <TouchableOpacity
-                    className="rounded-3xl p-6 mb-5 flex-row items-center"
-                    style={{ backgroundColor: colores.superficieTerracota, flex: 1.4 }}
-                    onPress={() => router.push('/metre/listaEspera')}
-                >
-                    <View
-                        className="rounded-full items-center justify-center mr-4"
-                        style={{ width: 64, height: 64, backgroundColor: colores.botonPrincipal }}
+                    {/* Lista de espera — conectada a Realtime, navega a lista-espera.tsx */}
+                    <TouchableOpacity
+                        onPress={() => router.push('/metre/listaEspera')}
+                        className="flex-1 bg-chido-cabecera border-2 border-white/70 rounded-2xl justify-center items-center flex-row px-6"
                     >
-                        <Ionicons name="time-outline" size={36} color={colores.textoSobreOscuro} />
-                    </View>
-                    <View className="flex-1">
-                        <Text className="text-2xl font-semibold" style={{ color: colores.textoSobreOscuro }}>
-                            Lista de espera
-                        </Text>
-                        <Text className="text-base mt-1" style={{ color: colores.textoSecundarioSobreOscuro }}>
-                            Clientes esperando una mesa disponible
-                        </Text>
-                    </View>
-                    <View
-                        className="rounded-full items-center justify-center"
-                        style={{ width: 40, height: 40, backgroundColor: colores.notificacion }}
-                    >
-                        <Text className="text-lg font-bold" style={{ color: colores.textoSobreOscuro }}>
-                            {cantidadEsperando}
-                        </Text>
-                    </View>
-                </TouchableOpacity>
+                        <Ionicons name="time-outline" size={36} color={colores.textoSobreOscuro} className="mr-4" />
+                        <View className="flex-1 ml-4">
+                            <Text className="text-chido-texto-sobre-oscuro font-bold text-2xl">Lista de espera</Text>
+                            <Text className="text-chido-texto-secundario-sobre-oscuro text-base mt-1">
+                                Clientes esperando una mesa disponible
+                            </Text>
+                        </View>
+                        <View
+                            className="rounded-full items-center justify-center"
+                            style={{ width: 40, height: 40, backgroundColor: colores.notificacion }}
+                        >
+                            <Text className="text-lg font-bold" style={{ color: colores.textoSobreOscuro }}>
+                                {cantidadEsperando}
+                            </Text>
+                        </View>
+                    </TouchableOpacity>
 
-                {/* Mapa del salón — sin destino todavía */}
-                <TouchableOpacity
-                    className="rounded-3xl p-6 flex-row items-center"
-                    style={{ backgroundColor: colores.superficieTerracota, flex: 1.4 }}
-                >
-                    <View
-                        className="rounded-full items-center justify-center mr-4"
-                        style={{ width: 64, height: 64, backgroundColor: colores.botonPrincipal }}
+                    {/* Mapa del salón — sin destino todavía */}
+                    <TouchableOpacity className="flex-1 bg-chido-cabecera border-2 border-white/70 rounded-2xl justify-center items-center flex-row px-6">
+                        <Ionicons name="grid-outline" size={36} color={colores.textoSobreOscuro} className="mr-4" />
+                        <View className="flex-1 ml-4">
+                            <Text className="text-chido-texto-sobre-oscuro font-bold text-2xl">Mapa del salón</Text>
+                            <Text className="text-chido-texto-secundario-sobre-oscuro text-base mt-1">
+                                Vistá el estado de cada mesa
+                            </Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={28} color={colores.textoSobreOscuro} />
+                    </TouchableOpacity>
+
+                    {/* Registrar un cliente — reutiliza FormularioRegistroCliente vía (auth)/registro en modo metre */}
+                    <TouchableOpacity
+                        onPress={() => router.push('/(auth)/registro')}
+                        className="flex-1 bg-chido-cabecera border-2 border-white/70 rounded-2xl justify-center items-center flex-row px-6"
                     >
-                        <Ionicons name="grid-outline" size={36} color={colores.textoSobreOscuro} />
-                    </View>
-                    <View className="flex-1">
-                        <Text className="text-2xl font-semibold" style={{ color: colores.textoSobreOscuro }}>
-                            Mapa del salón
-                        </Text>
-                        <Text className="text-base mt-1" style={{ color: colores.textoSecundarioSobreOscuro }}>
-                            Vistá el estado de cada mesa
-                        </Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={28} color={colores.textoSecundarioAlternativo} />
-                </TouchableOpacity>
+                        <Ionicons name="person-add-outline" size={36} color={colores.textoSobreOscuro} className="mr-4" />
+                        <View className="flex-1 ml-4">
+                            <Text className="text-chido-texto-sobre-oscuro font-bold text-2xl">Registrar un cliente</Text>
+                            <Text className="text-chido-texto-secundario-sobre-oscuro text-base mt-1">
+                                Dar de alta un nuevo cliente
+                            </Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={28} color={colores.textoSobreOscuro} />
+                    </TouchableOpacity>
+                </View>
             </View>
         </View>
     );

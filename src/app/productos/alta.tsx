@@ -1,15 +1,36 @@
 import { useState } from 'react';
-import { View, Text, Pressable, ActivityIndicator, Image, Modal, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, Image, Modal, KeyboardAvoidingView, Platform, TextInput, TextInputProps } from 'react-native';
 import { crearProducto, TipoProducto, subirFotos, existeProducto } from '../../../lib/productos';
 import { Header } from '../../components/Header';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Input } from '../../components/ui/Input';
 import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { colores } from '../../theme/colores';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { useRestriccionSimulacion } from '../../components/ui/RestriccionSimulacion';
+
+type CampoProps = TextInputProps & {
+    label: string;
+    error?: string;
+    containerClassName?: string;
+    inputClassName?: string;
+};
+
+// Versión más grande del Input compartido, sólo para esta pantalla
+function Campo({ label, error, containerClassName = '', inputClassName = '', ...props }: CampoProps) {
+    return (
+        <View className={`mb-5 ${containerClassName}`}>
+            <Text className="text-chido-texto-sobre-oscuro text-lg font-semibold mb-2 ml-1">{label}</Text>
+            <TextInput
+                className={`bg-chido-cabecera text-chido-texto-sobre-oscuro text-xl px-4 py-4 rounded-xl border border-chido-texto-boton-outline ${inputClassName}`}
+                placeholderTextColor={colores.textoSecundarioAlternativo}
+                {...props}
+            />
+            {error ? <Text className="text-chido-error text-base mt-1 ml-1">{error}</Text> : null}
+        </View>
+    );
+}
 
 
 export default function AltaPlato() {
@@ -188,15 +209,15 @@ export default function AltaPlato() {
                     <View className="flex-row items-center mb-8 relative">
                         {router.canGoBack() && <Pressable
                             onPress={() => router.back()}
-                            className="w-10 h-10 rounded-xl bg-chido-acento items-center justify-center absolute left-0 z-10"
+                            className="w-12 h-12 rounded-xl bg-chido-acento items-center justify-center absolute left-0 z-10"
                         >
-                        <Ionicons name="arrow-back" size={20} color={colores.textoSobreOscuro} />
+                        <Ionicons name="arrow-back" size={26} color={colores.textoSobreOscuro} />
                         </Pressable>}
-                        <Text className="text-2xl font-bold text-chido-texto-sobre-oscuro text-center flex-1">Alta de plato</Text>
+                        <Text className="text-3xl font-bold text-chido-texto-sobre-oscuro text-center flex-1">Alta de plato</Text>
                     </View>
 
-                    <View className="mb-4">
-                        <Text className="text-chido-texto-sobre-oscuro text-sm mb-2 ml-1">Fotos del plato</Text>
+                    <View className="mb-5">
+                        <Text className="text-chido-texto-sobre-oscuro text-lg font-semibold mb-2 ml-1">Fotos del plato</Text>
                         <View className="flex-row gap-3">
                             <Pressable
                                 onPress={() => abrirSelector(0)}
@@ -205,7 +226,7 @@ export default function AltaPlato() {
                                 {fotos[0] ? (
                                     <Image source={{ uri: fotos[0] }} className="w-full h-full" />
                                 ) : (
-                                    <Ionicons name="image-outline" size={28} color={colores.textoSobreOscuro} />
+                                    <Ionicons name="image-outline" size={40} color={colores.textoSobreOscuro} />
                                 )}
                             </Pressable>
 
@@ -216,7 +237,7 @@ export default function AltaPlato() {
                                 {fotos[1] ? (
                                     <Image source={{ uri: fotos[1] }} className="w-full h-full" />
                                 ) : (
-                                    <Ionicons name="image-outline" size={28} color={colores.textoSobreOscuro} />
+                                    <Ionicons name="image-outline" size={40} color={colores.textoSobreOscuro} />
                                 )}
                             </Pressable>
 
@@ -227,39 +248,41 @@ export default function AltaPlato() {
                                 {fotos[2] ? (
                                     <Image source={{ uri: fotos[2] }} className="w-full h-full" />
                                 ) : (
-                                    <Ionicons name="image-outline" size={28} color={colores.textoSobreOscuro} />
+                                    <Ionicons name="image-outline" size={40} color={colores.textoSobreOscuro} />
                                 )}
                             </Pressable>
                         </View>
-                        {errores.fotos && <Text className="text-chido-error text-xs mt-1 ml-1">{errores.fotos}</Text>}
+                        {errores.fotos && <Text className="text-chido-error text-base mt-1 ml-1">{errores.fotos}</Text>}
                     </View>
 
-                    <Input
+                    <Campo
                         label="Nombre"
                         value={nombre}
                         onChangeText={setNombre}
                         error={errores.nombre}
                     />
 
-                    <Input
+                    <Campo
                         label="Descripción"
                         value={descripcion}
                         onChangeText={setDescripcion}
                         multiline
-                        style={{ height: 100, textAlignVertical: 'top' }}
+                        containerClassName="flex-1"
+                        inputClassName="flex-1"
+                        style={{ minHeight: 140, textAlignVertical: 'top' }}
                         error={errores.descripcion}
                     />
 
                     <View className="flex-row gap-4">
                         <Input
-                            label="Tiempo (minutos)"
+                            label="Tiempo "
                             value={tiempoElaboracion}
                             onChangeText={setTiempoElaboracion}
                             keyboardType="numeric"
                             containerClassName="flex-1"
                             error={errores.tiempoElaboracion}
                         />
-                        <Input
+                        <Campo
                             label="Precio"
                             value={precio}
                             onChangeText={setPrecio}
@@ -269,18 +292,18 @@ export default function AltaPlato() {
                         />
                     </View>
 
-                    {error !== '' && <Text className="text-chido-error font-bold mb-2">{error}</Text>}
-                    {exito && <Text className="text-chido-exito font-bold mb-2">¡Plato guardado con éxito!</Text>}
+                    {error !== '' && <Text className="text-chido-error text-lg font-bold mb-2">{error}</Text>}
+                    {exito && <Text className="text-chido-exito text-lg font-bold mb-2">¡Plato guardado con éxito!</Text>}
 
                     {cargando && <ActivityIndicator size="large" color={colores.textoSobreOscuro} />}
 
-                    <Pressable className="bg-chido-cabecera p-4 rounded-xl mt-4 mb-12 items-center" onPress={handleGuardar}>
-                        <Text className="text-chido-texto-sobre-oscuro font-bold text-lg">Guardar</Text>
+                    <Pressable className="bg-chido-cabecera p-5 rounded-xl mt-4 mb-8 items-center" onPress={handleGuardar}>
+                        <Text className="text-chido-texto-sobre-oscuro font-bold text-xl">Guardar</Text>
                     </Pressable>
 
                     <Modal visible={selectorVisible} transparent animationType="fade">
                         <View className="flex-1 bg-chido-cabecera/50 items-center justify-center">
-                            <View className="bg-chido-cabecera rounded-2xl p-4 w-64 gap-3">
+                            <View className="bg-chido-cabecera rounded-2xl p-5 w-80 gap-4">
                                 <Pressable
                                     onPress={() => {
                                         if (indiceSeleccionado !== null) {
@@ -288,9 +311,9 @@ export default function AltaPlato() {
                                         }
                                         setSelectorVisible(false);
                                     }}
-                                    className="bg-chido-acento p-3 rounded-xl items-center"
+                                    className="bg-chido-acento p-4 rounded-xl items-center"
                                 >
-                                    <Text className="text-chido-texto-sobre-oscuro font-bold">Tomar foto</Text>
+                                    <Text className="text-chido-texto-sobre-oscuro font-bold text-lg">Tomar foto</Text>
                                 </Pressable>
 
                                 <Pressable
@@ -300,16 +323,16 @@ export default function AltaPlato() {
                                         }
                                         setSelectorVisible(false);
                                     }}
-                                    className="bg-chido-acento p-3 rounded-xl items-center"
+                                    className="bg-chido-acento p-4 rounded-xl items-center"
                                 >
-                                    <Text className="text-chido-texto-sobre-oscuro font-bold">Elegir de galería</Text>
+                                    <Text className="text-chido-texto-sobre-oscuro font-bold text-lg">Elegir de galería</Text>
                                 </Pressable>
 
                                 <Pressable
                                     onPress={() => setSelectorVisible(false)}
-                                    className="p-3 rounded-xl items-center"
+                                    className="p-4 rounded-xl items-center"
                                 >
-                                    <Text className="text-chido-texto-sobre-oscuro">Cancelar</Text>
+                                    <Text className="text-chido-texto-sobre-oscuro text-lg">Cancelar</Text>
                                 </Pressable>
                             </View>
                         </View>

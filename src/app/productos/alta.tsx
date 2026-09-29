@@ -21,7 +21,7 @@ export default function AltaPlato() {
     const [descripcion, setDescripcion] = useState('');
     const [tiempoElaboracion, setTiempoElaboracion] = useState('');
     const [precio, setPrecio] = useState('');
-    const [tipo, setTipo] = useState<TipoProducto>('plato');
+    const [tipo] = useState<TipoProducto>('plato');
     const [cargando, setCargando] = useState(false);
     const [error, setError] = useState('');
     const [fotos, setFotos] = useState<(string| null)[]>([null,null,null])

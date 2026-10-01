@@ -7,7 +7,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { colores } from '../../theme/colores';
 import { CerrarSesionButton } from '../../components/auth/CerrarSesionButton';
-import { obtenerClienteEnListaPorId } from '../../../lib/clientesAnonimos';
 
 const QR_ENTRADA = 'ENTRADA_LOCAL';
 const CLIENTE_ANONIMO_ID_KEY = 'cliente_anonimo_id';

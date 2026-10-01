@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, FlatList, Image, TouchableOpacity, Modal, Alert } from 'react-native';
-import { Stack } from 'expo-router';
-import { useFocusEffect } from 'expo-router';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
+
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/Header';
 import { colores } from '../../theme/colores';
 import { obtenerListaEspera, suscribirseALista, eliminarDeLista, asignarMesaACliente, ClienteEnEspera } from '../../../lib/listaEspera';
 import { useMesas } from '../../hooks/useMesas';
+import { useAppSession } from '../../contexts/AppSessionContext';
+import { useAppSession } from '../../contexts/AppSessionContext';
 
 function obtenerMensajeError(err: unknown): string {
     if (err instanceof Error) return err.message;
@@ -15,6 +17,9 @@ function obtenerMensajeError(err: unknown): string {
 }
 
 export default function ListaEsperaMetre() {
+    const router = useRouter();
+    const { usuario } = useAppSession();
+    const nombre = [usuario?.nombres, usuario?.apellidos].filter(Boolean).join(' ').trim() || 'Metre';
     const [lista, setLista] = useState<ClienteEnEspera[]>([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState('');

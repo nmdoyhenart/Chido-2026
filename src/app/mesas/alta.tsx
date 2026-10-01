@@ -251,7 +251,7 @@ export default function AgregarMesa() {
       <Header userName={nombreVisible} role={perfilVisible} />
       <SafeAreaView edges={["left", "right", "bottom"]} className="flex-1">
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
-          <ScrollView className="flex-1 p-5" contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" accessibilityElementsHidden={ocupada} importantForAccessibility={ocupada ? "no-hide-descendants" : "auto"}>
+          <View className="flex-1 p-5" accessibilityElementsHidden={ocupada} importantForAccessibility={ocupada ? "no-hide-descendants" : "auto"}>
             <View className="w-full max-w-xl self-center">
               <View className="relative mb-8 flex-row items-center">
                 <Pressable className="absolute left-0 z-10 h-10 w-10 items-center justify-center rounded-xl bg-chido-acento" onPress={volver} accessibilityRole="button" accessibilityLabel="Volver al panel de Supervisor">
@@ -306,7 +306,7 @@ export default function AgregarMesa() {
                 <Text className="text-lg font-bold text-chido-texto-sobre-oscuro">Guardar mesa</Text>
               </Pressable>
             </View>
-          </ScrollView>
+          </View>
           {ocupada && !cameraVisible ? (
             <ImageBackground source={require("../../../assets/images/fondo.jpeg")} resizeMode="cover" blurRadius={2} style={StyleSheet.absoluteFill}>
               <View className="absolute inset-0 bg-chido-cabecera/35" />

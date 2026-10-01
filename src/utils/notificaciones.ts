@@ -33,19 +33,8 @@ export function crearAvisoClienteEnEspera(): NotificacionPush {
     };
 }
 
-
-
-export function obtenerRutaNotificacion(datos: unknown): Href | null {
+export function obtenerRutaNotificacion(datos: unknown): RutaNotificacion | null {
     if (!datos || typeof datos !== 'object' || Array.isArray(datos)) return null;
-    const data = datos as Record<string, unknown>;
-  const ruta = data.ruta;
-    
-  if (typeof ruta === 'string' && RUTAS_VALIDAS.has(ruta)) {
-    // If the notification includes extra data like mesaId, we pass it as query params
-    if (ruta === '/mozo/chat-mesa' || ruta === '/cliente/chat') {
-      return { pathname: ruta as any, params: data as any };
-    }
-    return ruta as Href;
-  }
-  return null;
+    const ruta = (datos as Record<string, unknown>).ruta;
+    return typeof ruta === 'string' && RUTAS_VALIDAS.has(ruta) ? ruta as RutaNotificacion : null;
 }

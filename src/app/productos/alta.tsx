@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { View, Text, Pressable, ActivityIndicator, Image, Modal, KeyboardAvoidingView, Platform, TextInput, TextInputProps } from 'react-native';
+import { useRef, useState } from 'react';
+import { View, Text, Pressable, ActivityIndicator, ScrollView, Image, Modal, KeyboardAvoidingView, Platform, TextInput, TextInputProps } from 'react-native';
 import { crearProducto, TipoProducto, subirFotos, existeProducto } from '../../../lib/productos';
 import { Header } from '../../components/Header';
 import { Stack, useRouter } from 'expo-router';
@@ -9,6 +9,7 @@ import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { colores } from '../../theme/colores';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { useRestriccionSimulacion } from '../../components/ui/RestriccionSimulacion';
+import { useCampoVisibleConTeclado } from '../../hooks/useCampoVisibleConTeclado';
 
 type CampoProps = TextInputProps & {
     label: string;
@@ -51,6 +52,8 @@ export default function AltaPlato() {
     const [indiceSeleccionado, setIndiceSeleccionado] = useState<number | null>(null);
     const [exito, setExito] = useState(false);
     const [errores, setErrores] = useState<Record<string, string>>({});
+    const scroll = useRef<ScrollView>(null);
+    const { alDesplazar, alEnfocar, rellenoInferior } = useCampoVisibleConTeclado(scroll);
 
     function validar() {
         const nuevosErrores: Record<string, string> = {};
@@ -203,9 +206,9 @@ export default function AltaPlato() {
             <Header userName={nombreUsuario} role='Cocinero'/>
             <KeyboardAvoidingView
                 className="flex-1"
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
-                <View className="flex-1 p-5">
+                <ScrollView ref={scroll} className="flex-1 p-5" contentContainerStyle={{ flexGrow: 1, paddingBottom: rellenoInferior }} keyboardShouldPersistTaps="handled" onScroll={alDesplazar} scrollEventThrottle={16}>
                     <View className="flex-row items-center mb-8 relative">
                         {router.canGoBack() && <Pressable
                             onPress={() => router.back()}
@@ -257,6 +260,7 @@ export default function AltaPlato() {
 
                     <Campo
                         label="Nombre"
+                        onFocus={alEnfocar}
                         value={nombre}
                         onChangeText={setNombre}
                         error={errores.nombre}
@@ -264,6 +268,7 @@ export default function AltaPlato() {
 
                     <Campo
                         label="Descripción"
+                        onFocus={alEnfocar}
                         value={descripcion}
                         onChangeText={setDescripcion}
                         multiline
@@ -274,8 +279,9 @@ export default function AltaPlato() {
                     />
 
                     <View className="flex-row gap-4">
-                        <Input
-                            label="Tiempo "
+                        <Campo
+                            label="Tiempo"
+                            onFocus={alEnfocar}
                             value={tiempoElaboracion}
                             onChangeText={setTiempoElaboracion}
                             keyboardType="numeric"
@@ -284,6 +290,7 @@ export default function AltaPlato() {
                         />
                         <Campo
                             label="Precio"
+                            onFocus={alEnfocar}
                             value={precio}
                             onChangeText={setPrecio}
                             keyboardType="numeric"
@@ -337,7 +344,7 @@ export default function AltaPlato() {
                             </View>
                         </View>
                     </Modal>
-                </View>
+                </ScrollView>
             </KeyboardAvoidingView>
         </View>
     );

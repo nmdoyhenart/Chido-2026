@@ -9,6 +9,7 @@ import ErrorFormulario from '../ui/ErrorFormulario';
 import ChidoLoader from '../ui/ChidoLoader';
 import CamaraRegistro, { type FotoCapturada } from './CamaraRegistro';
 import { colores } from '../../theme/colores';
+import { useCampoVisibleConTeclado } from '../../hooks/useCampoVisibleConTeclado';
 
 export type ResultadoFormulario = { ok: true } | { ok: false; mensaje: string; campos?: ErroresRegistro };
 type Props = {
@@ -36,6 +37,7 @@ export default function FormularioRegistroCliente({ esMetre, onSubmit, onVolver 
   const inputs = useRef<Partial<Record<CampoTexto, TextInput | null>>>({});
   const posiciones = useRef<Partial<Record<CampoRegistro, number>>>({});
   const inicioFormulario = useRef(0);
+  const { alDesplazar, alEnfocar, rellenoInferior } = useCampoVisibleConTeclado(scroll);
 
   useEffect(() => {
     activa.current = true;
@@ -75,6 +77,11 @@ export default function FormularioRegistroCliente({ esMetre, onSubmit, onVolver 
       if (primero !== 'fotoBase64') inputs.current[primero]?.focus();
     }
     Vibration.vibrate(180);
+  }
+
+  function volver() {
+    Keyboard.dismiss();
+    onVolver();
   }
 
   async function registrar() {
@@ -134,11 +141,11 @@ export default function FormularioRegistroCliente({ esMetre, onSubmit, onVolver 
             <Text className="text-chido-texto-sobre-oscuro text-xl text-center my-6">
               {esMetre ? 'El cliente quedó pendiente de aprobación. Podrá ingresar cuando el dueño o supervisor acepte su registro.' : 'Tu registro quedó pendiente de aprobación. Podrás ingresar cuando el dueño o supervisor lo acepte.'}
             </Text>
-            <Pressable onPress={onVolver} accessibilityRole="button" className="bg-chido-cabecera rounded-xl p-5"><Text className="text-chido-texto-sobre-oscuro text-xl text-center font-bold">{esMetre ? 'Volver al inicio' : 'Volver al ingreso'}</Text></Pressable>
+            <Pressable onPress={volver} accessibilityRole="button" className="bg-chido-cabecera rounded-xl p-5"><Text className="text-chido-texto-sobre-oscuro text-xl text-center font-bold">{esMetre ? 'Volver al inicio' : 'Volver al ingreso'}</Text></Pressable>
           </ScrollView>
         ) : (
-          <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <ScrollView ref={scroll} keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1 }}>
+          <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <ScrollView ref={scroll} keyboardShouldPersistTaps="handled" onScroll={alDesplazar} scrollEventThrottle={16} contentContainerStyle={{ flexGrow: 1, paddingBottom: rellenoInferior }}>
               <View className="items-center px-6 pt-5 pb-4">
                 <Image source={require('../../../assets/images/logo.png')} style={{ width: 125, height: 125 }} resizeMode="contain" />
                 <Text className="text-chido-texto-sobre-oscuro text-3xl font-extrabold text-center mt-2">{esMetre ? 'Registrar cliente' : 'Crear cuenta'}</Text>
@@ -163,7 +170,7 @@ export default function FormularioRegistroCliente({ esMetre, onSubmit, onVolver 
                       ref={(input) => { inputs.current[campo.id] = input; }}
                       etiqueta={campo.etiqueta} ayuda={campo.ayuda} error={errores[campo.id]}
                       value={valores[campo.id]} onChangeText={(valor) => editar(campo.id, valor)}
-                      onBlur={() => validarCampo(campo.id)} placeholder={campo.placeholder} maxLength={campo.limite}
+                      onFocus={alEnfocar} onBlur={() => validarCampo(campo.id)} placeholder={campo.placeholder} maxLength={campo.limite}
                       editable={!enviando}
                       keyboardType={campo.id === 'correo' ? 'email-address' : campo.id === 'dni' ? 'number-pad' : 'default'}
                       autoCapitalize={campo.id === 'nombres' || campo.id === 'apellidos' ? 'words' : 'none'}
@@ -180,7 +187,7 @@ export default function FormularioRegistroCliente({ esMetre, onSubmit, onVolver 
                 </Pressable>
                 {mensaje && <View className="mb-4"><ErrorFormulario mensaje={mensaje} /></View>}
                 {enviando ? <ChidoLoader mensaje="Registrando cliente…" /> : <Pressable onPress={registrar} accessibilityRole="button" className="bg-chido-cabecera rounded-xl p-5"><Text className="text-chido-texto-sobre-oscuro text-xl text-center font-bold">{esMetre ? 'Registrar cliente' : 'Registrarme'}</Text></Pressable>}
-                <Pressable disabled={enviando} onPress={onVolver} accessibilityRole="button" className="py-5"><Text className="text-chido-texto-sobre-oscuro text-lg font-bold text-center underline">{esMetre ? 'Volver al inicio' : 'Volver al ingreso'}</Text></Pressable>
+                <Pressable disabled={enviando} onPress={volver} accessibilityRole="button" className="py-5"><Text className="text-chido-texto-sobre-oscuro text-lg font-bold text-center underline">{esMetre ? 'Volver al inicio' : 'Volver al ingreso'}</Text></Pressable>
               </View>
             </ScrollView>
           </KeyboardAvoidingView>

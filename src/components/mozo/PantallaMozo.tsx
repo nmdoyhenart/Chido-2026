@@ -96,7 +96,7 @@ export default function PantallaMozo({ vista = 'inicio', mesa = '5' }: { vista?:
       </View>}
     </SafeAreaView>
     <SafeAreaView edges={['bottom', 'left', 'right']} style={[s.cuerpo, vista === 'chat' && s.fondoChat]}>
-      <KeyboardAvoidingView style={s.cuerpo} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={s.cuerpo} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView key={vista} keyboardShouldPersistTaps="handled" contentContainerStyle={[s.contenido, (vista === 'inicio' || vista === 'pedidos') && s.contenidoExpandido]} showsVerticalScrollIndicator={false}>
           {saliendo && <ChidoLoader mensaje="Cerrando sesión…" />}
           {vista === 'inicio' ? <Text style={s.saludo} accessibilityRole="header">Hola, {nombre.split(' ')[0]}</Text> : vista !== 'chat' && <View style={s.tituloFila}>

@@ -35,10 +35,6 @@ export default function HomeMetre() {
         }
     }
 
-    return (
-        <View className="flex-1" style={{ backgroundColor: colores.fondo }}>
-            <Stack.Screen options={{ headerShown: false }} />
-            <Header userName="Juan Ignacio Antunez" role="Metre" />
   return (
     <View className="flex-1" style={{ backgroundColor: colores.fondo }}>
       <Stack.Screen options={{ headerShown: false }} />

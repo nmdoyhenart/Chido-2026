@@ -57,6 +57,9 @@ BEGIN
   IF v_pedido_id IS NOT NULL THEN
     RETURN jsonb_build_object('pedido_id', v_pedido_id, 'total', v_total);
   END IF;
+  -- SELECT INTO deja NULL los destinos cuando no encuentra filas.
+  -- Reiniciar el acumulador antes de calcular un pedido nuevo.
+  v_total := 0;
 
   IF p_pedido_id IS NULL THEN
     SELECT m.id INTO v_mesa_id

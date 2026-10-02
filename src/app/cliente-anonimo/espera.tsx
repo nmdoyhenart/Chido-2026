@@ -52,10 +52,18 @@ export default function EsperaClienteAnonimo() {
     }, []);
 
     const salirDelLocal = async () => {
-        await AsyncStorage.removeItem(CLIENTE_ANONIMO_ID_KEY);
-        await AsyncStorage.removeItem(CLIENTE_ANONIMO_NOMBRE_KEY);
-        await AsyncStorage.removeItem(CLIENTE_ANONIMO_FOTO_KEY);
-        router.replace('/(auth)/login');
+        setSaliendo(true);
+        setError('');
+        try {
+            await AsyncStorage.removeItem(CLIENTE_ANONIMO_ID_KEY);
+            await AsyncStorage.removeItem(CLIENTE_ANONIMO_NOMBRE_KEY);
+            await AsyncStorage.removeItem(CLIENTE_ANONIMO_FOTO_KEY);
+            router.replace('/(auth)/login');
+        } catch {
+            setError('No se pudo cerrar la sesión. Intentá de nuevo.');
+        } finally {
+            setSaliendo(false);
+        }
     };
 
     const verEncuestasPrevias = () => {
@@ -165,7 +173,7 @@ export default function EsperaClienteAnonimo() {
                 <Ionicons name="exit-outline" size={28} color={colores.textoSobreOscuro} />
                 <Text className="text-chido-texto-sobre-oscuro font-bold text-2xl ml-2">{saliendo ? 'Saliendo…' : 'Salir del local'}</Text>
             </TouchableOpacity>
-            {!!Error && <Text accessibilityLiveRegion="assertive" className="text-chido-texto-sobre-oscuro text-center mt-4">{error}</Text>}
+            {!!error && <Text accessibilityLiveRegion="assertive" className="text-chido-texto-sobre-oscuro text-center mt-4">{error}</Text>}
         </View>
     );
 }

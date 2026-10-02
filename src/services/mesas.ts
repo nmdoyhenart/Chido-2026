@@ -192,6 +192,11 @@ export async function confirmarMesaPorQr(
   }
 
   if (mesa.qr_confirmado_at) return mesa;
+  const { error: errorConfirmacion } = await supabase.rpc('confirmar_mesa_qr_cliente', {
+    p_mesa_id: mesa.id,
+  });
+  if (errorConfirmacion) throw errorConfirmacion;
+  return { ...mesa, qr_confirmado_at: new Date().toISOString() };
 
   const { data, error } = await supabase
     .from("mesas")

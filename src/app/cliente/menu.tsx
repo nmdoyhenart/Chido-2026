@@ -8,10 +8,11 @@ import { Header } from '../../components/Header';
 import { PrimaryButton } from '../../components/ui/Buttons';
 import { Producto } from '../../types/producto';
 import { getProductos } from '../../services/productos.service';
-import { crearPedido, getPedidoRechazado } from '../../services/pedidos.service';
+import { crearPedido, crearPedidoAnonimo, getPedidoRechazado, getPedidoRechazadoAnonimo } from '../../services/pedidos.service';
 import { colores } from '../../theme/colores';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Crypto from 'expo-crypto';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 const ITEM_HEIGHT = 440;
@@ -20,9 +21,10 @@ const ITEM_MARGIN = 24;
 export default function MenuCliente() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { mesaId: mesaIdParametro, pedidoId } = useLocalSearchParams<{ mesaId?: string; pedidoId?: string }>();
+  const { mesaId: mesaIdParametro, pedidoId, clienteAnonimoId: clienteAnonimoIdParametro } = useLocalSearchParams<{ mesaId?: string; pedidoId?: string; clienteAnonimoId?: string }>();
   const { usuario } = useAppSession();
   const [mesaId, setMesaId] = useState(mesaIdParametro ?? '');
+  const [clienteAnonimoId, setClienteAnonimoId] = useState(clienteAnonimoIdParametro ?? '');
 
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,8 +58,13 @@ export default function MenuCliente() {
       const { data } = await supabase.from('mesas').select('numero').eq('id', id).single();
       if (activo && data) setMesaNumero(data.numero);
     };
+    void AsyncStorage.getItem('cliente_anonimo_id').then(id => {
+      if (activo && !clienteAnonimoIdParametro && id) setClienteAnonimoId(id);
+    });
     if (pedidoId) {
-      void getPedidoRechazado(pedidoId).then(pedidoAnterior => {
+      void (clienteAnonimoIdParametro
+        ? getPedidoRechazadoAnonimo(clienteAnonimoIdParametro, pedidoId)
+        : getPedidoRechazado(pedidoId)).then(pedidoAnterior => {
         if (!activo) return;
         setMesaId(pedidoAnterior.mesa_id);
         void mostrarNumeroMesa(pedidoAnterior.mesa_id);
@@ -69,7 +76,7 @@ export default function MenuCliente() {
       if (mesaIdParametro) void mostrarNumeroMesa(mesaIdParametro);
     }
     return () => { activo = false; clearTimeout(cargaInicial); };
-  }, [mesaIdParametro, pedidoId]);
+  }, [mesaIdParametro, pedidoId, clienteAnonimoIdParametro]);
 
   const updateCantidad = (id: string, delta: number) => {
     solicitudId.current = Crypto.randomUUID();
@@ -102,7 +109,7 @@ export default function MenuCliente() {
       Alert.alert('Aviso', 'Agrega productos al pedido.');
       return;
     }
-    if (!usuario?.id || !mesaId || (pedidoId && !Object.keys(pedido).length)) {
+    if ((!usuario?.id && !clienteAnonimoId) || !mesaId || (pedidoId && !Object.keys(pedido).length)) {
       Alert.alert('Error', 'No encontramos la mesa o el pedido. Escaneá el QR de tu mesa y volvé a intentarlo.');
       return;
     }
@@ -111,8 +118,10 @@ export default function MenuCliente() {
       enviandoRef.current = true;
       setEnviando(true);
       const detalles = Object.entries(pedido).map(([id, cantidad]) => ({ producto_id: id, cantidad }));
-      const guardado = await crearPedido(mesaId, solicitudId.current, detalles, pedidoId);
-      router.replace({ pathname: '/cliente/estado-pedido', params: { pedidoId: guardado.pedido_id } });
+      const guardado = clienteAnonimoId
+        ? await crearPedidoAnonimo(clienteAnonimoId, mesaId, solicitudId.current, detalles, pedidoId)
+        : await crearPedido(mesaId, solicitudId.current, detalles, pedidoId);
+      router.replace({ pathname: '/cliente/estado-pedido', params: { pedidoId: guardado.pedido_id, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } });
     } catch (error: unknown) {
       Alert.alert('No se pudo enviar el pedido', error instanceof Error ? error.message : 'Intentá nuevamente.');
     } finally {

@@ -20,6 +20,26 @@ export const crearPedido = async (
   return resultado;
 };
 
+export const crearPedidoAnonimo = async (
+  clienteAnonimoId: string,
+  mesaId: string,
+  solicitudId: string,
+  detallesPedido: { producto_id: string; cantidad: number }[],
+  pedidoId?: string,
+) => {
+  const { data, error } = await supabase.rpc('guardar_pedido_cliente_anonimo', {
+    p_cliente_anonimo_id: clienteAnonimoId,
+    p_mesa_id: mesaId,
+    p_solicitud_id: solicitudId,
+    p_detalles: detallesPedido,
+    p_pedido_id: pedidoId ?? null,
+  });
+  if (error) throw new Error(error.message || 'No se pudo guardar el pedido.');
+  const resultado = data as { pedido_id?: string; total?: number } | null;
+  if (!resultado?.pedido_id || typeof resultado.total !== 'number') throw new Error('No se confirmó el pedido.');
+  return resultado;
+};
+
 export type PedidoRechazado = {
   id: string;
   mesa_id: string;
@@ -37,6 +57,16 @@ export const getPedidoRechazado = async (pedidoId: string): Promise<PedidoRechaz
   return pedido;
 };
 
+export const getPedidoRechazadoAnonimo = async (clienteAnonimoId: string, pedidoId: string): Promise<PedidoRechazado> => {
+  const { data, error } = await supabase.rpc('obtener_pedido_rechazado_anonimo', {
+    p_cliente_anonimo_id: clienteAnonimoId, p_pedido_id: pedidoId,
+  });
+  if (error) throw new Error(error.message || 'No se pudo recuperar el pedido.');
+  const pedido = data as PedidoRechazado | null;
+  if (!pedido || pedido.estado !== 'rechazado' || !Array.isArray(pedido.detalles)) throw new Error('Este pedido ya no se puede modificar.');
+  return pedido;
+};
+
 export const getEstadoPedido = async (pedidoId: string): Promise<string> => {
   const { data, error } = await supabase
     .from('pedidos')
@@ -46,6 +76,21 @@ export const getEstadoPedido = async (pedidoId: string): Promise<string> => {
   
   if (error) throw error;
   return data.estado;
+};
+
+export const getEstadoPedidoAnonimo = async (clienteAnonimoId: string, pedidoId: string): Promise<string> => {
+  const { data, error } = await supabase.rpc('obtener_estado_pedido_anonimo', {
+    p_cliente_anonimo_id: clienteAnonimoId, p_pedido_id: pedidoId,
+  });
+  if (error) throw error;
+  return data as string;
+};
+
+export const confirmarMesaAnonima = async (clienteAnonimoId: string, mesaId: string) => {
+  const { error } = await supabase.rpc('confirmar_mesa_qr_anonimo', {
+    p_cliente_anonimo_id: clienteAnonimoId, p_mesa_id: mesaId,
+  });
+  if (error) throw error;
 };
 
 export const suscribirEstadoPedido = (pedidoId: string, callback: (estado: string) => void) => {
@@ -80,7 +125,8 @@ export const getPedidosMozo = async () => {
   return (data ?? []) as {
     id: string; estado: string; total: number; created_at: string;
     mesas: { numero: number; tipo: string; cantidad_comensales: number };
-    usuarios: { nombres: string; apellidos: string | null };
+    usuarios: { nombres: string; apellidos: string | null } | null;
+    cliente_nombre?: string;
     pedido_detalles: { id: string; cantidad: number; precio_unitario: number; estado_sector: string; productos: { nombre: string; tipo: string } }[];
   }[];
 };

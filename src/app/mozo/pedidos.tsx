@@ -139,6 +139,9 @@ export default function PedidosMozo() {
                   <Text className="text-chido-texto-sobre-oscuro text-xl font-bold">
                     Mesa {item.mesas?.numero}
                   </Text>
+                  <Text className="text-chido-texto-secundario-sobre-oscuro text-sm font-semibold" numberOfLines={1}>
+                    {item.cliente_nombre || [item.usuarios?.nombres, item.usuarios?.apellidos].filter(Boolean).join(' ') || 'Cliente'}
+                  </Text>
                   <Text className="text-white text-base capitalize mt-1 font-semibold">
                     {item.mesas?.tipo} • {item.mesas?.cantidad_comensales} personas
                   </Text>

@@ -3,12 +3,12 @@ import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/Header';
-import { getEstadoPedido, suscribirEstadoPedido } from '../../services/pedidos.service';
+import { getEstadoPedido, getEstadoPedidoAnonimo, suscribirEstadoPedido } from '../../services/pedidos.service';
 import { colores } from '../../theme/colores';
 
 export default function EstadoPedido() {
   const router = useRouter();
-  const { pedidoId } = useLocalSearchParams<{ pedidoId: string }>();
+  const { pedidoId, clienteAnonimoId } = useLocalSearchParams<{ pedidoId: string; clienteAnonimoId?: string }>();
   const [estado, setEstado] = useState<string>('pendiente_mozo');
 
   useEffect(() => {
@@ -16,7 +16,9 @@ export default function EstadoPedido() {
 
     const fetchEstado = async () => {
       try {
-        const estadoActual = await getEstadoPedido(pedidoId);
+        const estadoActual = clienteAnonimoId
+          ? await getEstadoPedidoAnonimo(clienteAnonimoId, pedidoId)
+          : await getEstadoPedido(pedidoId);
         setEstado(estadoActual);
       } catch (e) {
         console.error(e);
@@ -27,7 +29,7 @@ export default function EstadoPedido() {
     // el estado actualizado también cuando la app está en iOS/Expo Go.
     const intervalo = setInterval(() => { void fetchEstado(); }, 5000);
 
-    const desuscribir = suscribirEstadoPedido(pedidoId, (nuevoEstado) => {
+    const desuscribir = clienteAnonimoId ? () => {} : suscribirEstadoPedido(pedidoId, (nuevoEstado) => {
       setEstado(nuevoEstado);
       Alert.alert('Pedido Actualizado', `El estado de tu pedido cambió a: ${nuevoEstado}`);
     });
@@ -36,7 +38,7 @@ export default function EstadoPedido() {
       clearInterval(intervalo);
       desuscribir();
     };
-  }, [pedidoId]);
+  }, [pedidoId, clienteAnonimoId]);
 
   return (
     <View className="flex-1 bg-chido-fondo">
@@ -65,7 +67,7 @@ export default function EstadoPedido() {
           <TouchableOpacity 
             className="bg-chido-cabecera p-4 rounded-xl mt-10 w-full"
             onPress={() => router.replace(estado === 'rechazado'
-              ? { pathname: '/cliente/menu', params: { pedidoId } }
+              ? { pathname: '/cliente/menu', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } }
               : '/cliente/home')}
           >
             <Text className="text-chido-texto-sobre-oscuro text-center font-bold text-lg">{estado === 'rechazado' ? 'Modificar pedido' : 'Volver al Menú'}</Text>

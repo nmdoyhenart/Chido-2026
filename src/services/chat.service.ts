@@ -31,20 +31,25 @@ export const enviarMensaje = async (mesaId: string, usuarioId: string, texto: st
 };
 
 export const suscribirMensajes = (mesaId: string, callback: (mensaje: Mensaje) => void) => {
-  const channel = supabase
-    .channel(`chat_mesa_${mesaId}`)
-    .on('postgres_changes', { 
-      event: 'INSERT', 
-      schema: 'public', 
-      table: 'chat_mensajes',
-      filter: `mesa_id=eq.${mesaId}`
-    }, (payload) => {
-      callback(payload.new as Mensaje);
-    })
-    .subscribe();
+  try {
+    const channel = supabase
+      .channel(`chat_mesa_${mesaId}_${Math.random()}`)
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'chat_mensajes',
+        filter: `mesa_id=eq.${mesaId}`
+      }, (payload) => {
+        callback(payload.new as Mensaje);
+      })
+      .subscribe();
 
-  return () => {
-    supabase.removeChannel(channel);
-  };
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  } catch (error) {
+    console.error("Error en suscribirMensajes:", error);
+    return () => {};
+  }
 };
 

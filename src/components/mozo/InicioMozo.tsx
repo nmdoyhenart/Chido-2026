@@ -28,7 +28,7 @@ export default function InicioMozo({ usuario, role }: any) {
     fetchStats();
     
     const channel = supabase
-      .channel('pedidos_stats_mozo')
+      .channel(`pedidos_stats_mozo_${Math.random()}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => {
         fetchStats();
       })

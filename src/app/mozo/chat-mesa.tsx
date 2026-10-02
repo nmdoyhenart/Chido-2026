@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert, ImageBackground } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAppSession } from '../../contexts/AppSessionContext';
@@ -61,7 +61,11 @@ export default function ChatMesaMozo() {
   const displayRole = role ? role.charAt(0).toUpperCase() + role.slice(1) : "Mozo";
 
   return (
-    <View className="flex-1 bg-chido-fondo">
+    <ImageBackground 
+      source={require('../../../assets/images/fondo.jpeg')} 
+      className="flex-1"
+      resizeMode="cover"
+    >
       <Header userName={userName} role={`${displayRole} - Chat Mesa ${numero}`} />
 
       <View className="flex-row items-center px-4 py-2 bg-transparent">
@@ -74,42 +78,44 @@ export default function ChatMesaMozo() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView 
-        className="flex-1 p-5"
-        ref={scrollViewRef}
-        onLayout={() => scrollViewRef.current?.scrollToEnd({ animated: false })}
-        onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
-      >
-        {mensajes.length === 0 ? (
-          <Text className="text-chido-texto-sobre-oscuro text-center mt-10">No hay mensajes en esta mesa.</Text>
-        ) : (
-          mensajes.map(msg => {
-            const isMe = msg.es_mozo;
-            return (
-              <View 
-                key={msg.id} 
-                className={`p-4 rounded-2xl mb-4 max-w-[80%] border border-white/30 ${
-                  isMe ? 'bg-chido-superficie self-end rounded-tr-sm' : 'bg-chido-cabecera self-start rounded-tl-sm'
-                }`}
-              >
-                <Text className={`font-bold mb-1 ${isMe ? 'text-chido-texto-boton-outline' : 'text-chido-aviso'}`}>
-                  {isMe ? 'Yo' : 'Cliente'}
-                </Text>
-                <Text className={`text-base ${isMe ? 'text-chido-texto-sobre-claro' : 'text-chido-texto-sobre-oscuro'}`}>
-                  {msg.texto}
-                </Text>
-                <Text className={`text-xs mt-2 self-end ${isMe ? 'text-chido-texto-secundario-sobre-claro' : 'text-chido-texto-secundario-sobre-oscuro'}`}>
-                  {formatearHora(msg.created_at)}
-                </Text>
-              </View>
-            );
-          })
-        )}
-      </ScrollView>
-
       <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
+        keyboardVerticalOffset={0}
+        className="flex-1"
       >
+        <ScrollView 
+          className="flex-1 p-5"
+          ref={scrollViewRef}
+          onLayout={() => scrollViewRef.current?.scrollToEnd({ animated: false })}
+          onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+        >
+          {mensajes.length === 0 ? (
+            <Text className="text-chido-texto-sobre-oscuro text-center mt-10">No hay mensajes en esta mesa.</Text>
+          ) : (
+            mensajes.map(msg => {
+              const isMe = msg.es_mozo;
+              return (
+                <View 
+                  key={msg.id} 
+                  className={`p-4 rounded-2xl mb-4 max-w-[80%] border border-white/30 ${
+                    isMe ? 'bg-chido-superficie self-end rounded-tr-sm' : 'bg-chido-cabecera self-start rounded-tl-sm'
+                  }`}
+                >
+                  <Text className={`font-bold mb-1 ${isMe ? 'text-chido-texto-boton-outline' : 'text-chido-aviso'}`}>
+                    {isMe ? 'Yo' : 'Cliente'}
+                  </Text>
+                  <Text className={`text-base ${isMe ? 'text-chido-texto-sobre-claro' : 'text-chido-texto-sobre-oscuro'}`}>
+                    {msg.texto}
+                  </Text>
+                  <Text className={`text-xs mt-2 self-end ${isMe ? 'text-chido-texto-secundario-sobre-claro' : 'text-chido-texto-secundario-sobre-oscuro'}`}>
+                    {formatearHora(msg.created_at)}
+                  </Text>
+                </View>
+              );
+            })
+          )}
+        </ScrollView>
+
         <View 
           className="flex-row items-center p-4 bg-chido-cabecera border-t border-white/30"
           style={{ paddingBottom: Math.max(insets.bottom, 16) }}
@@ -131,7 +137,7 @@ export default function ChatMesaMozo() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </View>
+    </ImageBackground>
   );
 }
 

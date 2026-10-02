@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-
+import { useAppSession } from '../../contexts/AppSessionContext';
+import { supabase } from '../../lib/supabase';
 import { Header } from '../../components/Header';
 import { QRScanner } from '../../components/ui/QRScanner';
 import { colores } from '../../theme/colores';
@@ -23,8 +24,57 @@ export default function HomeCliente() {
  const tarjeta = { flexGrow: 1, flexBasis: 0, minHeight: 112, justifyContent: 'center' as const, padding: compacto ? 16 : 24 };
 
 
- function handleScan() {
-   router.push('/cliente/menu');
+ const { usuario } = useAppSession();
+
+ async function handleScan(raw: string) {
+   if (!usuario) return;
+   try {
+     const regex = /chido:mesa:([^:]+):v1/i;
+     const match = raw.match(regex);
+     if (!match) {
+       Alert.alert('Error', 'El código QR no corresponde a una mesa.');
+       return;
+     }
+     const mesaId = match[1].toLowerCase();
+
+     // Verificar si la mesa ya está ocupada por otro cliente
+     const { data: mesaVerificada, error: errorVerificacion } = await supabase
+       .from('mesas')
+       .select('cliente_id, disponibilidad')
+       .eq('id', mesaId)
+       .single();
+
+     if (errorVerificacion) {
+       Alert.alert('Error', 'Mesa no encontrada.');
+       return;
+     }
+
+     if (mesaVerificada.cliente_id && mesaVerificada.cliente_id !== usuario.id) {
+       Alert.alert('Aviso', 'Esta mesa ya está ocupada por otro cliente.');
+       setScannerVisible(false);
+       return;
+     }
+
+     const { error } = await supabase
+       .from('mesas')
+       .update({
+         cliente_id: usuario.id,
+         disponibilidad: 'ocupada',
+         qr_confirmado_at: new Date().toISOString()
+       })
+       .eq('id', mesaId);
+
+     if (error) {
+       Alert.alert('Error', 'No se pudo asignar la mesa. ' + error.message);
+       setScannerVisible(false);
+       return;
+     }
+
+     setScannerVisible(false);
+     router.push({ pathname: '/cliente/menu', params: { mesaId } });
+   } catch (e: any) {
+     Alert.alert('Error', e.message);
+   }
  }
 
 

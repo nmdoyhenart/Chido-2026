@@ -1,6 +1,7 @@
 import { useAppSession } from '../../contexts/AppSessionContext';
 import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, Alert, Modal, StyleSheet, KeyboardAvoidingView, Keyboard, Platform, Pressable } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, Alert, Modal, StyleSheet, Keyboard, Platform, Pressable } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { Stack, router } from 'expo-router';
@@ -140,11 +141,14 @@ export default function AgregarEmpleado() {
       <Header userName={userName} role={displayRole} />
 
       <SafeAreaView edges={["left", "right", "bottom"]} className="flex-1">
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          className="flex-1"
-        >
-          <ScrollView className="flex-1 p-5" contentContainerStyle={{ flexGrow: 1 }}>
+        <View className="flex-1">
+          <KeyboardAwareScrollView 
+            className="flex-1 p-5" 
+            contentContainerStyle={{ flexGrow: 1 }} 
+            keyboardShouldPersistTaps="handled"
+            enableOnAndroid={true}
+            extraScrollHeight={Platform.OS === 'ios' ? 20 : 20}
+          >
             {/* Top bar with back button and title */}
             <View className="flex-row items-center mb-8 relative">
               <TouchableOpacity
@@ -281,8 +285,8 @@ export default function AgregarEmpleado() {
             className="mt-4 mb-12"
             isLoading={guardando}
           />
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </KeyboardAwareScrollView>
+        </View>
       </SafeAreaView>
 
       {scanningDni && <CamaraRegistro

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert, ImageBackground } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAppSession } from '../../contexts/AppSessionContext';
@@ -55,7 +55,11 @@ export default function ChatCliente() {
   }, [mesaId]);
 
   const handleEnviar = async () => {
-    if (!nuevoMensaje.trim() || !usuario?.id || !mesaId) return;
+    if (!nuevoMensaje.trim() || !usuario?.id) return;
+    if (!mesaId) {
+      Alert.alert('Aviso', 'No puedes enviar mensajes porque no estás asignado a ninguna mesa.');
+      return;
+    }
 
     const texto = nuevoMensaje.trim();
     setNuevoMensaje(''); 
@@ -73,7 +77,11 @@ export default function ChatCliente() {
   };
 
   return (
-    <View className="flex-1 bg-chido-fondo">
+    <ImageBackground 
+      source={require('../../../assets/images/fondo.jpeg')} 
+      className="flex-1"
+      resizeMode="cover"
+    >
       <Header userName="Cliente" role={numero ? `Mesa ${numero}` : "Chat con Mozo"} />
 
       <View className="flex-row items-center px-4 py-2 bg-transparent">
@@ -88,7 +96,8 @@ export default function ChatCliente() {
       </View>
 
       <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
+        keyboardVerticalOffset={0}
         className="flex-1"
       >
         <ScrollView 
@@ -138,7 +147,7 @@ export default function ChatCliente() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </View>
+    </ImageBackground>
   );
 }
 

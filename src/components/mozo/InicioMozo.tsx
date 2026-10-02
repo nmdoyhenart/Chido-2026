@@ -27,15 +27,18 @@ export default function InicioMozo({ usuario, role }: any) {
     };
     fetchStats();
     
+    // Cada montaje necesita un canal nuevo. El mismo nombre fijo puede devolver
+    // un canal que aún está suscrito durante los cambios/remontajes de sesión.
+    const nombreCanal = `pedidos_stats_mozo_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     const channel = supabase
-      .channel(`pedidos_stats_mozo_${Math.random()}`)
+      .channel(nombreCanal)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => {
         fetchStats();
       })
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, []);
 

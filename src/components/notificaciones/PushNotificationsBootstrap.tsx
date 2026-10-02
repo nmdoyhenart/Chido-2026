@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, Text, Vibration, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import type { Href } from 'expo-router';
 
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { obtenerRutaNotificacion } from '../../utils/notificaciones';
@@ -21,7 +22,7 @@ export default function PushNotificationsBootstrap() {
   useEffect(() => {
     const detener = escucharRespuestasPush((datos) => {
       const ruta = obtenerRutaNotificacion(datos);
-      if (ruta) router.push(ruta);
+      if (ruta) router.push(ruta as Href);
     });
     return detener;
   }, [router]);

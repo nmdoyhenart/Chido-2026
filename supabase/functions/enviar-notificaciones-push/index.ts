@@ -4,10 +4,10 @@ type CuentaFirebase = { project_id: string; client_email: string; private_key: s
 type NotificacionTomada = {
   id: string;
   usuario_id: string;
-  evento: 'cliente_registrado';
+  evento: string;
   titulo: string;
   cuerpo: string;
-  datos: { ruta: string };
+  datos: Record<string, unknown>;
   intentos: number;
   bloqueo: string;
 };
@@ -114,7 +114,7 @@ Deno.serve(async (request) => {
               message: {
                 token: dispositivo.token,
                 notification: { title: aviso.titulo, body: aviso.cuerpo },
-                data: { evento: aviso.evento, ruta: aviso.datos.ruta },
+                data: { evento: aviso.evento, ...Object.fromEntries(Object.entries(aviso.datos).map(([clave, valor]) => [clave, String(valor)])) },
                 android: {
                   priority: 'high',
                   notification: { channel_id: 'chido-avisos', notification_priority: 'PRIORITY_HIGH' },

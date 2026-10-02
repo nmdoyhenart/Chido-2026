@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { View, Text, Pressable, ActivityIndicator, ScrollView, Image, Modal, KeyboardAvoidingView, Platform, TextInput, TextInputProps } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, ScrollView, Image, Modal, KeyboardAvoidingView, Platform, TextInput, TextInputProps, useWindowDimensions } from 'react-native';
 import { crearProducto, TipoProducto, subirFotos, existeProducto } from '../../../lib/productos';
 import { Header } from '../../components/Header';
 import { Stack, useRouter } from 'expo-router';
@@ -10,21 +10,28 @@ import { colores } from '../../theme/colores';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { useRestriccionSimulacion } from '../../components/ui/RestriccionSimulacion';
 import { useCampoVisibleConTeclado } from '../../hooks/useCampoVisibleConTeclado';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type CampoProps = TextInputProps & {
     label: string;
     error?: string;
     containerClassName?: string;
     inputClassName?: string;
+    compacto?: boolean;
 };
 
+// Alto aproximado del Header (pt-14 + avatar + pb-6)
+const ALTO_HEADER = 144;
+// Por debajo de este alto disponible se usa la versión compacta para que todo entre sin scroll
+const ALTO_MINIMO_NORMAL = 800;
+
 // Versión más grande del Input compartido, sólo para esta pantalla
-function Campo({ label, error, containerClassName = '', inputClassName = '', ...props }: CampoProps) {
+function Campo({ label, error, compacto = false, containerClassName = '', inputClassName = '', ...props }: CampoProps) {
     return (
-        <View className={`mb-5 ${containerClassName}`}>
-            <Text className="text-chido-texto-sobre-oscuro text-lg font-semibold mb-2 ml-1">{label}</Text>
+        <View className={`${compacto ? 'mb-3' : 'mb-5'} ${containerClassName}`}>
+            <Text className={`text-chido-texto-sobre-oscuro font-semibold ml-1 ${compacto ? 'text-base mb-1' : 'text-lg mb-2'}`}>{label}</Text>
             <TextInput
-                className={`bg-chido-cabecera text-chido-texto-sobre-oscuro text-xl px-4 py-4 rounded-xl border border-chido-texto-boton-outline ${inputClassName}`}
+                className={`bg-chido-cabecera text-chido-texto-sobre-oscuro px-4 rounded-xl border border-chido-texto-boton-outline ${compacto ? 'text-lg py-2.5' : 'text-xl py-4'} ${inputClassName}`}
                 placeholderTextColor={colores.textoSecundarioAlternativo}
                 {...props}
             />
@@ -54,6 +61,13 @@ export default function AltaPlato() {
     const [errores, setErrores] = useState<Record<string, string>>({});
     const scroll = useRef<ScrollView>(null);
     const { alDesplazar, alEnfocar, rellenoInferior } = useCampoVisibleConTeclado(scroll);
+    const insets = useSafeAreaInsets();
+    const { height, width } = useWindowDimensions();
+    // Ancho de cada foto: pantalla menos el p-5 de los costados y los dos gap-3 entre fotos
+    const anchoFoto = (width - 40 - 24) / 3;
+    // Espacio entre el Header y los botones del sistema (barra de navegación de Android o barra de gestos de iPhone)
+    const altoDisponible = height - ALTO_HEADER - insets.bottom;
+    const compacto = altoDisponible < ALTO_MINIMO_NORMAL;
 
     function validar() {
         const nuevosErrores: Record<string, string> = {};
@@ -208,23 +222,24 @@ export default function AltaPlato() {
                 className="flex-1"
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
-                <ScrollView ref={scroll} className="flex-1 p-5" contentContainerStyle={{ flexGrow: 1, paddingBottom: rellenoInferior }} keyboardShouldPersistTaps="handled" onScroll={alDesplazar} scrollEventThrottle={16}>
-                    <View className="flex-row items-center mb-8 relative">
+                <ScrollView ref={scroll} className="flex-1 p-5" contentContainerStyle={{ flexGrow: 1, paddingBottom: 16 + insets.bottom + rellenoInferior }} bounces={false} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" onScroll={alDesplazar} scrollEventThrottle={16}>
+                    <View className={`flex-row items-center relative ${compacto ? 'mb-3' : 'mb-8'}`}>
                         {router.canGoBack() && <Pressable
                             onPress={() => router.back()}
                             className="w-12 h-12 rounded-xl bg-chido-acento items-center justify-center absolute left-0 z-10"
                         >
                         <Ionicons name="arrow-back" size={26} color={colores.textoSobreOscuro} />
                         </Pressable>}
-                        <Text className="text-3xl font-bold text-chido-texto-sobre-oscuro text-center flex-1">Alta de plato</Text>
+                        <Text className={`font-bold text-chido-texto-sobre-oscuro text-center flex-1 ${compacto ? 'text-2xl' : 'text-3xl'}`}>Alta de plato</Text>
                     </View>
 
-                    <View className="mb-5">
-                        <Text className="text-chido-texto-sobre-oscuro text-lg font-semibold mb-2 ml-1">Fotos del plato</Text>
-                        <View className="flex-row gap-3">
+                    {/* Las fotos crecen con el espacio libre hasta quedar cuadradas; lo que sobra después lo toma la descripción */}
+                    <View className={`flex-1 ${compacto ? 'mb-3' : 'mb-5'}`} style={{ maxHeight: anchoFoto + (compacto ? 28 : 36) + (errores.fotos ? 28 : 0) }}>
+                        <Text className={`text-chido-texto-sobre-oscuro font-semibold ml-1 ${compacto ? 'text-base mb-1' : 'text-lg mb-2'}`}>Fotos del plato</Text>
+                        <View className="flex-row gap-3 flex-1" style={{ minHeight: 80 }}>
                             <Pressable
                                 onPress={() => abrirSelector(0)}
-                                className="flex-1 aspect-square rounded-2xl border-2 border-dashed border-chido-texto-secundario-alternativo bg-chido-acento items-center justify-center overflow-hidden"
+                                className={`flex-1 rounded-2xl border-2 border-dashed border-chido-texto-secundario-alternativo bg-chido-acento items-center justify-center overflow-hidden`}
                             >
                                 {fotos[0] ? (
                                     <Image source={{ uri: fotos[0] }} className="w-full h-full" />
@@ -235,7 +250,7 @@ export default function AltaPlato() {
 
                             <Pressable
                                 onPress={() => abrirSelector(1)}
-                                className="flex-1 aspect-square rounded-2xl border-2 border-dashed border-chido-texto-secundario-alternativo bg-chido-acento items-center justify-center overflow-hidden"
+                                className={`flex-1 rounded-2xl border-2 border-dashed border-chido-texto-secundario-alternativo bg-chido-acento items-center justify-center overflow-hidden`}
                             >
                                 {fotos[1] ? (
                                     <Image source={{ uri: fotos[1] }} className="w-full h-full" />
@@ -246,7 +261,7 @@ export default function AltaPlato() {
 
                             <Pressable
                                 onPress={() => abrirSelector(2)}
-                                className="flex-1 aspect-square rounded-2xl border-2 border-dashed border-chido-texto-secundario-alternativo bg-chido-acento items-center justify-center overflow-hidden"
+                                className={`flex-1 rounded-2xl border-2 border-dashed border-chido-texto-secundario-alternativo bg-chido-acento items-center justify-center overflow-hidden`}
                             >
                                 {fotos[2] ? (
                                     <Image source={{ uri: fotos[2] }} className="w-full h-full" />
@@ -259,6 +274,7 @@ export default function AltaPlato() {
                     </View>
 
                     <Campo
+                        compacto={compacto}
                         label="Nombre"
                         onFocus={alEnfocar}
                         value={nombre}
@@ -267,6 +283,7 @@ export default function AltaPlato() {
                     />
 
                     <Campo
+                        compacto={compacto}
                         label="Descripción"
                         onFocus={alEnfocar}
                         value={descripcion}
@@ -274,12 +291,13 @@ export default function AltaPlato() {
                         multiline
                         containerClassName="flex-1"
                         inputClassName="flex-1"
-                        style={{ minHeight: 140, textAlignVertical: 'top' }}
+                        style={{ minHeight: compacto ? 56 : 80, textAlignVertical: 'top' }}
                         error={errores.descripcion}
                     />
 
                     <View className="flex-row gap-4">
                         <Campo
+                            compacto={compacto}
                             label="Tiempo"
                             onFocus={alEnfocar}
                             value={tiempoElaboracion}
@@ -289,6 +307,7 @@ export default function AltaPlato() {
                             error={errores.tiempoElaboracion}
                         />
                         <Campo
+                            compacto={compacto}
                             label="Precio"
                             onFocus={alEnfocar}
                             value={precio}
@@ -304,7 +323,7 @@ export default function AltaPlato() {
 
                     {cargando && <ActivityIndicator size="large" color={colores.textoSobreOscuro} />}
 
-                    <Pressable className="bg-chido-cabecera p-5 rounded-xl mt-4 mb-8 items-center" onPress={handleGuardar}>
+                    <Pressable className={`bg-chido-cabecera rounded-xl items-center ${compacto ? 'p-3.5 mt-1' : 'p-5 mt-4'}`} onPress={handleGuardar}>
                         <Text className="text-chido-texto-sobre-oscuro font-bold text-xl">Guardar</Text>
                     </Pressable>
 

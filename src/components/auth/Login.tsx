@@ -7,16 +7,16 @@ import {
   Pressable,
   Image,
   ImageBackground,
-  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
   Vibration,
+  useWindowDimensions,
 } from 'react-native';
 
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -34,25 +34,22 @@ export default function Login() {
   const { iniciarSesion: autenticar, mode, role, cargando, avisoSesion, limpiarAviso } = useAppSession();
   const [mensaje, setMensaje] = useState<string | null>(null);
   const operacion = useRef(false);
-  const [tecladoVisible, setTecladoVisible] = useState(false);
   const scroll = useRef<ScrollView>(null);
   const { alDesplazar, alEnfocar, rellenoInferior } = useCampoVisibleConTeclado(scroll);
-  const escala = 1;
+  const { height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
-  useEffect(() => {
-    const mostrar = Keyboard.addListener('keyboardDidShow', () => setTecladoVisible(true));
-    const ocultar = Keyboard.addListener('keyboardDidHide', () => setTecladoVisible(false));
-    return () => { mostrar.remove(); ocultar.remove(); };
-  }, []);
+  const ALTO_DISENO = 900; // lo que mide el contenido con escala 1
+  const altoDisponible = height - insets.top - insets.bottom;
+  const escala = Math.min(1, altoDisponible / ALTO_DISENO);
 
   useEffect(() => {
     if (mode === 'authenticated' && !cargando) {
       if (role === 'supervisor') {
         router.replace('/supervisor/home');
-      } 
-      if (role === 'metre') {
+      } else if (role === 'metre') {
         router.replace('/metre/home');
-      }else {
+      } else {
         router.replace('/(app)/home');
       }
     }
@@ -129,7 +126,6 @@ export default function Login() {
               paddingTop: 20 * escala,
               paddingBottom: 20 * escala + rellenoInferior,
             }}
-            scrollEnabled={tecladoVisible}
             keyboardShouldPersistTaps="handled"
             onScroll={alDesplazar}
             scrollEventThrottle={16}

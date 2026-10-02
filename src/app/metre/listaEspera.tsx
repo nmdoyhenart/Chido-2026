@@ -7,7 +7,7 @@ import { Header } from '../../components/Header';
 import { colores } from '../../theme/colores';
 import { obtenerListaEspera, suscribirseALista, eliminarDeLista, asignarMesaACliente, ClienteEnEspera } from '../../../lib/listaEspera';
 import { useMesas } from '../../hooks/useMesas';
-import { useAppSession } from '../../contexts/AppSessionContext';
+
 import { useAppSession } from '../../contexts/AppSessionContext';
 
 function obtenerMensajeError(err: unknown): string {

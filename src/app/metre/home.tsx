@@ -5,7 +5,6 @@ import { Header } from '../../components/Header';
 import { Ionicons } from '@expo/vector-icons';
 import { colores } from '../../theme/colores';
 import { obtenerListaEspera, suscribirseALista } from '../../../lib/listaEspera';
-import { useAppSession } from '../../contexts/AppSessionContext';
 
 export default function HomeMetre() {
     const router = useRouter();
@@ -30,10 +29,25 @@ export default function HomeMetre() {
         try {
             const data = await obtenerListaEspera();
             setCantidadEsperando(data.length);
+            setErrorLista(false);
         } catch (err) {
             console.error('Error al traer la cantidad de espera:', err);
+            setErrorLista(true);
         }
-    }
+    }, []);
+
+    useEffect(() => {
+        const inicial = setTimeout(() => { void cargarCantidad(); }, 0);
+        const desuscribirse = suscribirseALista('home-metre-lista-espera', cargarCantidad);
+        const intervalo = setInterval(() => { void cargarCantidad(); }, 7000);
+        return () => { clearTimeout(inicial); clearInterval(intervalo); desuscribirse(); };
+    }, [cargarCantidad]);
+
+    useFocusEffect(
+        useCallback(() => {
+            void cargarCantidad();
+        }, [cargarCantidad])
+    );
 
     return (
         <View className="flex-1" style={{ backgroundColor: colores.fondo }}>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Image, TouchableOpacity, Alert, FlatList, Dimensions, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -8,9 +8,10 @@ import { Header } from '../../components/Header';
 import { PrimaryButton } from '../../components/ui/Buttons';
 import { Producto } from '../../types/producto';
 import { getProductos } from '../../services/productos.service';
-import { crearPedido } from '../../services/pedidos.service';
+import { crearPedido, getPedidoRechazado } from '../../services/pedidos.service';
 import { colores } from '../../theme/colores';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Crypto from 'expo-crypto';
 
 const { width } = Dimensions.get('window');
 const ITEM_HEIGHT = 440;
@@ -19,39 +20,59 @@ const ITEM_MARGIN = 24;
 export default function MenuCliente() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { mesaId } = useLocalSearchParams<{ mesaId: string }>();
+  const { mesaId: mesaIdParametro, pedidoId } = useLocalSearchParams<{ mesaId?: string; pedidoId?: string }>();
   const { usuario } = useAppSession();
+  const [mesaId, setMesaId] = useState(mesaIdParametro ?? '');
 
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
   const [mesaNumero, setMesaNumero] = useState<number | null>(null);
   
   const [pedido, setPedido] = useState<Record<string, number>>({});
+  const [cargandoPedido, setCargandoPedido] = useState(!!pedidoId);
+  const [errorCargaPedido, setErrorCargaPedido] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const enviandoRef = useRef(false);
+  const solicitudId = useRef(Crypto.randomUUID());
   
   const [filtro, setFiltro] = useState<'todos' | 'plato' | 'bebida'>('todos');
 
-  useEffect(() => {
-    cargarProductos();
-    if (mesaId) {
-      supabase.from('mesas').select('numero').eq('id', mesaId).single().then(({ data }) => {
-        if (data) setMesaNumero(data.numero);
-      });
-    }
-  }, [mesaId]);
-
-  const cargarProductos = async () => {
+  async function cargarProductos() {
     try {
       const data = await getProductos();
-      setProductos(data);
-    } catch (err: any) {
+      setProductos(data.filter(producto => producto.tipo === 'plato' || producto.tipo === 'bebida'));
+    } catch (err: unknown) {
       console.log('Error fetching productos:', err);
       Alert.alert('Error', 'No se pudieron cargar los productos.');
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  useEffect(() => {
+    const cargaInicial = setTimeout(() => { void cargarProductos(); }, 0);
+    let activo = true;
+    const mostrarNumeroMesa = async (id: string) => {
+      const { data } = await supabase.from('mesas').select('numero').eq('id', id).single();
+      if (activo && data) setMesaNumero(data.numero);
+    };
+    if (pedidoId) {
+      void getPedidoRechazado(pedidoId).then(pedidoAnterior => {
+        if (!activo) return;
+        setMesaId(pedidoAnterior.mesa_id);
+        void mostrarNumeroMesa(pedidoAnterior.mesa_id);
+        setPedido(Object.fromEntries(pedidoAnterior.detalles.map(detalle => [detalle.producto_id, detalle.cantidad])));
+      }).catch(error => {
+        if (activo) setErrorCargaPedido(error instanceof Error ? error.message : 'No se pudo recuperar el pedido.');
+      }).finally(() => { if (activo) setCargandoPedido(false); });
+    } else {
+      if (mesaIdParametro) void mostrarNumeroMesa(mesaIdParametro);
+    }
+    return () => { activo = false; clearTimeout(cargaInicial); };
+  }, [mesaIdParametro, pedidoId]);
 
   const updateCantidad = (id: string, delta: number) => {
+    solicitudId.current = Crypto.randomUUID();
     setPedido(prev => {
       const current = prev[id] || 0;
       const next = Math.max(0, current + delta);
@@ -72,50 +93,31 @@ export default function MenuCliente() {
 
   const tiempoEstimado = Object.entries(pedido).reduce((acc, [id, cant]) => {
     const prod = productos.find(p => p.id === id);
-    return acc + (prod && cant > 0 ? prod.tiempo_elaboracion : 0);
+    return acc + (prod && cant > 0 ? prod.tiempo_elaboracion * cant : 0);
   }, 0);
 
   const handleRealizarPedido = async () => {
+    if (enviandoRef.current) return;
     if (Object.keys(pedido).length === 0) {
       Alert.alert('Aviso', 'Agrega productos al pedido.');
       return;
     }
-    if (!usuario?.id || !mesaId) {
-      Alert.alert('Error', 'Falta información del cliente o la mesa.');
+    if (!usuario?.id || !mesaId || (pedidoId && !Object.keys(pedido).length)) {
+      Alert.alert('Error', 'No encontramos la mesa o el pedido. Escaneá el QR de tu mesa y volvé a intentarlo.');
       return;
     }
     
     try {
-      Alert.alert(
-        'Confirmar pedido',
-        `El total es $${totalImporte} y tardará aprox ${tiempoEstimado} min.`,
-        [
-          { text: 'Cancelar', style: 'cancel' },
-          { 
-            text: 'Pedir', 
-            onPress: async () => {
-              try {
-                const detalles = Object.entries(pedido).map(([id, cant]) => ({
-                  producto_id: id,
-                  cantidad: cant,
-                  precio_unitario: productos.find(p => p.id === id)?.precio || 0
-                }));
-                
-                const nuevoPedidoId = await crearPedido(usuario.id, mesaId, totalImporte, detalles);
-                
-                Alert.alert('Pedido realizado', 'Esperando confirmación del mozo...');
-                setPedido({});
-                router.replace({ pathname: '/cliente/estado-pedido', params: { pedidoId: nuevoPedidoId } });
-              } catch (e: any) {
-                console.error(e);
-                Alert.alert('Error', `No se pudo generar el pedido: ${e.message || JSON.stringify(e)}`);
-              }
-            }
-          }
-        ]
-      );
-    } catch (err: any) {
-      Alert.alert('Error', 'No se pudo realizar el pedido');
+      enviandoRef.current = true;
+      setEnviando(true);
+      const detalles = Object.entries(pedido).map(([id, cantidad]) => ({ producto_id: id, cantidad }));
+      const guardado = await crearPedido(mesaId, solicitudId.current, detalles, pedidoId);
+      router.replace({ pathname: '/cliente/estado-pedido', params: { pedidoId: guardado.pedido_id } });
+    } catch (error: unknown) {
+      Alert.alert('No se pudo enviar el pedido', error instanceof Error ? error.message : 'Intentá nuevamente.');
+    } finally {
+      enviandoRef.current = false;
+      setEnviando(false);
     }
   };
 
@@ -157,6 +159,7 @@ export default function MenuCliente() {
   return (
     <View className="flex-1 bg-chido-fondo">
       <Header userName="Cliente" role={mesaNumero ? `Mesa ${mesaNumero}` : "Mesa"} />
+      {!!errorCargaPedido && <Text className="bg-chido-error p-3 text-center text-chido-texto-sobre-oscuro">{errorCargaPedido}</Text>}
       
       <View className="flex-row items-center p-4 bg-chido-acento">
         <View className="flex-row gap-2 mr-auto">
@@ -262,9 +265,9 @@ export default function MenuCliente() {
           </View>
           <PrimaryButton 
             className="border-2 border-white/70 rounded-2xl"
-            title={Object.keys(pedido).length > 0 ? "Realizar pedido" : "Seleccione un producto"}
+            title={enviando ? 'Enviando pedido…' : (pedidoId ? 'Volver a enviar pedido' : (Object.keys(pedido).length > 0 ? 'Realizar pedido' : 'Seleccione un producto'))}
             onPress={Object.keys(pedido).length > 0 ? handleRealizarPedido : undefined}
-            disabled={Object.keys(pedido).length === 0}
+            disabled={Object.keys(pedido).length === 0 || loading || enviando || cargandoPedido || !!errorCargaPedido}
           />
         </View>
       </View>

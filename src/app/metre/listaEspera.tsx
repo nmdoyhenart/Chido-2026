@@ -29,32 +29,33 @@ export default function ListaEsperaMetre() {
 
     const { mesas, recargar: recargarMesas } = useMesas();
 
-    useEffect(() => {
-        cargarLista();
-        recargarMesas();
-        const desuscribirse = suscribirseALista('metre-lista-espera-pantalla', cargarLista);
-        return desuscribirse;
-    }, []);
-
-    useFocusEffect(
-        useCallback(() => {
-            cargarLista();
-            recargarMesas();
-        }, [])
-    );
-
-    async function cargarLista() {
+    const cargarLista = useCallback(async () => {
         setError('');
         try {
             const data = await obtenerListaEspera();
             setLista(data);
         } catch (err) {
             console.error('Error al traer la lista de espera:', err);
-            setError('No se pudo cargar la lista de espera.');
+            setError(err instanceof Error ? err.message : 'No se pudo cargar la lista de espera.');
         } finally {
             setCargando(false);
         }
-    }
+    }, []);
+
+    useEffect(() => {
+        const inicial = setTimeout(() => { void cargarLista(); }, 0);
+        recargarMesas();
+        const desuscribirse = suscribirseALista('metre-lista-espera-pantalla', cargarLista);
+        const intervalo = setInterval(() => { void cargarLista(); }, 7000);
+        return () => { clearTimeout(inicial); clearInterval(intervalo); desuscribirse(); };
+    }, [cargarLista, recargarMesas]);
+
+    useFocusEffect(
+        useCallback(() => {
+            cargarLista();
+            recargarMesas();
+        }, [cargarLista, recargarMesas])
+    );
 
     async function eliminarCliente(id: string) {
         setEliminando(id);
@@ -113,9 +114,18 @@ export default function ListaEsperaMetre() {
 
                 {!cargando && error !== '' && (
                     <View className="flex-1 items-center justify-center px-6">
-                        <Text className="text-lg text-center" style={{ color: colores.error }}>
+                      <View className="w-full rounded-3xl border-2 p-6" style={{ backgroundColor: colores.superficieTerracota, borderColor: colores.textoSecundarioAlternativo }}>
+                        <Ionicons name="alert-circle-outline" size={40} color={colores.notificacion} style={{ alignSelf: 'center', marginBottom: 12 }} />
+                        <Text className="text-xl text-center font-bold" style={{ color: colores.textoSobreOscuro }}>
+                            No se pudo cargar la lista
+                        </Text>
+                        <Text className="mt-2 text-base text-center" style={{ color: colores.textoSecundarioSobreOscuro }}>
                             {error}
                         </Text>
+                        <TouchableOpacity accessibilityRole="button" onPress={() => { setCargando(true); void cargarLista(); }} className="mt-5 rounded-xl p-4" style={{ backgroundColor: colores.botonPrincipal }}>
+                            <Text className="text-center text-base font-bold" style={{ color: colores.textoSobreOscuro }}>Volver a intentar</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
                 )}
 
@@ -137,10 +147,13 @@ export default function ListaEsperaMetre() {
                                 className="flex-row items-center rounded-2xl p-4 mb-4"
                                 style={{ backgroundColor: colores.superficieTerracota }}
                             >
-                                <Image
-                                    source={{ uri: item.foto_url }}
-                                    style={{ width: 56, height: 56, borderRadius: 28 }}
-                                />
+                                {item.foto_url ? (
+                                    <Image source={{ uri: item.foto_url }} style={{ width: 56, height: 56, borderRadius: 28 }} />
+                                ) : (
+                                    <View className="h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: colores.fondo }}>
+                                        <Ionicons name="person-outline" size={28} color={colores.textoSobreOscuro} />
+                                    </View>
+                                )}
                                 <View className="flex-1 ml-4">
                                     <Text className="text-xl font-semibold" style={{ color: colores.textoSobreOscuro }}>
                                         {item.nombre}

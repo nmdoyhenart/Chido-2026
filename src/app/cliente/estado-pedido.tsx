@@ -22,14 +22,20 @@ export default function EstadoPedido() {
         console.error(e);
       }
     };
-    fetchEstado();
+    void fetchEstado();
+    // Realtime puede tardar en conectarse en una red móvil; el sondeo mantiene
+    // el estado actualizado también cuando la app está en iOS/Expo Go.
+    const intervalo = setInterval(() => { void fetchEstado(); }, 5000);
 
     const desuscribir = suscribirEstadoPedido(pedidoId, (nuevoEstado) => {
       setEstado(nuevoEstado);
       Alert.alert('Pedido Actualizado', `El estado de tu pedido cambió a: ${nuevoEstado}`);
     });
 
-    return desuscribir;
+    return () => {
+      clearInterval(intervalo);
+      desuscribir();
+    };
   }, [pedidoId]);
 
   return (
@@ -50,16 +56,19 @@ export default function EstadoPedido() {
         <Text className="text-xl text-chido-texto-secundario-sobre-oscuro font-bold mt-4 text-center">
           {estado === 'pendiente_mozo' && 'Esperando confirmación del mozo...'}
           {estado === 'confirmado' && '¡Pedido confirmado! En preparación...'}
+          {estado === 'en_preparacion' && 'Cocina y bar están preparando tu pedido.'}
           {estado === 'entregado' && '¡Tu pedido ha sido entregado! ¡Que lo disfrutes!'}
-          {estado === 'rechazado' && 'Tu pedido ha sido rechazado. Por favor, realiza uno nuevo o consulta al mozo.'}
+          {estado === 'rechazado' && 'El mozo rechazó el pedido. Podés cambiar productos o cantidades y volver a enviarlo.'}
         </Text>
 
         {(estado === 'entregado' || estado === 'rechazado') && (
           <TouchableOpacity 
             className="bg-chido-cabecera p-4 rounded-xl mt-10 w-full"
-            onPress={() => router.replace('/cliente/home')}
+            onPress={() => router.replace(estado === 'rechazado'
+              ? { pathname: '/cliente/menu', params: { pedidoId } }
+              : '/cliente/home')}
           >
-            <Text className="text-chido-texto-sobre-oscuro text-center font-bold text-lg">Volver al Menú</Text>
+            <Text className="text-chido-texto-sobre-oscuro text-center font-bold text-lg">{estado === 'rechazado' ? 'Modificar pedido' : 'Volver al Menú'}</Text>
           </TouchableOpacity>
         )}
       </View>

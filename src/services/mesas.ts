@@ -155,14 +155,21 @@ export async function ingresarALaListaDeEspera(
   const mesa = await obtenerMesaAsignada(usuarioId);
   if (mesa) throw new Error("Ya tenés una mesa asignada.");
 
-  const { error } = await supabase
-    .from("lista_espera")
-    .insert({ usuario_id: usuarioId });
+  const { error } = await supabase.rpc("ingresar_lista_espera_cliente");
+  if (error?.code === "23505") throw new Error("Ya tenés una mesa asignada.");
+  if (error) throw new Error(error.message || "No se pudo registrar el ingreso a la lista de espera.");
+}
 
-  if (error?.code === "23505") {
-    throw new Error("Ya estás en la lista de espera.");
-  }
-  if (error) throw new Error("No se pudo registrar el ingreso a la lista de espera.");
+export type EstadoListaEsperaCliente = {
+  estado: "sin_registro" | "esperando" | "asignado";
+  mesa_id?: string | null;
+  mesa_numero?: number | null;
+};
+
+export async function obtenerEstadoListaEsperaCliente(): Promise<EstadoListaEsperaCliente> {
+  const { data, error } = await supabase.rpc("estado_lista_espera_cliente");
+  if (error) throw new Error(error.message || "No se pudo consultar la lista de espera.");
+  return data as EstadoListaEsperaCliente;
 }
 
 export async function confirmarMesaPorQr(

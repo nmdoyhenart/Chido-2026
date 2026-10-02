@@ -1,9 +1,9 @@
-import type { Href } from 'expo-router';
 import type { NotificacionPush, RutaNotificacion } from '../types/notificaciones';
 
 const RUTA_CLIENTES_PENDIENTES: RutaNotificacion = '/(app)/clientes-pendientes';
 const RUTA_LISTA_ESPERA_METRE: RutaNotificacion = '/metre/listaEspera';
-const RUTAS_VALIDAS = new Set<string>([RUTA_CLIENTES_PENDIENTES, RUTA_LISTA_ESPERA_METRE]);
+const RUTA_PEDIDOS_CLIENTE: RutaNotificacion = '/cliente/estado-pedido';
+const RUTAS_VALIDAS = new Set<string>([RUTA_CLIENTES_PENDIENTES, RUTA_LISTA_ESPERA_METRE, RUTA_PEDIDOS_CLIENTE, '/cocina/pedidos', '/bar/pedidos']);
 
 export function crearAvisoClienteRegistrado(): NotificacionPush {
     return {
@@ -28,5 +28,11 @@ export function crearAvisoClienteEnEspera(): NotificacionPush {
 export function obtenerRutaNotificacion(datos: unknown): RutaNotificacion | null {
     if (!datos || typeof datos !== 'object' || Array.isArray(datos)) return null;
     const ruta = (datos as Record<string, unknown>).ruta;
-    return typeof ruta === 'string' && RUTAS_VALIDAS.has(ruta) ? ruta as RutaNotificacion : null;
+    if (typeof ruta !== 'string' || !RUTAS_VALIDAS.has(ruta)) return null;
+    if (ruta === RUTA_PEDIDOS_CLIENTE) {
+        const pedidoId = (datos as Record<string, unknown>).pedidoId;
+        if (typeof pedidoId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(pedidoId)) return null;
+        return `${ruta}?pedidoId=${pedidoId}` as RutaNotificacion;
+    }
+    return ruta as RutaNotificacion;
 }

@@ -1,18 +1,21 @@
 export const RUTAS_NOTIFICACION = {
     clientesPendientes: '/(app)/clientes-pendientes',
     listaEsperaMetre: '/metre/listaEspera',
+    pedidosCliente: '/cliente/estado-pedido',
+    pedidosCocina: '/cocina/pedidos',
+    pedidosBar: '/bar/pedidos',
 } as const;
 
-export type RutaNotificacion = typeof RUTAS_NOTIFICACION[keyof typeof RUTAS_NOTIFICACION];
-export type DestinatarioNotificacion = 'dueño' | 'supervisor' | 'metre';
-export type EventoNotificacion = 'cliente_registrado' | 'cliente_en_espera';
+export type RutaNotificacion = typeof RUTAS_NOTIFICACION[keyof typeof RUTAS_NOTIFICACION] | `/cliente/estado-pedido?pedidoId=${string}`;
+export type DestinatarioNotificacion = 'dueño' | 'supervisor' | 'metre' | 'mozo' | 'cocinero' | 'cantinero' | 'cliente registrado';
+export type EventoNotificacion = 'cliente_registrado' | 'cliente_en_espera' | 'pedido_confirmado' | 'pedido_rechazado';
 
 export type NotificacionPush = {
     evento: EventoNotificacion;
     destinatarios: readonly DestinatarioNotificacion[];
     titulo: string;
     cuerpo: string;
-    datos: { ruta: RutaNotificacion };
+    datos: { ruta: RutaNotificacion; pedidoId?: string };
 };
 
-export type DatosNotificacionPush = NotificacionPush['datos'];
+export type DatosNotificacionPush = NotificacionPush['datos'] & { pedidoId?: string };

@@ -1,6 +1,6 @@
 import { useAppSession } from '../contexts/AppSessionContext';
 import { mesasDemostracion } from '../data/demostracion';
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   actualizarDisponibilidadMesa,
   crearMesa,
@@ -24,7 +24,7 @@ export function useMesas() {
     };
   }, []);
 
-  const recargar = (forzar = false): Promise<Mesa[]> => {
+  const recargar = useCallback((forzar = false): Promise<Mesa[]> => {
     if (mode === 'simulation') { setCargando(false); return Promise.resolve(mesasDemostracion); }
     if (pendiente.current && !forzar) return pendiente.current;
     consulta.current?.abort();
@@ -52,7 +52,7 @@ export function useMesas() {
         }
       });
     return pendiente.current;
-  };
+  }, [mode]);
 
   const agregar = async (datos: NuevaMesa): Promise<Mesa> => {
     if (mode !== 'authenticated') throw new Error('Se requiere una cuenta autorizada.');

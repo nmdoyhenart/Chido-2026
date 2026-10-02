@@ -1,12 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 
 
 import { Header } from '../../components/Header';
 import { QRScanner } from '../../components/ui/QRScanner';
 import { colores } from '../../theme/colores';
+import { confirmarMesaPorQr, ingresarALaListaDeEspera } from '../../services/mesas';
+import { useAppSession } from '../../contexts/AppSessionContext';
 
 
 const CATEGORIAS_ENCUESTA = [
@@ -18,11 +20,20 @@ const CATEGORIAS_ENCUESTA = [
 
 export default function HomeCliente() {
  const router = useRouter();
+ const { usuario } = useAppSession();
  const [scannerVisible, setScannerVisible] = useState(false);
+ const [scannerProposito, setScannerProposito] = useState<'ingreso' | 'mesa'>('mesa');
 
 
- function handleScan() {
-   router.push('/cliente/menu');
+ async function handleScan(rawQr: string) {
+   if (!usuario?.id) throw new Error('Iniciá sesión con tu cuenta de cliente para confirmar la mesa.');
+   if (scannerProposito === 'ingreso') {
+     await ingresarALaListaDeEspera(usuario.id, rawQr);
+     router.push('/cliente/espera' as Href);
+     return;
+   }
+   const mesa = await confirmarMesaPorQr(usuario.id, rawQr);
+   router.push({ pathname: '/cliente/menu', params: { mesaId: mesa.id } });
  }
 
 
@@ -50,7 +61,7 @@ export default function HomeCliente() {
          accessibilityRole="button"
          accessibilityLabel="Escanear código QR de la mesa"
          className="rounded-3xl border-2 border-chido-texto-secundario-sobre-oscuro bg-chido-acento p-5"
-         onPress={() => setScannerVisible(true)}
+         onPress={() => { setScannerProposito('mesa'); setScannerVisible(true); }}
        >
          <View className="flex-row items-center">
            <View className="h-16 w-16 items-center justify-center rounded-2xl bg-chido-cabecera">
@@ -92,14 +103,14 @@ export default function HomeCliente() {
        </View>
 
 
-       <View accessibilityLabel="Solicitar mesa próximamente disponible" className="rounded-3xl border-2 border-chido-acento bg-chido-acento p-5">
+       <Pressable accessibilityRole="button" accessibilityLabel="Anotarme en la lista de espera" onPress={() => { setScannerProposito('ingreso'); setScannerVisible(true); }} className="rounded-3xl border-2 border-chido-texto-secundario-sobre-oscuro bg-chido-cabecera p-5">
          <View className="flex-row items-center">
            <View className="h-14 w-14 items-center justify-center rounded-2xl bg-chido-cabecera">
              <Ionicons name="people-outline" size={30} color={colores.textoSobreOscuro} />
            </View>
            <View className="ml-4 flex-1">
-             <Text className="text-2xl font-extrabold text-chido-texto-sobre-oscuro">Solicitar mesa</Text>
-             <Text className="mt-1 text-base text-chido-texto-secundario-sobre-oscuro">Esta opción estará disponible próximamente.</Text>
+           <Text className="text-2xl font-extrabold text-chido-texto-sobre-oscuro">Lista de espera</Text>
+           <Text className="mt-1 text-base text-chido-texto-secundario-sobre-oscuro">Escaneá el QR de ingreso para que el metre pueda asignarte una mesa.</Text>
            </View>
          </View>
          <View className="mt-5 flex-row items-center">
@@ -115,13 +126,13 @@ export default function HomeCliente() {
              </React.Fragment>
            ))}
          </View>
-       </View>
+       </Pressable>
      </ScrollView>
 
 
      <QRScanner
        visible={scannerVisible}
-       proposito="mesa"
+       proposito={scannerProposito}
        onScan={handleScan}
        onClose={() => setScannerVisible(false)}
      />

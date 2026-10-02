@@ -12,6 +12,7 @@ const CLIENTE_ANONIMO_NOMBRE_KEY = 'cliente_anonimo_nombre';
 const CLIENTE_ANONIMO_FOTO_KEY = 'cliente_anonimo_foto_url';
 
 export default function EsperaClienteAnonimo() {
+    
     const { cerrarSesion } = useAppSession();
     const [fueEliminado, setFueEliminado] = useState(false);
     const [mesaAsignada, setMesaAsignada] = useState<string | null>(null);
@@ -51,18 +52,10 @@ export default function EsperaClienteAnonimo() {
     }, []);
 
     const salirDelLocal = async () => {
-        if (saliendo) return;
-        setSaliendo(true);
-        setError('');
-        try {
-            await cerrarSesion();
-            await AsyncStorage.removeItem(CLIENTE_ANONIMO_ID_KEY);
-            await AsyncStorage.removeItem(CLIENTE_ANONIMO_NOMBRE_KEY);
+        await AsyncStorage.removeItem(CLIENTE_ANONIMO_ID_KEY);
+        await AsyncStorage.removeItem(CLIENTE_ANONIMO_NOMBRE_KEY);
         await AsyncStorage.removeItem(CLIENTE_ANONIMO_FOTO_KEY);
         router.replace('/(auth)/login');
-        } catch {
-            setError('No pudimos cerrar la sesión. Intentá nuevamente.');
-        } finally { setSaliendo(false); }
     };
 
     const verEncuestasPrevias = () => {
@@ -172,7 +165,7 @@ export default function EsperaClienteAnonimo() {
                 <Ionicons name="exit-outline" size={28} color={colores.textoSobreOscuro} />
                 <Text className="text-chido-texto-sobre-oscuro font-bold text-2xl ml-2">{saliendo ? 'Saliendo…' : 'Salir del local'}</Text>
             </TouchableOpacity>
-            {!!error && <Text accessibilityLiveRegion="assertive" className="text-chido-texto-sobre-oscuro text-center mt-4">{error}</Text>}
+            {!!Error && <Text accessibilityLiveRegion="assertive" className="text-chido-texto-sobre-oscuro text-center mt-4">{error}</Text>}
         </View>
     );
 }

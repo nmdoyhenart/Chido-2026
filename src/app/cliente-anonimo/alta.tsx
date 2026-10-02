@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { View, Text, TouchableOpacity, Image, Modal, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Modal, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,8 +8,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
 import { Input } from '../../components/ui/Input';
 import { subirFotoCliente } from '../../../lib/clientesAnonimos';
-import { KeyboardAvoidingView, Platform } from 'react-native';
 import { colores } from '../../theme/colores';
+import { useCampoVisibleConTeclado } from '../../hooks/useCampoVisibleConTeclado';
 
 const CLIENTE_ANONIMO_ID_KEY = 'cliente_anonimo_id';
 const CLIENTE_ANONIMO_NOMBRE_KEY = 'cliente_anonimo_nombre';
@@ -24,6 +24,8 @@ export default function AltaClienteAnonimo() {
     const [guardando, setGuardando] = useState(false);
     const [permission, requestPermission] = useCameraPermissions();
     const cameraRef = useRef<any>(null);
+    const scroll = useRef<ScrollView>(null);
+    const { alDesplazar, alEnfocar, rellenoInferior } = useCampoVisibleConTeclado(scroll);
 
     const abrirCamara = () => {
         if (!permission?.granted) {
@@ -79,10 +81,10 @@ export default function AltaClienteAnonimo() {
             <Stack.Screen options={{ headerShown: false }} />
 
             <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 className="flex-1"
             >
-                <View className="flex-1 px-6">
+                <ScrollView ref={scroll} className="flex-1 px-6" contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 + rellenoInferior }} keyboardShouldPersistTaps="handled" onScroll={alDesplazar} scrollEventThrottle={16}>
                     <TouchableOpacity
                         onPress={() => router.back()}
                         className="w-14 h-14 rounded-xl bg-chido-cabecera items-center justify-center mt-4"
@@ -115,6 +117,7 @@ export default function AltaClienteAnonimo() {
                                 placeholder="Ej. María José"
                                 value={nombre}
                                 onChangeText={setNombre}
+                                onFocus={alEnfocar}
                             />
 
                             {error !== '' && (
@@ -134,7 +137,7 @@ export default function AltaClienteAnonimo() {
                             )}
                         </TouchableOpacity>
                     </View>
-                </View>
+                </ScrollView>
             </KeyboardAvoidingView>
 
             <Modal visible={tomandoFoto} animationType="slide">

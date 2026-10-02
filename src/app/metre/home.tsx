@@ -14,26 +14,29 @@ export default function HomeMetre() {
     const nombreUsuario = [usuario?.nombres, usuario?.apellidos].filter(Boolean).join(' ').trim() || 'Metre';
     const primerNombre = usuario?.nombres?.trim().split(/\s+/)[0] || 'Metre';
 
-    useEffect(() => {
-        cargarCantidad();
-        const desuscribirse = suscribirseALista('home-metre-lista-espera', cargarCantidad);
-        return desuscribirse;
-    }, []);
-
-    useFocusEffect(
-        useCallback(() => {
-            cargarCantidad();
-        }, [])
-    );
-
-    async function cargarCantidad() {
+    const cargarCantidad = useCallback(async () => {
         try {
             const data = await obtenerListaEspera();
             setCantidadEsperando(data.length);
         } catch (err) {
             console.error('Error al traer la cantidad de espera:', err);
         }
-    }
+    }, []);
+
+    useEffect(() => {
+        const inicio = setTimeout(() => void cargarCantidad(), 0);
+        const desuscribirse = suscribirseALista('home-metre-lista-espera', () => void cargarCantidad());
+        return () => {
+            clearTimeout(inicio);
+            desuscribirse();
+        };
+    }, [cargarCantidad]);
+
+    useFocusEffect(
+        useCallback(() => {
+            void cargarCantidad();
+        }, [cargarCantidad])
+    );
 
     return (
         <View className="flex-1" style={{ backgroundColor: colores.fondo }}>
@@ -126,6 +129,5 @@ export default function HomeMetre() {
                     </TouchableOpacity>
                 </View>
             </View>
-        </View>
     );
 }

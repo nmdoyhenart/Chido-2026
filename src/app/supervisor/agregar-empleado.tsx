@@ -14,6 +14,7 @@ import { colores } from '../../theme/colores';
 import { useRestriccionSimulacion } from '../../components/ui/RestriccionSimulacion';
 import CamaraRegistro from '../../components/auth/CamaraRegistro';
 import { ResultadoModal } from '../../components/ui/ResultadoModal';
+import { useCampoVisibleConTeclado } from '../../hooks/useCampoVisibleConTeclado';
 
 export default function AgregarEmpleado() {
   const { role, usuario, mode } = useAppSession();
@@ -23,6 +24,8 @@ export default function AgregarEmpleado() {
   const [errorRegistro, setErrorRegistro] = useState('');
   const [avisoRegistro, setAvisoRegistro] = useState<'exito' | 'error' | null>(null);
   const empleadoGuardado = useRef(false);
+  const scroll = useRef<ScrollView>(null);
+  const { alDesplazar, alEnfocar, rellenoInferior } = useCampoVisibleConTeclado(scroll);
 
   const mostrarErrorRegistro = (mensaje: string) => {
     Keyboard.dismiss();
@@ -141,10 +144,10 @@ export default function AgregarEmpleado() {
 
       <SafeAreaView edges={["left", "right", "bottom"]} className="flex-1">
         <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           className="flex-1"
         >
-          <ScrollView className="flex-1 p-5" contentContainerStyle={{ flexGrow: 1 }}>
+          <ScrollView ref={scroll} className="flex-1 p-5" contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 + rellenoInferior }} keyboardShouldPersistTaps="handled" onScroll={alDesplazar} scrollEventThrottle={16}>
             {/* Top bar with back button and title */}
             <View className="flex-row items-center mb-8 relative">
               <TouchableOpacity
@@ -198,6 +201,7 @@ export default function AgregarEmpleado() {
               placeholder="Ej. María José"
               value={formData.nombres}
               onChangeText={(t) => setFormData(prev => ({...prev, nombres: formatName(t)}))}
+              onFocus={alEnfocar}
               error={errors.nombres}
               containerClassName="flex-1"
             />
@@ -206,6 +210,7 @@ export default function AgregarEmpleado() {
               placeholder="Ej. González"
               value={formData.apellidos}
               onChangeText={(t) => setFormData(prev => ({...prev, apellidos: formatName(t)}))}
+              onFocus={alEnfocar}
               error={errors.apellidos}
               containerClassName="flex-1"
             />
@@ -218,6 +223,7 @@ export default function AgregarEmpleado() {
             keyboardType="numeric"
             maxLength={8}
             onChangeText={(t) => setFormData(prev => ({...prev, dni: t}))}
+            onFocus={alEnfocar}
             error={errors.dni}
           />
 
@@ -227,6 +233,7 @@ export default function AgregarEmpleado() {
             value={formData.cuil}
             keyboardType="numeric"
             onChangeText={(t) => setFormData(prev => ({...prev, cuil: formatCuil(t)}))}
+            onFocus={alEnfocar}
             error={errors.cuil}
           />
 
@@ -237,6 +244,7 @@ export default function AgregarEmpleado() {
             keyboardType="email-address"
             autoCapitalize="none"
             onChangeText={(t) => setFormData(prev => ({...prev, correo: t}))}
+            onFocus={alEnfocar}
             error={errors.correo}
           />
 
@@ -246,6 +254,7 @@ export default function AgregarEmpleado() {
             value={formData.password}
             secureTextEntry
             onChangeText={(t) => setFormData(prev => ({...prev, password: t}))}
+            onFocus={alEnfocar}
             error={errors.password}
           />
 

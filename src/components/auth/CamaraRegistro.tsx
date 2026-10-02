@@ -29,9 +29,16 @@ export default function CamaraRegistro({ modo, onFoto, onDni, onClose }: Props) 
   const [error, setError] = useState<string | null>(null);
   const [primerPlano, setPrimerPlano] = useState(AppState.currentState === 'active');
   const [intento, setIntento] = useState(0);
+  const [camaraMontada, setCamaraMontada] = useState(true);
   const [zoom, setZoom] = useState(0);
   const [flash, setFlash] = useState(false);
   const [dniLeido, setDniLeido] = useState<DatosDni | null>(null);
+  const temporizadorRemontaje = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function limpiarRemontaje() {
+    if (temporizadorRemontaje.current) clearTimeout(temporizadorRemontaje.current);
+    temporizadorRemontaje.current = null;
+  }
 
   useEffect(() => {
     activa.current = true;
@@ -41,8 +48,22 @@ export default function CamaraRegistro({ modo, onFoto, onDni, onClose }: Props) 
       if (estado !== 'active') setFlash(false);
       if (estado === 'active') void consultarPermiso().catch(() => mostrarError('No se pudo verificar el permiso necesario. Volvé a intentarlo.'));
     });
-    return () => { activa.current = false; suscripcion.remove(); };
+    return () => {
+      activa.current = false;
+      limpiarRemontaje();
+      suscripcion.remove();
+    };
   }, [consultarPermiso]);
+
+  useEffect(() => {
+    if (!permiso?.granted || !primerPlano || !camaraMontada || lista || error) return;
+    const limite = setTimeout(() => {
+      if (!activa.current) return;
+      setError('La cámara tardó demasiado en iniciarse. Reintentá o cerrá y volvé a abrir esta pantalla.');
+      Vibration.vibrate(180);
+    }, 8000);
+    return () => clearTimeout(limite);
+  }, [camaraMontada, error, intento, lista, permiso?.granted, primerPlano]);
 
   function mostrarError(mensaje: string) {
     if (!activa.current) return;
@@ -115,14 +136,29 @@ export default function CamaraRegistro({ modo, onFoto, onDni, onClose }: Props) 
     setDniLeido(datos);
   }
 
-  function cerrar() { activa.current = false; onClose(); }
+  function cerrar() {
+    activa.current = false;
+    limpiarRemontaje();
+    onClose();
+  }
 
-  function reiniciarCamara() {
+  function reiniciarCamara(cambiarLente = false) {
     if (ocupada.current && !error) return;
+    limpiarRemontaje();
     setError(null);
     ocupada.current = false;
     setLista(false);
-    setIntento((anterior) => anterior + 1);
+    setFlash(false);
+    // En Android, cambiar facing con la vista montada puede dejar la lente
+    // anterior bloqueada y no volver a emitir onCameraReady.
+    setCamaraMontada(false);
+    temporizadorRemontaje.current = setTimeout(() => {
+      temporizadorRemontaje.current = null;
+      if (!activa.current) return;
+      if (cambiarLente) setFrente((actual) => actual === 'front' ? 'back' : 'front');
+      setIntento((anterior) => anterior + 1);
+      setCamaraMontada(true);
+    }, 180);
   }
 
   if (dniLeido) return (
@@ -175,7 +211,7 @@ export default function CamaraRegistro({ modo, onFoto, onDni, onClose }: Props) 
             </View>
           ) : primerPlano ? (
             <>
-              <CameraView
+              {camaraMontada ? <CameraView
                 key={`${frente}-${intento}`}
                 ref={camara}
                 style={{ flex: 1 }}
@@ -190,7 +226,7 @@ export default function CamaraRegistro({ modo, onFoto, onDni, onClose }: Props) 
                 onMountError={() => { setLista(false); mostrarError('No pudimos iniciar la cámara. Intentalo nuevamente.'); }}
                 barcodeScannerSettings={modo === 'dni' ? { barcodeTypes: ['pdf417', 'qr'] } : undefined}
                 onBarcodeScanned={modo === 'dni' && !error && !espera ? ({ data }) => escanear(data) : undefined}
-              />
+              /> : null}
               {modo === 'dni' && lista && !error && !espera && (
                 <View pointerEvents="none" className="absolute inset-0" accessible accessibilityLabel="Guía de lectura: ubicá el código de barras dentro del rectángulo">
                   <View style={{ flex: 1, backgroundColor: 'rgba(67,20,7,0.55)', justifyContent: 'flex-end', paddingBottom: 12 }}>
@@ -214,7 +250,7 @@ export default function CamaraRegistro({ modo, onFoto, onDni, onClose }: Props) 
         {error && (
           <View className="bg-chido-error rounded-xl mx-4 mt-4 p-4 gap-3" accessibilityLiveRegion="assertive">
             <Text className="text-chido-texto-sobre-oscuro text-base">{error}</Text>
-            <Pressable onPress={reiniciarCamara} accessibilityRole="button">
+            <Pressable onPress={() => reiniciarCamara()} accessibilityRole="button">
               <Text className="text-chido-texto-sobre-oscuro font-bold text-lg underline">Reintentar</Text>
             </Pressable>
           </View>
@@ -235,7 +271,7 @@ export default function CamaraRegistro({ modo, onFoto, onDni, onClose }: Props) 
               <Pressable disabled={!lista} onPress={() => setFlash(actual => !actual)} accessibilityRole="button" accessibilityState={{ disabled: !lista, selected: flash }} className="flex-1 bg-chido-cabecera rounded-xl p-3">
                 <Text className="text-chido-texto-sobre-oscuro text-base font-bold text-center">{flash ? 'Apagar flash' : 'Encender flash'}</Text>
               </Pressable>
-              <Pressable disabled={!lista} onPress={reiniciarCamara} accessibilityRole="button" className="flex-1 bg-chido-cabecera rounded-xl p-3">
+              <Pressable disabled={!lista} onPress={() => reiniciarCamara()} accessibilityRole="button" className="flex-1 bg-chido-cabecera rounded-xl p-3">
                 <Text className="text-chido-texto-sobre-oscuro text-base font-bold text-center">Reiniciar cámara</Text>
               </Pressable>
             </View>
@@ -244,7 +280,7 @@ export default function CamaraRegistro({ modo, onFoto, onDni, onClose }: Props) 
         <View className="flex-row gap-3 p-5">
           {modo === 'foto' && permiso?.granted ? (
             <>
-              <Pressable disabled={!lista || espera !== null} onPress={() => { setLista(false); setFrente((actual) => actual === 'front' ? 'back' : 'front'); }} accessibilityRole="button" accessibilityLabel="Cambiar cámara" className="bg-chido-cabecera rounded-xl p-4 justify-center">
+              <Pressable disabled={!lista || espera !== null} onPress={() => reiniciarCamara(true)} accessibilityRole="button" accessibilityLabel="Cambiar cámara" className="bg-chido-cabecera rounded-xl p-4 justify-center">
                 <Ionicons name="camera-reverse-outline" size={28} color={colores.textoSobreOscuro} />
               </Pressable>
               <Pressable disabled={!lista || espera !== null || !!error} onPress={tomarFoto} accessibilityRole="button" className={`flex-1 bg-chido-cabecera rounded-xl p-4 ${!lista || espera || error ? 'opacity-50' : ''}`}>

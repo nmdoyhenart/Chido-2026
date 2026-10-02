@@ -27,6 +27,7 @@ import { validarCorreo } from '../../../shared/registro-cliente';
 import AccesoRapidoModal from './AccesoRapidoModal';
 import { colores } from '../../theme/colores';
 import { ENTRADA_APP } from '../../utils/inicioPorPerfil';
+import { useCampoVisibleConTeclado } from '../../hooks/useCampoVisibleConTeclado';
 
 export default function Login() {
   const router = useRouter();
@@ -34,11 +35,9 @@ export default function Login() {
   const [mensaje, setMensaje] = useState<string | null>(null);
   const operacion = useRef(false);
   const [tecladoVisible, setTecladoVisible] = useState(false);
-  const [altoDisponible, setAltoDisponible] = useState(0);
-  const [altoContenidoBase, setAltoContenidoBase] = useState(0);
-  const escala = altoDisponible > 0 && altoContenidoBase > 0
-    ? Math.min(1, altoDisponible / altoContenidoBase)
-    : 1;
+  const scroll = useRef<ScrollView>(null);
+  const { alDesplazar, alEnfocar, rellenoInferior } = useCampoVisibleConTeclado(scroll);
+  const escala = 1;
 
   useEffect(() => {
     const mostrar = Keyboard.addListener('keyboardDidShow', () => setTecladoVisible(true));
@@ -116,25 +115,24 @@ export default function Login() {
           behavior={
             Platform.OS === 'ios'
               ? 'padding'
-              : undefined
+              : 'height'
           }
           className="flex-1"
-          onLayout={(evento) => setAltoDisponible(evento.nativeEvent.layout.height)}
         >
 
           <ScrollView
+            ref={scroll}
             contentContainerStyle={{
               flexGrow: 1,
               justifyContent: 'center',
               paddingHorizontal: 28 * escala,
-              paddingVertical: 20 * escala,
+              paddingTop: 20 * escala,
+              paddingBottom: 20 * escala + rellenoInferior,
             }}
             scrollEnabled={tecladoVisible}
-            onContentSizeChange={(_, alto) => {
-              const nuevoAltoBase = alto / escala;
-              setAltoContenidoBase((anterior) => Math.abs(anterior - nuevoAltoBase) > 1 ? nuevoAltoBase : anterior);
-            }}
             keyboardShouldPersistTaps="handled"
+            onScroll={alDesplazar}
+            scrollEventThrottle={16}
             showsVerticalScrollIndicator={false}
           >
 
@@ -174,6 +172,7 @@ export default function Login() {
                   autoCapitalize="none"
                   autoCorrect={false}
                   editable={!loading}
+                  onFocus={alEnfocar}
                   className="rounded-2xl border-2 border-chido-texto-secundario-alternativo/70 bg-chido-cabecera/55 text-chido-texto-sobre-oscuro font-semibold"
                   style={{ height: 64 * escala, paddingHorizontal: 20 * escala, fontSize: 20 * escala, borderRadius: 16 * escala }}
                 />
@@ -219,6 +218,7 @@ export default function Login() {
                     secureTextEntry={!mostrarPassword}
                     autoCapitalize="none"
                     editable={!loading}
+                    onFocus={alEnfocar}
                     className="flex-1 h-full text-chido-texto-sobre-oscuro font-semibold"
                     style={{ paddingHorizontal: 20 * escala, fontSize: 20 * escala }}
                   />

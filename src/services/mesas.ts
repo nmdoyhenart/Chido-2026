@@ -4,6 +4,7 @@ import { parseQrPayload } from "../utils/qr";
 import type {
   DisponibilidadMesa,
   Mesa,
+  ClienteRegistradoSolicitudMesa,
   NuevaMesa,
 } from "../types/mesa";
 import { eliminarFotoMesa, subirFotoMesa } from "./storage";
@@ -143,8 +144,57 @@ export async function obtenerMesaAsignada(usuarioId: string): Promise<MesaQr | n
   return (data as MesaQr | null) ?? null;
 }
 
+export type EstadoSolicitudMesa = {
+  enEspera: boolean;
+  mesa: MesaQr | null;
+};
+
+export async function obtenerEstadoSolicitudMesa(usuarioId: string): Promise<EstadoSolicitudMesa> {
+  const [mesa, solicitud] = await Promise.all([
+    obtenerMesaAsignada(usuarioId),
+    supabase
+      .from("lista_espera")
+      .select("id")
+      .eq("usuario_id", usuarioId)
+      .eq("estado", "esperando")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  if (solicitud.error) throw new Error("No se pudo verificar tu solicitud de mesa.");
+
+  return { mesa, enEspera: Boolean(solicitud.data) };
+}
+
+export async function solicitarMesa(cliente: ClienteRegistradoSolicitudMesa): Promise<EstadoSolicitudMesa> {
+  const nombre = [cliente.nombres, cliente.apellidos].filter(Boolean).join(" ").trim();
+  if (!nombre) throw new Error("Tu cuenta no tiene un nombre válido para solicitar una mesa.");
+  if (!cliente.foto_perfil.trim()) throw new Error("Tu cuenta no tiene una foto válida para solicitar una mesa.");
+
+  const estado = await obtenerEstadoSolicitudMesa(cliente.id);
+  if (estado.mesa) throw new Error(`Ya tenés asignada la mesa ${estado.mesa.numero}.`);
+  if (estado.enEspera) return estado;
+
+  const { error } = await supabase
+    .from("lista_espera")
+    .insert({
+      identificador: cliente.id,
+      nombre,
+      foto_url: cliente.foto_perfil,
+      tipo_cliente: "registrado",
+      estado: "esperando",
+      usuario_id: cliente.id,
+    });
+
+  if (error?.code === "23505") return { enEspera: true, mesa: null };
+  if (error) throw new Error("No se pudo enviar la solicitud de mesa.");
+
+  return { enEspera: true, mesa: null };
+}
+
 export async function ingresarALaListaDeEspera(
-  usuarioId: string,
+  cliente: ClienteRegistradoSolicitudMesa,
   rawQr: string,
 ): Promise<void> {
   const payload = parseQrPayload(rawQr);
@@ -152,17 +202,10 @@ export async function ingresarALaListaDeEspera(
     throw new Error("El código escaneado no corresponde al ingreso al local.");
   }
 
-  const mesa = await obtenerMesaAsignada(usuarioId);
-  if (mesa) throw new Error("Ya tenés una mesa asignada.");
-
-  const { error } = await supabase
-    .from("lista_espera")
-    .insert({ usuario_id: usuarioId });
-
-  if (error?.code === "23505") {
-    throw new Error("Ya estás en la lista de espera.");
-  }
-  if (error) throw new Error("No se pudo registrar el ingreso a la lista de espera.");
+  const estado = await obtenerEstadoSolicitudMesa(cliente.id);
+  if (estado.mesa) throw new Error("Ya tenés una mesa asignada.");
+  if (estado.enEspera) throw new Error("Ya estás en la lista de espera.");
+  await solicitarMesa(cliente);
 }
 
 export async function confirmarMesaPorQr(

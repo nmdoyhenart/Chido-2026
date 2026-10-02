@@ -5,8 +5,9 @@ import { Pressable, ScrollView, Text, Vibration, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '../../components/Header';
 import ChidoLoader from '../../components/ui/ChidoLoader';
+import { QRScanner } from '../../components/ui/QRScanner';
 import { useAppSession } from '../../contexts/AppSessionContext';
-import { obtenerEstadoSolicitudMesa, type EstadoSolicitudMesa } from '../../services/mesas';
+import { confirmarMesaPorQr, obtenerEstadoSolicitudMesa, type EstadoSolicitudMesa } from '../../services/mesas';
 import { colores } from '../../theme/colores';
 
 export default function EsperaMesaCliente() {
@@ -16,6 +17,7 @@ export default function EsperaMesaCliente() {
   const [estado, setEstado] = useState<EstadoSolicitudMesa | null>(null);
   const [cargando, setCargando] = useState(true);
   const [actualizando, setActualizando] = useState(false);
+  const [scannerVisible, setScannerVisible] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
 
   const consultarEstado = useCallback(async (manual = false) => {
@@ -43,6 +45,12 @@ export default function EsperaMesaCliente() {
     return () => clearInterval(intervalo);
   }, [consultarEstado]));
 
+  async function confirmarMesa(rawQr: string) {
+    if (!clienteId) throw new Error('No pudimos identificar tu cuenta para confirmar la mesa.');
+    await confirmarMesaPorQr(clienteId, rawQr);
+    router.replace('/cliente/menu');
+  }
+
   if (cargando) return <View className="flex-1 justify-center bg-chido-fondo"><ChidoLoader mensaje="Consultando tu solicitud…" /></View>;
 
   const mesa = estado?.mesa;
@@ -60,10 +68,11 @@ export default function EsperaMesaCliente() {
             </Text>
           </View>
           {aviso && <View className="mt-5 rounded-2xl bg-chido-error p-4"><Text className="text-center font-bold text-chido-texto-sobre-oscuro">{aviso}</Text></View>}
-          {mesa ? <Pressable accessibilityRole="button" onPress={() => router.replace('/cliente/menu')} className="mt-6 min-h-14 items-center justify-center rounded-2xl bg-chido-botonPrincipal px-4"><Text className="text-lg font-extrabold text-chido-texto-sobre-oscuro">Ir al menú</Text></Pressable> : actualizando ? <ChidoLoader mensaje="Actualizando estado…" /> : !sinSolicitud && <Pressable accessibilityRole="button" onPress={() => void consultarEstado(true)} className="mt-6 min-h-14 flex-row items-center justify-center rounded-2xl bg-chido-botonPrincipal px-4"><Ionicons name="refresh-outline" size={23} color={colores.textoSobreOscuro} /><Text className="ml-2 text-lg font-extrabold text-chido-texto-sobre-oscuro">Actualizar estado</Text></Pressable>}
+          {mesa ? <Pressable accessibilityRole="button" onPress={() => setScannerVisible(true)} className="mt-6 min-h-14 flex-row items-center justify-center rounded-2xl bg-chido-botonPrincipal px-4"><Ionicons name="qr-code-outline" size={23} color={colores.textoSobreOscuro} /><Text className="ml-2 text-lg font-extrabold text-chido-texto-sobre-oscuro">Escanear QR de mi mesa</Text></Pressable> : actualizando ? <ChidoLoader mensaje="Actualizando estado…" /> : !sinSolicitud && <Pressable accessibilityRole="button" onPress={() => void consultarEstado(true)} className="mt-6 min-h-14 flex-row items-center justify-center rounded-2xl bg-chido-botonPrincipal px-4"><Ionicons name="refresh-outline" size={23} color={colores.textoSobreOscuro} /><Text className="ml-2 text-lg font-extrabold text-chido-texto-sobre-oscuro">Actualizar estado</Text></Pressable>}
           <Pressable accessibilityRole="button" onPress={() => router.back()} className="mt-4 min-h-12 items-center justify-center rounded-2xl bg-chido-acento px-4"><Text className="text-base font-extrabold text-chido-texto-sobre-oscuro">Volver a Inicio</Text></Pressable>
         </View>
       </ScrollView>
+      <QRScanner visible={scannerVisible} proposito="mesa" onScan={confirmarMesa} onClose={() => setScannerVisible(false)} />
     </SafeAreaView>
   );
 }

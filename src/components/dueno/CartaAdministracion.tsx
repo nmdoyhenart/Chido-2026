@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState, type ComponentProps } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -8,6 +8,7 @@ import { useAppSession } from '../../contexts/AppSessionContext';
 import { colores as c } from '../../theme/colores';
 import ChidoLoader from '../ui/ChidoLoader';
 import { getProductos } from '../../services/productos.service';
+import { useCampoVisibleConTeclado } from '../../hooks/useCampoVisibleConTeclado';
 
 type TipoProducto = 'plato' | 'bebida';
 type Producto = {
@@ -59,6 +60,10 @@ export default function CartaAdministracion() {
   const [pagina, setPagina] = useState(0);
   const [altoLista, setAltoLista] = useState(0);
   const [altoControles, setAltoControles] = useState(0);
+  const lista = useRef<ScrollView>(null);
+  const formulario = useRef<ScrollView>(null);
+  const tecladoLista = useCampoVisibleConTeclado(lista);
+  const tecladoFormulario = useCampoVisibleConTeclado(formulario);
   const visibles = productos.filter(p => normalizar(p.nombre + ' ' + p.descripcion).includes(normalizar(busqueda.trim()))
     && (tipo === 'Todos' || p.tipoProducto === (tipo === 'Platos' ? 'plato' : 'bebida')));
   const bebida = (accion?.tipo === 'agregar' ? accion.tipoProducto : accion?.plato.tipoProducto) === 'bebida';
@@ -87,7 +92,7 @@ export default function CartaAdministracion() {
       <Ionicons name="book-outline" size={28} color={c.textoSecundarioAlternativo} />
     </View>
     <SafeAreaView edges={['bottom']} style={s.cuerpo}>
-      <ScrollView key={paginaActual} refreshControl={<RefreshControl refreshing={cargandoProductos} onRefresh={() => setRevision(r => r + 1)} tintColor={c.textoSobreOscuro} />} keyboardShouldPersistTaps="handled" style={s.lista} onLayout={({ nativeEvent }) => setAltoLista(nativeEvent.layout.height)} contentContainerStyle={s.contenido}>
+      <ScrollView ref={lista} key={paginaActual} refreshControl={<RefreshControl refreshing={cargandoProductos} onRefresh={() => setRevision(r => r + 1)} tintColor={c.textoSobreOscuro} />} keyboardShouldPersistTaps="handled" style={s.lista} onLayout={({ nativeEvent }) => setAltoLista(nativeEvent.layout.height)} onScroll={tecladoLista.alDesplazar} scrollEventThrottle={16} contentContainerStyle={[s.contenido, { paddingBottom: tecladoLista.rellenoInferior }]}>
         {paginaActual === 0 && <View style={s.controles} onLayout={({ nativeEvent }) => setAltoControles(nativeEvent.layout.height)}>
           <View><Text style={s.titulo}>Carta de Chido</Text><Text style={s.intro}>Agregá, editá y organizá platos y bebidas.</Text></View>
         <View style={s.resumen}>
@@ -109,7 +114,7 @@ export default function CartaAdministracion() {
         </View>
         <View style={s.buscador}>
           <Ionicons name="search-outline" size={22} color={c.textoSecundarioSobreOscuro} />
-          <TextInput accessibilityLabel="Buscar platos o bebidas" placeholder="Buscar platos o bebidas…" placeholderTextColor={c.textoSecundarioSobreOscuro} value={busqueda} onChangeText={texto => { setBusqueda(texto); setPagina(0); }} style={s.busqueda} returnKeyType="search" />
+          <TextInput accessibilityLabel="Buscar platos o bebidas" placeholder="Buscar platos o bebidas…" placeholderTextColor={c.textoSecundarioSobreOscuro} value={busqueda} onChangeText={texto => { setBusqueda(texto); setPagina(0); }} onFocus={tecladoLista.alEnfocar} style={s.busqueda} returnKeyType="search" />
           {!!busqueda && <TouchableOpacity accessibilityRole="button" accessibilityLabel="Limpiar búsqueda" onPress={() => { setBusqueda(''); setPagina(0); }} style={s.limpiar}><Ionicons name="close-circle" size={22} color={c.textoSecundarioSobreOscuro} /></TouchableOpacity>}
         </View>
         <View style={s.tipos}>{tipos.map(item => <TouchableOpacity key={item} accessibilityRole="button" accessibilityLabel={`Mostrar ${item.toLowerCase()}`} accessibilityState={{ selected: tipo === item }} onPress={() => { setTipo(item); setPagina(0); }} style={[s.tipo, tipo === item && s.tipoActivo]}><Text style={[s.filtroTexto, tipo === item && s.filtroTextoActivo]}>{item}</Text></TouchableOpacity>)}</View>
@@ -144,17 +149,17 @@ export default function CartaAdministracion() {
     </SafeAreaView>
     <Modal visible={accion !== null} transparent animationType="slide" onRequestClose={() => setAccion(null)}>
       <SafeAreaView style={s.fondoModal}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={s.modalContenedor}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.modalContenedor}>
           <View style={s.modal} accessibilityViewIsModal>
             <View style={s.fila}><Text style={[s.nombre, s.flex]}>{accion?.tipo === 'agregar' ? (bebida ? 'Nueva bebida' : 'Nuevo plato') : `${accion?.tipo === 'editar' ? 'Editar' : 'Eliminar'} ${nombreTipo}`}</Text><TouchableOpacity accessibilityRole="button" accessibilityLabel="Cerrar vista previa" onPress={() => setAccion(null)} style={s.limpiar}><Ionicons name="close" size={26} color={c.textoSobreOscuro} /></TouchableOpacity></View>
-            <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 14, paddingBottom: 16 }}>
+            <ScrollView ref={formulario} keyboardShouldPersistTaps="handled" onScroll={tecladoFormulario.alDesplazar} scrollEventThrottle={16} contentContainerStyle={{ gap: 14, paddingBottom: 16 + tecladoFormulario.rellenoInferior }}>
               <Text style={s.descripcion}>Vista previa del diseño. Los cambios todavía no se guardan.</Text>
               {accion?.tipo === 'eliminar' ? <><View style={s.iconoEliminar}><Ionicons name="trash-outline" size={36} color={c.textoSobreOscuro} /></View><Text style={s.nombre}>{accion.plato.nombre}</Text><Text style={s.descripcion}>Aquí podrás confirmar la eliminación de {bebida ? 'esta bebida' : 'este plato'} de la carta.</Text></> : accion && <>
                 <View style={s.foto}><Ionicons name="camera-outline" size={32} color={c.textoSobreOscuro} /><Text style={s.descripcion}>Fotos {bebida ? 'de la bebida' : 'del plato'}</Text><Text style={s.ayuda}>Vista previa del espacio para imágenes</Text></View>
-                <Campo key={accion.tipo + ('plato' in accion ? accion.plato.id : nombreTipo) + 'nombre'} titulo={`Nombre ${bebida ? 'de la bebida' : 'del plato'}`} valor={'plato' in accion ? accion.plato.nombre : ''} placeholder={bebida ? 'Ej. Limonada con menta' : 'Ej. Tacos al pastor'} />
-                <Campo key={accion.tipo + 'descripcion'} titulo="Descripción" valor={'plato' in accion ? accion.plato.descripcion : ''} placeholder="Ingredientes y presentación" multilinea />
-                <Campo key={accion.tipo + 'precio'} titulo="Precio ($)" valor={'plato' in accion ? String(accion.plato.precio) : ''} placeholder="0" numerico />
-                <Campo key={accion.tipo + 'minutos'} titulo="Tiempo de preparación (min)" valor={'plato' in accion ? String(accion.plato.minutos) : ''} placeholder="20" numerico />
+                <Campo key={accion.tipo + ('plato' in accion ? accion.plato.id : nombreTipo) + 'nombre'} titulo={`Nombre ${bebida ? 'de la bebida' : 'del plato'}`} valor={'plato' in accion ? accion.plato.nombre : ''} placeholder={bebida ? 'Ej. Limonada con menta' : 'Ej. Tacos al pastor'} onFocus={tecladoFormulario.alEnfocar} />
+                <Campo key={accion.tipo + 'descripcion'} titulo="Descripción" valor={'plato' in accion ? accion.plato.descripcion : ''} placeholder="Ingredientes y presentación" multilinea onFocus={tecladoFormulario.alEnfocar} />
+                <Campo key={accion.tipo + 'precio'} titulo="Precio ($)" valor={'plato' in accion ? String(accion.plato.precio) : ''} placeholder="0" numerico onFocus={tecladoFormulario.alEnfocar} />
+                <Campo key={accion.tipo + 'minutos'} titulo="Tiempo de preparación (min)" valor={'plato' in accion ? String(accion.plato.minutos) : ''} placeholder="20" numerico onFocus={tecladoFormulario.alEnfocar} />
               </>}
               <View accessibilityRole="button" accessibilityState={{ disabled: true }} style={[s.agregar, s.deshabilitado]}><Text style={s.botonTexto}>{accion?.tipo === 'eliminar' ? 'Eliminar' : 'Guardar'} {nombreTipo}</Text></View>
               <Text style={s.ayuda}>Disponible en la próxima etapa.</Text>
@@ -166,8 +171,8 @@ export default function CartaAdministracion() {
   </SafeAreaView>;
 }
 
-function Campo({ titulo, valor, placeholder, multilinea = false, numerico = false }: { titulo: string; valor: string; placeholder: string; multilinea?: boolean; numerico?: boolean }) {
-  return <View style={{ gap: 6 }}><Text style={s.etiqueta}>{titulo}</Text><TextInput accessibilityLabel={titulo} defaultValue={valor} placeholder={placeholder} placeholderTextColor={c.textoSecundarioSobreOscuro} multiline={multilinea} keyboardType={numerico ? 'decimal-pad' : 'default'} style={[s.campo, multilinea && { minHeight: 84, textAlignVertical: 'top' }]} /></View>;
+function Campo({ titulo, valor, placeholder, multilinea = false, numerico = false, onFocus }: { titulo: string; valor: string; placeholder: string; multilinea?: boolean; numerico?: boolean; onFocus: ComponentProps<typeof TextInput>['onFocus'] }) {
+  return <View style={{ gap: 6 }}><Text style={s.etiqueta}>{titulo}</Text><TextInput accessibilityLabel={titulo} defaultValue={valor} placeholder={placeholder} placeholderTextColor={c.textoSecundarioSobreOscuro} multiline={multilinea} keyboardType={numerico ? 'decimal-pad' : 'default'} onFocus={onFocus} style={[s.campo, multilinea && { minHeight: 84, textAlignVertical: 'top' }]} /></View>;
 }
 
 const s = StyleSheet.create({

@@ -7,16 +7,16 @@ import {
   Pressable,
   Image,
   ImageBackground,
-  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
   Vibration,
+  useWindowDimensions,
 } from 'react-native';
 
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -27,33 +27,29 @@ import { validarCorreo } from '../../../shared/registro-cliente';
 import AccesoRapidoModal from './AccesoRapidoModal';
 import { colores } from '../../theme/colores';
 import { ENTRADA_APP } from '../../utils/inicioPorPerfil';
+import { useCampoVisibleConTeclado } from '../../hooks/useCampoVisibleConTeclado';
 
 export default function Login() {
   const router = useRouter();
   const { iniciarSesion: autenticar, mode, role, cargando, avisoSesion, limpiarAviso } = useAppSession();
   const [mensaje, setMensaje] = useState<string | null>(null);
   const operacion = useRef(false);
-  const [tecladoVisible, setTecladoVisible] = useState(false);
-  const [altoDisponible, setAltoDisponible] = useState(0);
-  const [altoContenidoBase, setAltoContenidoBase] = useState(0);
-  const escala = altoDisponible > 0 && altoContenidoBase > 0
-    ? Math.min(1, altoDisponible / altoContenidoBase)
-    : 1;
+  const scroll = useRef<ScrollView>(null);
+  const { alDesplazar, alEnfocar, rellenoInferior } = useCampoVisibleConTeclado(scroll);
+  const { height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
-  useEffect(() => {
-    const mostrar = Keyboard.addListener('keyboardDidShow', () => setTecladoVisible(true));
-    const ocultar = Keyboard.addListener('keyboardDidHide', () => setTecladoVisible(false));
-    return () => { mostrar.remove(); ocultar.remove(); };
-  }, []);
+  const ALTO_DISENO = 900; // lo que mide el contenido con escala 1
+  const altoDisponible = height - insets.top - insets.bottom;
+  const escala = Math.min(1, altoDisponible / ALTO_DISENO);
 
   useEffect(() => {
     if (mode === 'authenticated' && !cargando) {
       if (role === 'supervisor') {
         router.replace('/supervisor/home');
-      } 
-      if (role === 'metre') {
+      } else if (role === 'metre') {
         router.replace('/metre/home');
-      }else {
+      } else {
         router.replace('/(app)/home');
       }
     }
@@ -116,25 +112,23 @@ export default function Login() {
           behavior={
             Platform.OS === 'ios'
               ? 'padding'
-              : undefined
+              : 'height'
           }
           className="flex-1"
-          onLayout={(evento) => setAltoDisponible(evento.nativeEvent.layout.height)}
         >
 
           <ScrollView
+            ref={scroll}
             contentContainerStyle={{
               flexGrow: 1,
               justifyContent: 'center',
               paddingHorizontal: 28 * escala,
-              paddingVertical: 20 * escala,
-            }}
-            scrollEnabled={tecladoVisible}
-            onContentSizeChange={(_, alto) => {
-              const nuevoAltoBase = alto / escala;
-              setAltoContenidoBase((anterior) => Math.abs(anterior - nuevoAltoBase) > 1 ? nuevoAltoBase : anterior);
+              paddingTop: 20 * escala,
+              paddingBottom: 20 * escala + rellenoInferior,
             }}
             keyboardShouldPersistTaps="handled"
+            onScroll={alDesplazar}
+            scrollEventThrottle={16}
             showsVerticalScrollIndicator={false}
           >
 
@@ -174,6 +168,7 @@ export default function Login() {
                   autoCapitalize="none"
                   autoCorrect={false}
                   editable={!loading}
+                  onFocus={alEnfocar}
                   className="rounded-2xl border-2 border-chido-texto-secundario-alternativo/70 bg-chido-cabecera/55 text-chido-texto-sobre-oscuro font-semibold"
                   style={{ height: 64 * escala, paddingHorizontal: 20 * escala, fontSize: 20 * escala, borderRadius: 16 * escala }}
                 />
@@ -219,6 +214,7 @@ export default function Login() {
                     secureTextEntry={!mostrarPassword}
                     autoCapitalize="none"
                     editable={!loading}
+                    onFocus={alEnfocar}
                     className="flex-1 h-full text-chido-texto-sobre-oscuro font-semibold"
                     style={{ paddingHorizontal: 20 * escala, fontSize: 20 * escala }}
                   />

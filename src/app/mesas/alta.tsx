@@ -30,6 +30,7 @@ import { createMesaQr } from "../../utils/qr";
 import { useAppSession } from "../../contexts/AppSessionContext";
 import { puedeAdministrarMesas } from "../../utils/permisos";
 import { colores } from "../../theme/colores";
+import { useCampoVisibleConTeclado } from "../../hooks/useCampoVisibleConTeclado";
 
 type FotoTomada = {
   base64: string;
@@ -44,6 +45,8 @@ export default function AgregarMesa() {
   const permitido = (mode === 'authenticated' || mode === 'simulation') && puedeAdministrarMesas(role);
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
+  const scroll = useRef<ScrollView>(null);
+  const { alDesplazar, alEnfocar, rellenoInferior } = useCampoVisibleConTeclado(scroll);
   const operacionEnCurso = useRef(false);
   const activa = useRef(true);
   const tokenCamara = useRef(0);
@@ -250,8 +253,8 @@ export default function AgregarMesa() {
       <Stack.Screen options={{ headerShown: false }} />
       <Header userName={nombreVisible} role={perfilVisible} />
       <SafeAreaView edges={["left", "right", "bottom"]} className="flex-1">
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
-          <View className="flex-1 p-5" accessibilityElementsHidden={ocupada} importantForAccessibility={ocupada ? "no-hide-descendants" : "auto"}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
+          <ScrollView ref={scroll} className="flex-1 p-5" contentContainerStyle={{ flexGrow: 1, paddingBottom: rellenoInferior }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets onScroll={alDesplazar} scrollEventThrottle={16} accessibilityElementsHidden={ocupada} importantForAccessibility={ocupada ? "no-hide-descendants" : "auto"}>
             <View className="w-full max-w-xl self-center">
               <View className="relative mb-8 flex-row items-center">
                 <Pressable className="absolute left-0 z-10 h-10 w-10 items-center justify-center rounded-xl bg-chido-acento" onPress={volver} accessibilityRole="button" accessibilityLabel="Volver al panel de Supervisor">
@@ -272,11 +275,11 @@ export default function AgregarMesa() {
               <View className={`mb-4 gap-4 ${camposEnFila ? "flex-row" : "flex-col"}`}>
                 <View className={camposEnFila ? "flex-1" : "w-full"}>
                   <Text className="mb-1 ml-1 text-sm text-chido-texto-sobre-oscuro">Número de mesa</Text>
-                  <TextInput value={numero} onChangeText={setNumero} keyboardType="number-pad" placeholder="Ej. 12" placeholderTextColor={colores.textoSecundarioAlternativo} editable={!ocupada} accessibilityLabel="Número de mesa" className="rounded-xl border border-chido-texto-boton-outline bg-chido-cabecera p-3 text-chido-texto-sobre-oscuro" />
+                  <TextInput value={numero} onChangeText={setNumero} onFocus={alEnfocar} keyboardType="number-pad" placeholder="Ej. 12" placeholderTextColor={colores.textoSecundarioAlternativo} editable={!ocupada} accessibilityLabel="Número de mesa" className="rounded-xl border border-chido-texto-boton-outline bg-chido-cabecera p-3 text-chido-texto-sobre-oscuro" />
                 </View>
                 <View className={camposEnFila ? "flex-1" : "w-full"}>
                   <Text className="mb-1 ml-1 text-sm text-chido-texto-sobre-oscuro">Comensales</Text>
-                  <TextInput value={cantidadComensales} onChangeText={setCantidadComensales} keyboardType="number-pad" placeholder="Ej. 4" placeholderTextColor={colores.textoSecundarioAlternativo} editable={!ocupada} accessibilityLabel="Cantidad de comensales" className="rounded-xl border border-chido-texto-boton-outline bg-chido-cabecera p-3 text-chido-texto-sobre-oscuro" />
+                  <TextInput value={cantidadComensales} onChangeText={setCantidadComensales} onFocus={alEnfocar} keyboardType="number-pad" placeholder="Ej. 4" placeholderTextColor={colores.textoSecundarioAlternativo} editable={!ocupada} accessibilityLabel="Cantidad de comensales" className="rounded-xl border border-chido-texto-boton-outline bg-chido-cabecera p-3 text-chido-texto-sobre-oscuro" />
                 </View>
               </View>
 
@@ -306,7 +309,7 @@ export default function AgregarMesa() {
                 <Text className="text-lg font-bold text-chido-texto-sobre-oscuro">Guardar mesa</Text>
               </Pressable>
             </View>
-          </View>
+          </ScrollView>
           {ocupada && !cameraVisible ? (
             <ImageBackground source={require("../../../assets/images/fondo.jpeg")} resizeMode="cover" blurRadius={2} style={StyleSheet.absoluteFill}>
               <View className="absolute inset-0 bg-chido-cabecera/35" />

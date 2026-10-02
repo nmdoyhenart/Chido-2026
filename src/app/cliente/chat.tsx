@@ -7,6 +7,7 @@ import { Header } from '../../components/Header';
 import { getMensajes, enviarMensaje, suscribirMensajes, Mensaje } from '../../services/chat.service';
 import { colores } from '../../theme/colores';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCampoVisibleConTeclado } from '../../hooks/useCampoVisibleConTeclado';
 
 export default function ChatCliente() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function ChatCliente() {
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
   const [nuevoMensaje, setNuevoMensaje] = useState('');
   const scrollViewRef = useRef<ScrollView>(null);
+  const { alDesplazar, alEnfocar, rellenoInferior } = useCampoVisibleConTeclado(scrollViewRef);
 
   useEffect(() => {
     if (!mesaId && usuario) {
@@ -105,6 +107,9 @@ export default function ChatCliente() {
           ref={scrollViewRef}
           onLayout={() => scrollViewRef.current?.scrollToEnd({ animated: false })}
           onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+          onScroll={alDesplazar}
+          scrollEventThrottle={16}
+          contentContainerStyle={{ paddingBottom: rellenoInferior }}
         >
           {mensajes.map(msg => {
             const isMe = !msg.es_mozo;
@@ -137,6 +142,7 @@ export default function ChatCliente() {
             placeholderTextColor={colores.textoSecundarioSobreOscuro}
             value={nuevoMensaje}
             onChangeText={setNuevoMensaje}
+            onFocus={alEnfocar}
             onSubmitEditing={handleEnviar}
           />
           <TouchableOpacity
@@ -150,4 +156,3 @@ export default function ChatCliente() {
     </ImageBackground>
   );
 }
-

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/Header';
@@ -10,6 +10,7 @@ export default function EstadoPedido() {
   const router = useRouter();
   const { pedidoId } = useLocalSearchParams<{ pedidoId: string }>();
   const [estado, setEstado] = useState<string>('pendiente_mozo');
+  const [aviso, setAviso] = useState<string | null>(null);
 
   useEffect(() => {
     if (!pedidoId) return;
@@ -26,7 +27,7 @@ export default function EstadoPedido() {
 
     const desuscribir = suscribirEstadoPedido(pedidoId, (nuevoEstado) => {
       setEstado(nuevoEstado);
-      Alert.alert('Pedido Actualizado', `El estado de tu pedido cambió a: ${nuevoEstado}`);
+      setAviso(`El estado de tu pedido cambió a: ${nuevoEstado}.`);
     });
 
     return desuscribir;
@@ -53,6 +54,13 @@ export default function EstadoPedido() {
           {estado === 'entregado' && '¡Tu pedido ha sido entregado! ¡Que lo disfrutes!'}
           {estado === 'rechazado' && 'Tu pedido ha sido rechazado. Por favor, realiza uno nuevo o consulta al mozo.'}
         </Text>
+        {aviso && <View className="mt-5 rounded-xl bg-chido-cabecera p-4"><Text className="text-center text-base font-bold text-chido-texto-sobre-oscuro">{aviso}</Text></View>}
+
+        {estado === 'confirmado' && pedidoId && (
+          <TouchableOpacity className="bg-chido-botonPrincipal p-4 rounded-xl mt-8 w-full" onPress={() => router.push(`/cliente/juegos?pedidoId=${encodeURIComponent(pedidoId)}` as never)}>
+            <Text className="text-chido-texto-sobre-oscuro text-center font-bold text-lg">Ir a juegos y descuentos</Text>
+          </TouchableOpacity>
+        )}
 
         {(estado === 'entregado' || estado === 'rechazado') && (
           <TouchableOpacity 

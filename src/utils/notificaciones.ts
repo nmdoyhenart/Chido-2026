@@ -33,8 +33,12 @@ export function crearAvisoClienteEnEspera(): NotificacionPush {
     };
 }
 
-export function obtenerRutaNotificacion(datos: unknown): RutaNotificacion | null {
+export function obtenerRutaNotificacion(datos: unknown): Href | null {
     if (!datos || typeof datos !== 'object' || Array.isArray(datos)) return null;
     const ruta = (datos as Record<string, unknown>).ruta;
-    return typeof ruta === 'string' && RUTAS_VALIDAS.has(ruta) ? ruta as RutaNotificacion : null;
+    if (typeof ruta === 'string') {
+        const rutaBase = ruta.split('?')[0];
+        if (RUTAS_VALIDAS.has(rutaBase)) return ruta as Href;
+    }
+    return null;
 }

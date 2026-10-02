@@ -35,6 +35,24 @@ export default function HomeCliente() {
      }
      const mesaId = match[1].toLowerCase();
 
+     // Verificar si la mesa ya está ocupada por otro cliente
+     const { data: mesaVerificada, error: errorVerificacion } = await supabase
+       .from('mesas')
+       .select('cliente_id, disponibilidad')
+       .eq('id', mesaId)
+       .single();
+
+     if (errorVerificacion) {
+       Alert.alert('Error', 'Mesa no encontrada.');
+       return;
+     }
+
+     if (mesaVerificada.cliente_id && mesaVerificada.cliente_id !== usuario.id) {
+       Alert.alert('Aviso', 'Esta mesa ya está ocupada por otro cliente.');
+       setScannerVisible(false);
+       return;
+     }
+
      const { error } = await supabase
        .from('mesas')
        .update({
@@ -45,7 +63,9 @@ export default function HomeCliente() {
        .eq('id', mesaId);
 
      if (error) {
-       console.log('Error asignando mesa:', error);
+       Alert.alert('Error', 'No se pudo asignar la mesa. ' + error.message);
+       setScannerVisible(false);
+       return;
      }
 
      setScannerVisible(false);

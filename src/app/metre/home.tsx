@@ -126,6 +126,5 @@ export default function HomeMetre() {
                     </TouchableOpacity>
                 </View>
             </View>
-        </View>
     );
 }

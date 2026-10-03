@@ -19,7 +19,19 @@ export const authService = {
     if (error) throw new ErrorAcceso('No pudimos verificar tu perfil. Revisá la conexión e intentá nuevamente.');
     const motivo = motivoAccesoDenegado(data as Usuario | null, identidad.user.id);
     if (motivo) throw new ErrorAcceso(motivo);
-    return data as Usuario;
+    const usuario = data as Usuario;
+    const fotoPerfil = usuario.foto_perfil.trim();
+    if (!fotoPerfil) return usuario;
+    if (/^https:\/\//i.test(fotoPerfil)) return { ...usuario, fotoUrl: fotoPerfil };
+
+    const { data: foto, error: fotoError } = await supabase.storage
+      .from('perfiles')
+      .createSignedUrl(fotoPerfil, 3600);
+    if (fotoError) {
+      console.warn('No se pudo preparar la foto de perfil.', fotoError.message);
+      return usuario;
+    }
+    return { ...usuario, fotoUrl: foto?.signedUrl ?? null };
   },
 
   async logout() {

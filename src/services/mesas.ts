@@ -176,6 +176,32 @@ export async function solicitarMesa(cliente: ClienteRegistradoSolicitudMesa): Pr
   if (estado.mesa) throw new Error(`Ya tenés asignada la mesa ${estado.mesa.numero}.`);
   if (estado.enEspera) return estado;
 
+  const { data: solicitudAnterior, error: errorSolicitudAnterior } = await supabase
+    .from("lista_espera")
+    .select("id")
+    .eq("identificador", cliente.id)
+    .in("estado", ["asignado", "eliminado"])
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (errorSolicitudAnterior) throw new Error("No se pudo verificar tu solicitud anterior.");
+  if (solicitudAnterior) {
+    const { error: errorReactivacion } = await supabase
+      .from("lista_espera")
+      .update({
+        nombre,
+        foto_url: cliente.foto_perfil,
+        tipo_cliente: "registrado",
+        estado: "esperando",
+        mesa_id: null,
+        usuario_id: cliente.id,
+      })
+      .eq("id", solicitudAnterior.id);
+    if (errorReactivacion) throw new Error("No se pudo reactivar tu solicitud de mesa.");
+    return { enEspera: true, mesa: null };
+  }
+
   const { error } = await supabase
     .from("lista_espera")
     .insert({
@@ -187,7 +213,11 @@ export async function solicitarMesa(cliente: ClienteRegistradoSolicitudMesa): Pr
       usuario_id: cliente.id,
     });
 
-  if (error?.code === "23505") return { enEspera: true, mesa: null };
+  if (error?.code === "23505") {
+    const estadoActual = await obtenerEstadoSolicitudMesa(cliente.id);
+    if (estadoActual.mesa || estadoActual.enEspera) return estadoActual;
+    throw new Error("Ya existe una solicitud activa que no se pudo actualizar.");
+  }
   if (error) throw new Error("No se pudo enviar la solicitud de mesa.");
 
   return { enEspera: true, mesa: null };
@@ -202,12 +232,7 @@ export async function ingresarALaListaDeEspera(
     throw new Error("El código escaneado no corresponde al ingreso al local.");
   }
 
-  const mesa = await obtenerMesaAsignada(usuarioId);
-  if (mesa) throw new Error("Ya tenés una mesa asignada.");
-
-  const { error } = await supabase.rpc("ingresar_lista_espera_cliente");
-  if (error?.code === "23505") throw new Error("Ya tenés una mesa asignada.");
-  if (error) throw new Error(error.message || "No se pudo registrar el ingreso a la lista de espera.");
+  await solicitarMesa(cliente);
 }
 
 export type EstadoListaEsperaCliente = {
@@ -247,26 +272,6 @@ export async function confirmarMesaPorQr(
   });
   if (errorConfirmacion) throw errorConfirmacion;
   return { ...mesa, qr_confirmado_at: new Date().toISOString() };
-
-  const { data, error } = await supabase
-    .from("mesas")
-    .update({ qr_confirmado_at: new Date().toISOString() })
-    .eq("id", mesa.id)
-    .eq("cliente_id", usuarioId)
-    .is("qr_confirmado_at", null)
-    .select(
-      "id, numero, cantidad_comensales, tipo, disponibilidad, cliente_id, qr_confirmado_at",
-    )
-    .maybeSingle();
-
-  if (error) throw new Error("No se pudo confirmar la mesa.");
-  if (!data) {
-    const mesaActualizada = await obtenerMesaAsignada(usuarioId);
-    if (mesaActualizada?.qr_confirmado_at) return mesaActualizada;
-    throw new Error("La mesa ya no está disponible para confirmar.");
-  }
-
-  return data as MesaQr;
 }
 
 export async function obtenerMesaDesdeQr(

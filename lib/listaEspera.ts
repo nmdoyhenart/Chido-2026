@@ -59,11 +59,26 @@ export async function eliminarDeLista(id: string) {
 }
 
 
+const TIEMPO_MAXIMO_ASIGNACION_MS = 15000;
+
 export async function asignarMesaACliente(cliente: ClienteEnEspera, mesaId: string): Promise<void> {
-    const { error } = await supabase.rpc('asignar_mesa_lista_espera', {
-        p_lista_id: cliente.id,
-        p_mesa_id: mesaId,
-    });
+    // Sin límite, si la base no responde el metre se queda con el indicador de carga para siempre
+    const controlador = new AbortController();
+    const temporizador = setTimeout(() => controlador.abort(), TIEMPO_MAXIMO_ASIGNACION_MS);
+    let error;
+    try {
+        ({ error } = await supabase
+            .rpc('asignar_mesa_lista_espera', {
+                p_lista_id: cliente.id,
+                p_mesa_id: mesaId,
+            })
+            .abortSignal(controlador.signal));
+    } finally {
+        clearTimeout(temporizador);
+    }
+    if (controlador.signal.aborted) {
+        throw new Error('La asignación tardó demasiado. Revisá la conexión e intentá de nuevo.');
+    }
     if (error) {
         console.error('Error al asignar la mesa:', error.message);
         throw error;

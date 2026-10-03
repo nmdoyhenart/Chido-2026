@@ -90,10 +90,14 @@ export default function EscanearEntrada() {
                 <Text className="text-chido-texto-sobre-oscuro font-bold text-3xl ml-3">Escanear código QR</Text>
             </TouchableOpacity>
 
+            {/* Fondo bordó oscuro con texto claro para que el error se lea bien sobre el fondo naranja */}
             {mensaje !== '' && (
-                <Text className="text-chido-notificacion text-xl text-center mt-6 font-semibold w-full">
-                    {mensaje}
-                </Text>
+                <View className="bg-chido-error w-full mt-6 px-5 py-5 rounded-2xl flex-row items-center">
+                    <Ionicons name="alert-circle" size={40} color={colores.textoSobreOscuro} />
+                    <Text className="text-chido-texto-sobre-oscuro text-2xl font-bold ml-3 flex-1">
+                        {mensaje}
+                    </Text>
+                </View>
             )}
             </View>
 

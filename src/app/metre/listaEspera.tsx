@@ -54,26 +54,11 @@ export default function ListaEsperaMetre() {
             setLista(data);
         } catch (err) {
             console.error('Error al traer la lista de espera:', err);
-            setError(err instanceof Error ? err.message : 'No se pudo cargar la lista de espera.');
+            setError('No se pudo cargar la lista de espera.');
         } finally {
             setCargando(false);
         }
-    }, []);
-
-    useEffect(() => {
-        const inicial = setTimeout(() => { void cargarLista(); }, 0);
-        recargarMesas();
-        const desuscribirse = suscribirseALista('metre-lista-espera-pantalla', cargarLista);
-        const intervalo = setInterval(() => { void cargarLista(); }, 7000);
-        return () => { clearTimeout(inicial); clearInterval(intervalo); desuscribirse(); };
-    }, [cargarLista, recargarMesas]);
-
-    useFocusEffect(
-        useCallback(() => {
-            cargarLista();
-            recargarMesas();
-        }, [cargarLista, recargarMesas])
-    );
+    }
 
     async function eliminarCliente(id: string) {
         setEliminando(id);
@@ -142,10 +127,6 @@ export default function ListaEsperaMetre() {
                         <Text className="text-xl text-center" style={{ color: colores.error }}>
                             {error}
                         </Text>
-                        <TouchableOpacity accessibilityRole="button" onPress={() => { setCargando(true); void cargarLista(); }} className="mt-5 rounded-xl p-4" style={{ backgroundColor: colores.botonPrincipal }}>
-                            <Text className="text-center text-base font-bold" style={{ color: colores.textoSobreOscuro }}>Volver a intentar</Text>
-                        </TouchableOpacity>
-                      </View>
                     </View>
                 )}
 

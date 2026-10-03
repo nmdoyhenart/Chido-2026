@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +14,7 @@ const CLIENTE_ANONIMO_FOTO_KEY = 'cliente_anonimo_foto_url';
 export default function ElegirOpcion() {
     const [anotando, setAnotando] = useState(false);
     const [error, setError] = useState('');
+    const insets = useSafeAreaInsets();
 
     const anotarme = async () => {
         setError('');
@@ -46,41 +48,55 @@ export default function ElegirOpcion() {
     };
 
     return (
-        <View className="flex-1 bg-chido-fondo items-center justify-center px-6">
+        <SafeAreaView className="flex-1 bg-chido-fondo" edges={['top', 'left', 'right']}>
             <Stack.Screen options={{ headerShown: false }} />
+            {/* El paddingBottom deja los botones por encima de la barra de navegación de Android */}
+            <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 12, paddingBottom: Math.max(insets.bottom, 16) + 8 }}>
 
-            <Text className="text-chido-texto-sobre-oscuro text-3xl font-bold text-center mb-10">
-                ¿Qué querés hacer?
-            </Text>
+                {/* La mascota toma el espacio que sobra y se achica en pantallas chicas para que todo entre sin scroll */}
+                <Image
+                    source={require('../../../assets/images/mascota-pensando.png')}
+                    style={{ flex: 1, width: '90%', minHeight: 0, alignSelf: 'center', marginBottom: 8 }}
+                    resizeMode="contain"
+                />
 
-            <TouchableOpacity
-                onPress={anotarme}
-                disabled={anotando}
-                className="bg-chido-cabecera w-full px-8 py-6 rounded-2xl flex-row items-center justify-center mb-4"
-            >
-                {anotando ? (
-                    <ActivityIndicator color={colores.textoSobreOscuro} />
-                ) : (
-                    <>
-                        <Ionicons name="list-outline" size={28} color={colores.textoSobreOscuro} />
-                        <Text className="text-chido-texto-sobre-oscuro font-bold text-2xl ml-2">Anotarme a la lista de espera</Text>
-                    </>
-                )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-                onPress={verEncuestas}
-                className="bg-chido-acento w-full px-8 py-6 rounded-2xl flex-row items-center justify-center"
-            >
-                <Ionicons name="stats-chart-outline" size={28} color={colores.textoSobreOscuro} />
-                <Text className="text-chido-texto-sobre-oscuro font-bold text-2xl ml-2">Ver encuestas anteriores</Text>
-            </TouchableOpacity>
-
-            {error !== '' && (
-                <Text className="text-chido-notificacion text-lg text-center mt-6 px-6 font-semibold">
-                    {error}
+                <Text className="text-chido-texto-sobre-oscuro text-4xl font-bold text-center mt-2 mb-6 w-full">
+                    ¿Qué querés hacer?
                 </Text>
-            )}
-        </View>
+
+                <TouchableOpacity
+                    onPress={anotarme}
+                    disabled={anotando}
+                    className="bg-chido-cabecera w-full px-6 py-8 rounded-2xl flex-row items-center justify-center mb-4"
+                >
+                    {anotando ? (
+                        <ActivityIndicator size="large" color={colores.textoSobreOscuro} />
+                    ) : (
+                        <>
+                            <Ionicons name="list-outline" size={36} color={colores.textoSobreOscuro} />
+                            <Text className="text-chido-texto-sobre-oscuro font-bold text-2xl ml-3 flex-shrink">Anotarme a la lista de espera</Text>
+                        </>
+                    )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    onPress={verEncuestas}
+                    className="bg-chido-acento w-full px-6 py-8 rounded-2xl flex-row items-center justify-center"
+                >
+                    <Ionicons name="stats-chart-outline" size={36} color={colores.textoSobreOscuro} />
+                    <Text className="text-chido-texto-sobre-oscuro font-bold text-2xl ml-3 flex-shrink">Ver encuestas anteriores</Text>
+                </TouchableOpacity>
+
+                {/* Fondo bordó oscuro con texto claro para que el error se lea bien sobre el fondo naranja */}
+                {error !== '' && (
+                    <View className="bg-chido-error w-full mt-4 px-5 py-4 rounded-2xl flex-row items-center">
+                        <Ionicons name="alert-circle" size={32} color={colores.textoSobreOscuro} />
+                        <Text className="text-chido-texto-sobre-oscuro text-xl font-bold ml-3 flex-1">
+                            {error}
+                        </Text>
+                    </View>
+                )}
+            </View>
+        </SafeAreaView>
     );
 }

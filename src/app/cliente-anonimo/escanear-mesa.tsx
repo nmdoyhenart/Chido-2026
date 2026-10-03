@@ -7,29 +7,23 @@ import { Ionicons } from '@expo/vector-icons';
 import { colores } from '../../theme/colores';
 import { obtenerClienteEnListaPorId } from '../../../lib/clientesAnonimos';
 import { parseQrPayload } from '../../utils/qr';
-<<<<<<< HEAD
-import { confirmarMesaAnonima } from '../../services/pedidos.service';
-=======
 import { QRScanner } from '../../components/ui/QRScanner';
->>>>>>> silvina
+import { confirmarMesaAnonima } from '../../services/pedidos.service';
 
 const CLIENTE_ANONIMO_ID_KEY = 'cliente_anonimo_id';
+const CLIENTE_ANONIMO_NOMBRE_KEY = 'cliente_anonimo_nombre';
+const CLIENTE_ANONIMO_FOTO_KEY = 'cliente_anonimo_foto_url';
 
 export default function EscanearMesa() {
 
     // Se llega desde "Escanear mi mesa", así que la cámara se abre de entrada
     const [escaneando, setEscaneando] = useState(true);
     const [mensaje, setMensaje] = useState('');
-<<<<<<< HEAD
-    const procesando = useRef(false);
-    const miMesaId = useRef<string | null>(null);
-    const clienteAnonimoId = useRef<string | null>(null);
-=======
     const [confirmado, setConfirmado] = useState(false);
     const miMesaId = useRef<string | null>(null);
+    const clienteAnonimoId = useRef<string | null>(null);
     const mesaConfirmada = useRef(false);
     const insets = useSafeAreaInsets();
->>>>>>> silvina
 
     useEffect(() => {
         (async () => {
@@ -84,17 +78,16 @@ export default function EscanearMesa() {
             throw new Error('Esta no es tu mesa asignada. Fijate el número con el metre.');
         }
 
-<<<<<<< HEAD
-        try {
-            if (!clienteAnonimoId.current) throw new Error('No encontramos tu sesión anónima.');
-            await confirmarMesaAnonima(clienteAnonimoId.current, payload.mesaId);
-            router.replace({ pathname: '/cliente/menu', params: { mesaId: payload.mesaId, clienteAnonimoId: clienteAnonimoId.current } });
-        } catch (error) {
-            setMensaje(error instanceof Error ? error.message : 'No se pudo confirmar la mesa. Intentá de nuevo.');
+        if (!clienteAnonimoId.current) {
+            throw new Error('No encontramos tu sesión anónima.');
         }
-    };
 
-=======
+        try {
+            await confirmarMesaAnonima(clienteAnonimoId.current, payload.mesaId);
+        } catch (error) {
+            throw new Error(error instanceof Error ? error.message : 'No se pudo confirmar la mesa. Intentá de nuevo.');
+        }
+
         mesaConfirmada.current = true;
         setConfirmado(true);
     };
@@ -140,7 +133,6 @@ export default function EscanearMesa() {
         );
     }
 
->>>>>>> silvina
     return (
         <View className="flex-1 bg-chido-fondo items-center justify-center px-6">
             <Stack.Screen options={{ headerShown: false }} />

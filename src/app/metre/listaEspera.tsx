@@ -3,11 +3,14 @@ import { View, Text, ActivityIndicator, FlatList, Image, TouchableOpacity, Modal
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
 
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '../../components/Header';
 import { colores } from '../../theme/colores';
 import { obtenerListaEspera, suscribirseALista, eliminarDeLista, asignarMesaACliente, ClienteEnEspera } from '../../../lib/listaEspera';
 import { useMesas } from '../../hooks/useMesas';
 import { useAppSession } from '../../contexts/AppSessionContext';
+
+const CLIENTES_POR_PAGINA = 4;
 
 function obtenerMensajeError(err: unknown): string {
     if (err instanceof Error) return err.message;
@@ -25,8 +28,10 @@ export default function ListaEsperaMetre() {
     const [eliminando, setEliminando] = useState<string | null>(null);
     const [asignando, setAsignando] = useState<string | null>(null);
     const [clienteParaAsignar, setClienteParaAsignar] = useState<ClienteEnEspera | null>(null);
+    const [altoLista, setAltoLista] = useState(0);
 
     const { mesas, recargar: recargarMesas } = useMesas();
+    const insets = useSafeAreaInsets();
 
     useEffect(() => {
         cargarLista();
@@ -89,20 +94,27 @@ export default function ListaEsperaMetre() {
     }
 
     const mesasDisponibles = mesas.filter((mesa) => mesa.disponibilidad === 'vacía');
+    // Cada cliente ocupa un cuarto del alto de la lista (incluye el mb-4 de la tarjeta)
+    const altoItem = Math.floor(altoLista / CLIENTES_POR_PAGINA);
+    const totalPaginas = Math.ceil(lista.length / CLIENTES_POR_PAGINA);
+    const altoRelleno = (totalPaginas * CLIENTES_POR_PAGINA - lista.length) * altoItem;
 
   return (
     <View className="flex-1" style={{ backgroundColor: colores.fondo }}>
       <Stack.Screen options={{ headerShown: false }} />
       <Header userName={nombre} role="Metre" />
 
-      <View className="flex-1 px-5 pt-5">
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Volver al inicio del metre"
-          onPress={() => router.dismissTo('/metre/home')} className="self-start rounded-xl p-3 mb-3" style={{ backgroundColor: colores.cabecera }}>
-          <Ionicons name="arrow-back" size={24} color={colores.textoSobreOscuro} />
-        </TouchableOpacity>
-        <Text className="text-3xl font-bold mb-5" style={{ color: colores.textoSobreOscuro }}>
-          Lista de espera
-        </Text>
+      {/* El paddingBottom deja la lista por encima de la barra de navegación de Android */}
+      <View className="flex-1 px-5 pt-5" style={{ paddingBottom: Math.max(insets.bottom, 12) }}>
+        <View className="flex-row items-center mb-5">
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Volver al inicio del metre"
+            onPress={() => router.dismissTo('/metre/home')} className="rounded-xl p-3 mr-4" style={{ backgroundColor: colores.cabecera }}>
+            <Ionicons name="arrow-back" size={28} color={colores.textoSobreOscuro} />
+          </TouchableOpacity>
+          <Text className="text-3xl font-bold flex-1" style={{ color: colores.textoSobreOscuro }}>
+            Lista de espera
+          </Text>
+        </View>
 
                 {cargando && (
                     <View className="flex-1 items-center justify-center">
@@ -112,7 +124,7 @@ export default function ListaEsperaMetre() {
 
                 {!cargando && error !== '' && (
                     <View className="flex-1 items-center justify-center px-6">
-                        <Text className="text-lg text-center" style={{ color: colores.error }}>
+                        <Text className="text-xl text-center" style={{ color: colores.error }}>
                             {error}
                         </Text>
                     </View>
@@ -120,31 +132,42 @@ export default function ListaEsperaMetre() {
 
                 {!cargando && error === '' && lista.length === 0 && (
                     <View className="flex-1 items-center justify-center">
-                        <Text className="text-lg text-center" style={{ color: colores.textoSecundarioAlternativo }}>
+                        <Text className="text-xl text-center" style={{ color: colores.textoSecundarioAlternativo }}>
                             No hay clientes esperando en este momento.
                         </Text>
                     </View>
                 )}
 
                 {!cargando && error === '' && lista.length > 0 && (
+                    <View className="flex-1" onLayout={({ nativeEvent }) => setAltoLista(Math.floor(nativeEvent.layout.height))}>
+                    {altoItem > 0 && (
                     <FlatList
                         data={lista}
                         keyExtractor={(item) => item.id}
-                        contentContainerStyle={{ paddingBottom: 20 }}
+                        // Cada scroll avanza exactamente una página de CLIENTES_POR_PAGINA
+                        snapToInterval={altoItem * CLIENTES_POR_PAGINA}
+                        decelerationRate="fast"
+                        disableIntervalMomentum
+                        bounces={false}
+                        showsVerticalScrollIndicator={false}
+                        getItemLayout={(_, index) => ({ length: altoItem, offset: altoItem * index, index })}
+                        // Completa la última página para que también quede alineada al snap
+                        ListFooterComponent={<View style={{ height: altoRelleno }} />}
                         renderItem={({ item }) => (
+                            <View style={{ height: altoItem }}>
                             <View
-                                className="flex-row items-center rounded-2xl p-4 mb-4"
+                                className="flex-1 flex-row items-center rounded-2xl p-4 mb-4"
                                 style={{ backgroundColor: colores.superficieTerracota }}
                             >
                                 <Image
                                     source={{ uri: item.foto_url }}
-                                    style={{ width: 56, height: 56, borderRadius: 28 }}
+                                    style={{ width: 64, height: 64, borderRadius: 32 }}
                                 />
                                 <View className="flex-1 ml-4">
-                                    <Text className="text-xl font-semibold" style={{ color: colores.textoSobreOscuro }}>
+                                    <Text className="text-2xl font-semibold" numberOfLines={1} style={{ color: colores.textoSobreOscuro }}>
                                         {item.nombre}
                                     </Text>
-                                    <Text className="text-sm" style={{ color: colores.textoSecundarioSobreOscuro }}>
+                                    <Text className="text-lg" style={{ color: colores.textoSecundarioSobreOscuro }}>
                                         {item.tipo_cliente === 'anonimo' ? 'Cliente anónimo' : 'Cliente registrado'}
                                     </Text>
                                 </View>
@@ -157,7 +180,7 @@ export default function ListaEsperaMetre() {
                                         {asignando === item.id ? (
                                             <ActivityIndicator size="small" color={colores.textoSobreOscuro} />
                                         ) : (
-                                            <Ionicons name="restaurant-outline" size={26} color={colores.textoSobreOscuro} />
+                                            <Ionicons name="restaurant-outline" size={30} color={colores.textoSobreOscuro} />
                                         )}
                                     </TouchableOpacity>
                                     <TouchableOpacity
@@ -168,13 +191,16 @@ export default function ListaEsperaMetre() {
                                         {eliminando === item.id ? (
                                             <ActivityIndicator size="small" color={colores.textoSobreOscuro} />
                                         ) : (
-                                            <Ionicons name="trash-outline" size={28} color={colores.notificacion} />
+                                            <Ionicons name="trash-outline" size={32} color={colores.notificacion} />
                                         )}
                                     </TouchableOpacity>
                                 </View>
                             </View>
+                            </View>
                         )}
                     />
+                    )}
+                    </View>
                 )}
             </View>
 
@@ -192,12 +218,12 @@ export default function ListaEsperaMetre() {
                         className="w-full rounded-2xl p-5"
                         style={{ backgroundColor: colores.fondo, maxHeight: '70%' }}
                     >
-                        <Text className="text-xl font-bold mb-4" style={{ color: colores.textoSobreOscuro }}>
+                        <Text className="text-2xl font-bold mb-4" style={{ color: colores.textoSobreOscuro }}>
                             Asignar mesa a {clienteParaAsignar?.nombre}
                         </Text>
 
                         {mesasDisponibles.length === 0 && (
-                            <Text className="text-base mb-4" style={{ color: colores.textoSecundarioAlternativo }}>
+                            <Text className="text-lg mb-4" style={{ color: colores.textoSecundarioAlternativo }}>
                                 No hay mesas disponibles en este momento.
                             </Text>
                         )}
@@ -212,10 +238,10 @@ export default function ListaEsperaMetre() {
                                     className="flex-row items-center justify-between rounded-xl p-4 mb-3"
                                     style={{ backgroundColor: colores.superficieTerracota }}
                                 >
-                                    <Text className="text-lg font-semibold" style={{ color: colores.textoSobreOscuro }}>
+                                    <Text className="text-xl font-semibold" style={{ color: colores.textoSobreOscuro }}>
                                         Mesa {mesa.numero}
                                     </Text>
-                                    <Text className="text-sm" style={{ color: colores.textoSecundarioSobreOscuro }}>
+                                    <Text className="text-lg" style={{ color: colores.textoSecundarioSobreOscuro }}>
                                         {mesa.cantidad_comensales} comensales
                                     </Text>
                                 </TouchableOpacity>
@@ -226,7 +252,7 @@ export default function ListaEsperaMetre() {
                             onPress={() => setClienteParaAsignar(null)}
                             style={{ marginTop: 8, alignSelf: 'center' }}
                         >
-                            <Text className="text-base" style={{ color: colores.textoSecundarioAlternativo }}>
+                            <Text className="text-lg" style={{ color: colores.textoSecundarioAlternativo }}>
                                 Cancelar
                             </Text>
                         </TouchableOpacity>

@@ -19,7 +19,7 @@ export async function obtenerListaEspera (): Promise<ClienteEnEspera[]> {
     .from('lista_espera')
     .select('*')
     .eq('estado', 'esperando')
-    .order('created_at', {ascending:true});
+    .order('created_at', {ascending:false});
 
     if (error) {
         console.error ('Error al traer la lista de espera', error.message);

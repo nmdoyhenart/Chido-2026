@@ -281,3 +281,19 @@ export const getMesasMozo = async (): Promise<Mesa[]> => {
   if (error) throw error;
   return data as Mesa[];
 };
+
+export function suscribirseAMesas(nombreCanal: string, alCambiar: () => void) {
+  const existente = supabase.getChannels().find((canal) => canal.topic === `realtime:${nombreCanal}`);
+  if (existente) {
+    supabase.removeChannel(existente);
+  }
+
+  const canal = supabase
+    .channel(nombreCanal)
+    .on("postgres_changes", { event: "*", schema: "public", table: "mesas" }, alCambiar)
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(canal);
+  };
+}

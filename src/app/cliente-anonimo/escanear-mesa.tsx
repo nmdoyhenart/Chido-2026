@@ -1,24 +1,35 @@
 import React, { useState, useRef, useEffect } from "react";
-import { View, Text, TouchableOpacity, Modal, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
-import { CameraView, useCameraPermissions } from 'expo-camera';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { colores } from '../../theme/colores';
 import { obtenerClienteEnListaPorId } from '../../../lib/clientesAnonimos';
 import { parseQrPayload } from '../../utils/qr';
+<<<<<<< HEAD
 import { confirmarMesaAnonima } from '../../services/pedidos.service';
+=======
+import { QRScanner } from '../../components/ui/QRScanner';
+>>>>>>> silvina
 
 const CLIENTE_ANONIMO_ID_KEY = 'cliente_anonimo_id';
 
 export default function EscanearMesa() {
 
-    const [permission, requestPermission] = useCameraPermissions();
-    const [escaneando, setEscaneando] = useState(false);
+    // Se llega desde "Escanear mi mesa", así que la cámara se abre de entrada
+    const [escaneando, setEscaneando] = useState(true);
     const [mensaje, setMensaje] = useState('');
+<<<<<<< HEAD
     const procesando = useRef(false);
     const miMesaId = useRef<string | null>(null);
     const clienteAnonimoId = useRef<string | null>(null);
+=======
+    const [confirmado, setConfirmado] = useState(false);
+    const miMesaId = useRef<string | null>(null);
+    const mesaConfirmada = useRef(false);
+    const insets = useSafeAreaInsets();
+>>>>>>> silvina
 
     useEffect(() => {
         (async () => {
@@ -32,12 +43,14 @@ export default function EscanearMesa() {
             try {
                 const clienteEnLista = await obtenerClienteEnListaPorId(identificador);
                 if (!clienteEnLista || clienteEnLista.estado !== 'asignado' || !clienteEnLista.mesa_id) {
+                    setEscaneando(false);
                     setMensaje('Todavía no tenés una mesa asignada.');
                     return;
                 }
                 miMesaId.current = clienteEnLista.mesa_id;
             } catch (err) {
                 console.error(err);
+                setEscaneando(false);
                 setMensaje('No se pudo verificar tu mesa asignada. Intentá de nuevo.');
             }
         })();
@@ -45,33 +58,33 @@ export default function EscanearMesa() {
 
     const abrirScanner = () => {
         if (!miMesaId.current) return;
-        if (!permission?.granted) {
-            requestPermission();
-            return;
-        }
-        procesando.current = false;
         setMensaje('');
         setEscaneando(true);
     };
 
-    const handleBarcodeScanned = async ({ data }: { data: string }) => {
-        if (procesando.current) return;
-        procesando.current = true;
-
+    // QRScanner también llama a onClose después de un escaneo correcto: ahí no hay que volver atrás
+    const cerrarScanner = () => {
         setEscaneando(false);
+        if (!mesaConfirmada.current && router.canGoBack()) router.back();
+    };
+
+    // QRScanner muestra el error del throw y deja reintentar sin cerrar la cámara
+    const confirmarMesa = async (data: string) => {
+        if (!miMesaId.current) {
+            throw new Error('Estamos verificando tu mesa asignada. Probá de nuevo en un momento.');
+        }
 
         const payload = parseQrPayload(data);
 
         if (!payload || payload.tipo !== 'mesa') {
-            setMensaje('Este código QR no corresponde a una mesa.');
-            return;
+            throw new Error('Este código QR no corresponde a una mesa.');
         }
 
         if (payload.mesaId !== miMesaId.current) {
-            setMensaje('Esta no es tu mesa asignada. Fijate el número con el metre.');
-            return;
+            throw new Error('Esta no es tu mesa asignada. Fijate el número con el metre.');
         }
 
+<<<<<<< HEAD
         try {
             if (!clienteAnonimoId.current) throw new Error('No encontramos tu sesión anónima.');
             await confirmarMesaAnonima(clienteAnonimoId.current, payload.mesaId);
@@ -81,6 +94,53 @@ export default function EscanearMesa() {
         }
     };
 
+=======
+        mesaConfirmada.current = true;
+        setConfirmado(true);
+    };
+
+    const salirDelLocal = async () => {
+        await AsyncStorage.removeItem(CLIENTE_ANONIMO_ID_KEY);
+        await AsyncStorage.removeItem(CLIENTE_ANONIMO_NOMBRE_KEY);
+        await AsyncStorage.removeItem(CLIENTE_ANONIMO_FOTO_KEY);
+        router.replace('/(auth)/login');
+    };
+
+    if (confirmado) {
+        return (
+            // Los paddings dejan todo entre la barra de estado y la barra de navegación de Android, sin scroll
+            <View
+                className="flex-1 bg-chido-fondo"
+                style={{ paddingTop: insets.top + 16, paddingHorizontal: 16, paddingBottom: Math.max(insets.bottom, 16) + 8 }}
+            >
+                <Stack.Screen options={{ headerShown: false }} />
+
+                {/* La mascota toma el espacio que sobra y se achica en pantallas chicas para que todo entre */}
+                <Image
+                    source={require('../../../assets/images/mascota-espera.png')}
+                    style={{ flex: 1, width: '85%', minHeight: 0, alignSelf: 'center', marginVertical: 8 }}
+                    resizeMode="contain"
+                />
+
+                <Text className="text-chido-texto-sobre-oscuro text-4xl font-bold text-center w-full mt-4 mb-3">
+                    ¡Listo, disfrutá tu mesa!
+                </Text>
+                <Text className="text-chido-texto-secundario-alternativo text-2xl text-center w-full mb-8">
+                    Ya podés sentarte, en breve te va a atender un mozo.
+                </Text>
+
+                <TouchableOpacity
+                    onPress={salirDelLocal}
+                    className="bg-chido-cabecera w-full px-6 py-7 rounded-2xl flex-row items-center justify-center"
+                >
+                    <Ionicons name="exit-outline" size={36} color={colores.textoSobreOscuro} />
+                    <Text className="text-chido-texto-sobre-oscuro font-bold text-3xl ml-3">Salir del local</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
+
+>>>>>>> silvina
     return (
         <View className="flex-1 bg-chido-fondo items-center justify-center px-6">
             <Stack.Screen options={{ headerShown: false }} />
@@ -106,23 +166,7 @@ export default function EscanearMesa() {
                 </Text>
             )}
 
-            <Modal visible={escaneando} animationType="slide">
-                <View className="flex-1 bg-black">
-                    <CameraView
-                        style={StyleSheet.absoluteFill}
-                        onBarcodeScanned={handleBarcodeScanned}
-                        barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-                    />
-                    <View className="absolute bottom-10 left-0 right-0 items-center">
-                        <TouchableOpacity
-                            onPress={() => setEscaneando(false)}
-                            className="bg-chido-error px-8 py-5 rounded-full"
-                        >
-                            <Text className="text-chido-texto-sobre-oscuro font-bold text-xl">Cancelar</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
+            <QRScanner visible={escaneando} proposito="mesa" onScan={confirmarMesa} onClose={cerrarScanner} />
         </View>
     )
 }

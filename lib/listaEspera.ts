@@ -15,7 +15,15 @@ export type ClienteEnEspera = {
 };
 
 export async function obtenerListaEspera (): Promise<ClienteEnEspera[]> {
+<<<<<<< HEAD
     const { data, error } = await supabase.rpc('obtener_lista_espera_metre');
+=======
+    const {data, error } = await supabase
+    .from('lista_espera')
+    .select('*')
+    .eq('estado', 'esperando')
+    .order('created_at', {ascending:false});
+>>>>>>> silvina
 
     if (error) {
         console.error ('Error al traer la lista de espera', error.message);

@@ -26,3 +26,10 @@ export type NuevaMesa = {
   tipo: TipoMesa;
   fotoBase64: string;
 };
+
+export type ClienteRegistradoSolicitudMesa = {
+  id: string;
+  nombres: string;
+  apellidos: string | null;
+  foto_perfil: string;
+};

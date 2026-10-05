@@ -5,7 +5,7 @@ import { Header } from '../../components/Header';
 import { supabase } from '../../../lib/supabase';
 import { colores } from '../../theme/colores';
 import { useAppSession } from '../../contexts/AppSessionContext';
-import { getPedidosMozo, actualizarEstadoPedido } from '../../services/pedidos.service';
+import { getPedidosMozo, actualizarEstadoPedido, entregarPedido } from '../../services/pedidos.service';
 
 const ESTADOS = ['todos', 'pendiente_mozo', 'confirmado', 'en_preparacion', 'entregado', 'rechazado'];
 
@@ -41,8 +41,10 @@ export default function PedidosMozo() {
         cargarPedidos();
       })
       .subscribe();
+    const intervalo = setInterval(() => { void cargarPedidos(); }, 8000);
 
     return () => {
+      clearInterval(intervalo);
       supabase.removeChannel(channel);
     };
   }, []);
@@ -52,6 +54,14 @@ export default function PedidosMozo() {
       await actualizarEstadoPedido(id, nuevoEstado);
     } catch {
       Alert.alert('Error', 'No se pudo actualizar el pedido.');
+    }
+  };
+
+  const cambiarEntregado = async (id: string) => {
+    try {
+      await entregarPedido(id);
+    } catch (error) {
+      Alert.alert('El pedido todavía no está listo', error instanceof Error ? error.message : 'Cocina y bar deben terminar los productos.');
     }
   };
 
@@ -129,6 +139,9 @@ export default function PedidosMozo() {
                   <Text className="text-chido-texto-sobre-oscuro text-xl font-bold">
                     Mesa {item.mesas?.numero}
                   </Text>
+                  <Text className="text-chido-texto-secundario-sobre-oscuro text-sm font-semibold" numberOfLines={1}>
+                    {item.cliente_nombre || [item.usuarios?.nombres, item.usuarios?.apellidos].filter(Boolean).join(' ') || 'Cliente'}
+                  </Text>
                   <Text className="text-white text-base capitalize mt-1 font-semibold">
                     {item.mesas?.tipo} • {item.mesas?.cantidad_comensales} personas
                   </Text>
@@ -142,6 +155,11 @@ export default function PedidosMozo() {
                   </View>
                 </View>
               </View>
+              {!!item.pedido_detalles?.length && <View className="mt-3 border-t border-white/30 pt-2">
+                {item.pedido_detalles.map((detalle: { id: string; cantidad: number; estado_sector: string; productos?: { nombre?: string; tipo?: string } | null }) => <Text key={detalle.id} className="text-chido-texto-secundario-sobre-oscuro text-sm">
+                  {detalle.cantidad} × {detalle.productos?.nombre ?? 'Producto'} · {detalle.estado_sector === 'listo' ? 'Listo' : (detalle.estado_sector === 'en_preparacion' ? 'En preparación' : 'Pendiente')}
+                </Text>)}
+              </View>}
               
               <View className="mt-auto pt-2 flex-row justify-end items-center gap-3">
                 {item.estado === 'pendiente_mozo' && (
@@ -162,21 +180,21 @@ export default function PedidosMozo() {
                     </TouchableOpacity>
                   </>
                 )}
-                {item.estado === 'confirmado' && (
+                {item.estado === 'en_preparacion' && item.pedido_detalles?.length > 0 && item.pedido_detalles.every((detalle: { estado_sector: string }) => detalle.estado_sector === 'listo') && (
                   <TouchableOpacity 
                     className="bg-chido-botonPrincipal border-2 border-white/70 px-3 py-2 rounded-xl w-full items-center justify-center"
                     style={{ minHeight: 44 }}
-                    onPress={() => cambiarEstado(item.id, 'entregado')}
+                    onPress={() => cambiarEntregado(item.id)}
                   >
-                    <Text className="text-chido-texto-sobre-oscuro font-bold text-base text-center">Marcar como Entregado</Text>
+                    <Text className="text-chido-texto-sobre-oscuro font-bold text-base text-center">Cocina y bar terminaron · Entregar</Text>
                   </TouchableOpacity>
                 )}
                 
                 {/* Textos de tiempo para los estados sin botones */}
-                {(item.estado === 'en_preparacion' || item.estado === 'entregado' || item.estado === 'rechazado') && (
+                {(item.estado === 'en_preparacion' && !item.pedido_detalles?.every((detalle: { estado_sector: string }) => detalle.estado_sector === 'listo') || item.estado === 'entregado' || item.estado === 'rechazado') && (
                   <View className="flex-1 items-center justify-center">
                     <Text className="text-chido-texto-secundario-sobre-oscuro font-semibold text-sm text-center">
-                      {item.estado === 'en_preparacion' && `En cocina - Ingresado a las ${new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                      {item.estado === 'en_preparacion' && 'Esperando que cocina y bar terminen.'}
                       {item.estado === 'entregado' && `Finalizado - Pedido de las ${new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                       {item.estado === 'rechazado' && `Cancelado - Pedido de las ${new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                     </Text>

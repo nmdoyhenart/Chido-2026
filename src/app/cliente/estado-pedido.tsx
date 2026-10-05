@@ -3,12 +3,12 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/Header';
-import { getEstadoPedido, suscribirEstadoPedido } from '../../services/pedidos.service';
+import { getEstadoPedido, getEstadoPedidoAnonimo, suscribirEstadoPedido } from '../../services/pedidos.service';
 import { colores } from '../../theme/colores';
 
 export default function EstadoPedido() {
   const router = useRouter();
-  const { pedidoId } = useLocalSearchParams<{ pedidoId: string }>();
+  const { pedidoId, clienteAnonimoId } = useLocalSearchParams<{ pedidoId: string; clienteAnonimoId?: string }>();
   const [estado, setEstado] = useState<string>('pendiente_mozo');
   const [aviso, setAviso] = useState<string | null>(null);
 
@@ -17,21 +17,29 @@ export default function EstadoPedido() {
 
     const fetchEstado = async () => {
       try {
-        const estadoActual = await getEstadoPedido(pedidoId);
+        const estadoActual = clienteAnonimoId
+          ? await getEstadoPedidoAnonimo(clienteAnonimoId, pedidoId)
+          : await getEstadoPedido(pedidoId);
         setEstado(estadoActual);
       } catch (e) {
         console.error(e);
       }
     };
-    fetchEstado();
+    void fetchEstado();
+    // Realtime puede tardar en conectarse en una red móvil; el sondeo mantiene
+    // el estado actualizado también cuando la app está en iOS/Expo Go.
+    const intervalo = setInterval(() => { void fetchEstado(); }, 5000);
 
-    const desuscribir = suscribirEstadoPedido(pedidoId, (nuevoEstado) => {
+    const desuscribir = clienteAnonimoId ? () => {} : suscribirEstadoPedido(pedidoId, (nuevoEstado) => {
       setEstado(nuevoEstado);
       setAviso(`El estado de tu pedido cambió a: ${nuevoEstado}.`);
     });
 
-    return desuscribir;
-  }, [pedidoId]);
+    return () => {
+      clearInterval(intervalo);
+      desuscribir();
+    };
+  }, [pedidoId, clienteAnonimoId]);
 
   return (
     <View className="flex-1 bg-chido-fondo">
@@ -51,8 +59,9 @@ export default function EstadoPedido() {
         <Text className="text-xl text-chido-texto-secundario-sobre-oscuro font-bold mt-4 text-center">
           {estado === 'pendiente_mozo' && 'Esperando confirmación del mozo...'}
           {estado === 'confirmado' && '¡Pedido confirmado! En preparación...'}
+          {estado === 'en_preparacion' && 'Cocina y bar están preparando tu pedido.'}
           {estado === 'entregado' && '¡Tu pedido ha sido entregado! ¡Que lo disfrutes!'}
-          {estado === 'rechazado' && 'Tu pedido ha sido rechazado. Por favor, realiza uno nuevo o consulta al mozo.'}
+          {estado === 'rechazado' && 'El mozo rechazó el pedido. Podés cambiar productos o cantidades y volver a enviarlo.'}
         </Text>
         {aviso && <View className="mt-5 rounded-xl bg-chido-cabecera p-4"><Text className="text-center text-base font-bold text-chido-texto-sobre-oscuro">{aviso}</Text></View>}
 
@@ -65,9 +74,11 @@ export default function EstadoPedido() {
         {(estado === 'entregado' || estado === 'rechazado') && (
           <TouchableOpacity 
             className="bg-chido-cabecera p-4 rounded-xl mt-10 w-full"
-            onPress={() => router.replace('/cliente/home')}
+            onPress={() => router.replace(estado === 'rechazado'
+              ? { pathname: '/cliente/menu', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } }
+              : '/cliente/home')}
           >
-            <Text className="text-chido-texto-sobre-oscuro text-center font-bold text-lg">Volver al Menú</Text>
+            <Text className="text-chido-texto-sobre-oscuro text-center font-bold text-lg">{estado === 'rechazado' ? 'Modificar pedido' : 'Volver al Menú'}</Text>
           </TouchableOpacity>
         )}
       </View>

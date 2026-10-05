@@ -74,7 +74,7 @@ export default function PantallaMozo({ vista = 'inicio', mesa = '5' }: { vista?:
     finally { salida.current = false; setSaliendo(false); }
   }
   function volver() {
-    router.dismissTo(vista === 'chat' ? '/(app)/mozo/consultas' : '/(app)/home');
+    router.dismissTo(vista === 'chat' ? '/mozo/chats' : '/(app)/home');
   }
   if (cargando) return <ChidoLoader mensaje="Verificando sesión…" />;
   if ((!simulacion && !real) || role !== 'mozo') return <Redirect href="/(app)/home" />;
@@ -90,7 +90,7 @@ export default function PantallaMozo({ vista = 'inicio', mesa = '5' }: { vista?:
         <View style={s.avatar}><Feather name="user" size={29} color={c.textoSobreOscuro} /></View>
         <View style={s.textos}><Text style={s.nombre}>{nombre}</Text><View style={s.insignia}><View style={s.puntoVerde} /><Text style={s.textoRol}>Mozo</Text></View></View>
         <View style={[s.acciones, compacto && s.accionesCompactas]}>
-          <TouchableOpacity style={s.botonIcono} accessibilityRole="button" accessibilityLabel="Ver consultas" onPress={() => router.push('/(app)/mozo/consultas')}><Feather name="bell" size={23} color={c.textoSobreOscuro} />{noLeidas > 0 && <View style={s.puntoAviso} />}</TouchableOpacity>
+          <TouchableOpacity style={s.botonIcono} accessibilityRole="button" accessibilityLabel="Ver consultas" onPress={() => router.push('/mozo/chats')}><Feather name="bell" size={23} color={c.textoSobreOscuro} />{noLeidas > 0 && <View style={s.puntoAviso} />}</TouchableOpacity>
           <TouchableOpacity style={s.botonIcono} accessibilityRole="button" accessibilityLabel="Cerrar sesión" disabled={saliendo} onPress={() => void salir()}><Feather name="log-out" size={23} color={c.textoSobreOscuro} /></TouchableOpacity>
         </View>
       </View>}
@@ -107,17 +107,16 @@ export default function PantallaMozo({ vista = 'inicio', mesa = '5' }: { vista?:
 
           {vista === 'inicio' && <>
             {([
-              { texto: 'Consultas al mozo', icono: 'message-circle', cantidad: simulacion ? noLeidas : null, ruta: '/(app)/mozo/consultas' },
-              { texto: 'Pedidos entrantes', icono: 'shopping-bag', cantidad: simulacion ? pedidos.length : null, ruta: '/(app)/mozo/pedidos' },
-              { texto: 'Ver la carta', icono: 'book-open', cantidad: null, ruta: '/(app)/mozo/carta' },
-            ] as const).map(item => <TouchableOpacity key={item.ruta} style={[s.card, s.acceso]} activeOpacity={0.8} accessibilityRole="button" onPress={() => router.push(item.ruta)}>
+              { texto: 'Consultas al mozo', icono: 'message-circle', cantidad: simulacion ? noLeidas : null, ruta: '/mozo/chats' },
+              { texto: 'Pedidos entrantes', icono: 'shopping-bag', cantidad: simulacion ? pedidos.length : null, ruta: '/mozo/pedidos' },
+            ] as const).map(item => <TouchableOpacity key={item.ruta} style={[s.card, s.acceso]} activeOpacity={0.8} accessibilityRole="button" onPress={() => router.push(item.ruta as any)}>
               <View style={[s.iconoAcceso, compacto && s.iconoCompacto]}><Feather name={item.icono} size={32} color={c.textoSobreOscuro} /></View>
               <Text style={[s.tituloCard, s.textos]}>{item.texto}</Text>
               {item.cantidad !== null ? <View style={s.contador}><Text style={s.textoContador}>{item.cantidad}</Text></View> : <Feather name="chevron-right" size={22} color={c.textoSecundarioSobreOscuro} />}
             </TouchableOpacity>)}
           </>}
 
-          {vista === 'consultas' && consultas.map(item => <TouchableOpacity key={item.mesa} style={[s.card, s.consulta]} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={`Consulta de la mesa ${item.mesa}${item.nueva ? ', sin leer' : ''}`} onPress={() => router.push({ pathname: '/(app)/mozo/chat', params: { mesa: String(item.mesa) } })}>
+          {vista === 'consultas' && consultas.map(item => <TouchableOpacity key={item.mesa} style={[s.card, s.consulta]} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={`Consulta de la mesa ${item.mesa}${item.nueva ? ', sin leer' : ''}`} onPress={() => router.push({ pathname: '/mozo/chat-mesa', params: { mesa: String(item.mesa) } })}>
             <View style={s.iconoConsulta}><Feather name="message-circle" size={27} color={c.textoSobreOscuro} /></View>
             <View style={s.textos}><Text style={s.tituloCard}>Mesa {item.mesa}</Text><Text numberOfLines={1} style={s.secundario}>{item.mensajes[0].texto}</Text></View>
             <View style={s.horaConsulta}><Text style={s.secundario}>{item.hora}</Text>{item.nueva && <View style={s.noLeida} />}</View>

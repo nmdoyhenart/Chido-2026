@@ -10,9 +10,9 @@ const destinos = {
   supervisor: ENTRADA_APP,
   mozo: ENTRADA_APP,
   metre: '/metre/home',
-  cocinero: '/productos/alta',
-  cocina: '/productos/alta', // Alias local anterior de cocinero.
-  cantinero: '/productos/alta-bebida',
+  cocinero: '/cocina/pedidos' as Href,
+  cocina: '/cocina/pedidos' as Href, // Alias local anterior de cocinero.
+  cantinero: '/bar/pedidos' as Href,
   'cliente registrado': '/cliente/home',
   'cliente anónimo': '/cliente-anonimo/escanear',
 } as const satisfies Record<AppRole, Href>;

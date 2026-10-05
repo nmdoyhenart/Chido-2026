@@ -8,6 +8,7 @@ export type Usuario = {
   perfil: Perfil;
   estado_registro: 'pendiente' | 'aceptado' | 'rechazado' | null;
   foto_perfil: string;
+  fotoUrl?: string | null;
 };
 
 export function motivoAccesoDenegado(usuario: Usuario | null, authId: string): string | null {

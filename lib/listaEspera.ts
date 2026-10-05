@@ -19,14 +19,14 @@ export async function obtenerListaEspera (): Promise<ClienteEnEspera[]> {
     .from('lista_espera')
     .select('*')
     .eq('estado', 'esperando')
-    .order('created_at', {ascending:true});
+    .order('created_at', {ascending:false});
 
     if (error) {
         console.error ('Error al traer la lista de espera', error.message);
         throw error;
     }
 
-    return data;
+    return (data ?? []) as ClienteEnEspera[];
 }
 
 export function suscribirseALista(nombreCanal: string, alCambiar: () => void) {
@@ -50,10 +50,7 @@ export function suscribirseALista(nombreCanal: string, alCambiar: () => void) {
 }
 
 export async function eliminarDeLista(id: string) {
-    const { error } = await supabase
-    .from('lista_espera')
-    .update({ estado: 'eliminado' })
-    .eq('id', id);
+    const { error } = await supabase.rpc('eliminar_de_lista_espera_metre', { p_lista_id: id });
 
     if (error) {
     console.error('Error al eliminar de la lista de espera:', error.message);
@@ -63,39 +60,12 @@ export async function eliminarDeLista(id: string) {
 
 
 export async function asignarMesaACliente(cliente: ClienteEnEspera, mesaId: string): Promise<void> {
-    const actualizacionMesa: { disponibilidad: 'ocupada'; cliente_id?: string } = {
-        disponibilidad: 'ocupada',
-    };
-
-    if (cliente.tipo_cliente === 'registrado') {
-        actualizacionMesa.cliente_id = cliente.identificador;
-    }
-
-    const { data: mesaActualizada, error: errorMesa } = await supabase
-        .from('mesas')
-        .update(actualizacionMesa)
-        .eq('id', mesaId)
-        .eq('disponibilidad', 'vacía')
-        .select('id')
-        .maybeSingle();
-
-    if (errorMesa) {
-        console.error('Error al asignar la mesa:', errorMesa.message);
-        throw errorMesa;
-    }
-
-    if (!mesaActualizada) {
-        throw new Error('La mesa ya no está disponible.');
-    }
-
-    const { error: errorListaEspera } = await supabase
-        .from('lista_espera')
-        .update({ mesa_id: mesaId, estado: 'asignado' })
-        .eq('id', cliente.id)
-        .eq('estado', 'esperando');
-
-    if (errorListaEspera) {
-        console.error('Error al marcar al cliente como asignado:', errorListaEspera.message);
-        throw errorListaEspera;
+    const { error } = await supabase.rpc('asignar_mesa_lista_espera', {
+        p_lista_id: cliente.id,
+        p_mesa_id: mesaId,
+    });
+    if (error) {
+        console.error('Error al asignar la mesa:', error.message);
+        throw error;
     }
 }

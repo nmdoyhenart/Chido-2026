@@ -27,15 +27,15 @@ export function Header({ userName, role }: HeaderProps) {
         } finally { setSaliendo(false); }
     };
 
-    const fotoValida = usuario?.foto_perfil && /^https:\/\//i.test(usuario.foto_perfil);
+    const fotoUrl = usuario?.fotoUrl ?? (usuario?.foto_perfil && /^https:\/\//i.test(usuario.foto_perfil) ? usuario.foto_perfil : null);
 
     return (
         <View className="bg-chido-cabecera px-5 pt-14 pb-6 flex-row items-center justify-between">
         {/* Profile Info */}
         <View className="flex-row items-center flex-1">
             <View className="w-16 h-16 rounded-full bg-chido-fondo items-center justify-center border-2 border-chido-acento mr-4 overflow-hidden">
-            {fotoValida ? (
-                <Image source={{ uri: usuario.foto_perfil }} className="w-full h-full" />
+            {fotoUrl ? (
+                <Image source={{ uri: fotoUrl }} className="w-full h-full" />
             ) : (
                 <Ionicons name="person" size={32} color={colores.textoSobreOscuro} />
             )}

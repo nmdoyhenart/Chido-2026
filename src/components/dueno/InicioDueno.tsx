@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
@@ -69,7 +69,7 @@ export default function InicioDueno({ usuario, simulacion = false, saliendo, err
     </SafeAreaView>
 
     <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.contenido}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, padding: 20 * escala, paddingTop: 24 * escala }}>
+      <View style={{ flex: 1, padding: 20 * escala, paddingTop: 24 * escala }}>
         <Text style={[styles.saludo, { fontSize: 30 * escala, marginBottom: 24 * escala }]}>Hola, {primerNombre}</Text>
         {simulacion && <Text style={[styles.detalle, { marginBottom: 18 }]}>Modo demostración · Explorá las pantallas sin modificar datos.</Text>}
         {saliendo && <ChidoLoader mensaje="Cerrando sesión…" />}
@@ -85,7 +85,7 @@ export default function InicioDueno({ usuario, simulacion = false, saliendo, err
             activeOpacity={0.8}
             accessibilityRole="button"
             accessibilityLabel={tarjeta.pendientes ? 'Clientes pendientes de aprobación: ' + (pendientes ?? 'cantidad no disponible') : tarjeta.titulo}
-            style={[styles.tarjeta, { minHeight: 104 * escala, paddingHorizontal: 24 * escala, paddingVertical: 18 * escala, gap: 24 * escala }]}
+            style={[styles.tarjeta, { paddingHorizontal: 24 * escala, paddingVertical: 18 * escala, gap: 24 * escala }]}
           >
             <Ionicons name={tarjeta.icono} size={32 * escala} color={colores.crema} />
             <View style={styles.textos}>
@@ -97,7 +97,7 @@ export default function InicioDueno({ usuario, simulacion = false, saliendo, err
             </View> : <Ionicons name="chevron-forward" size={24 * escala} color={colores.crema} />}
           </TouchableOpacity>)}
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   </View>;
 }

@@ -274,7 +274,7 @@ export default function AltaPlato() {
                     />
 
                     <View className="flex-row gap-4">
-                        <Input
+                        <Campo
                             label="Tiempo "
                             value={tiempoElaboracion}
                             onChangeText={setTiempoElaboracion}

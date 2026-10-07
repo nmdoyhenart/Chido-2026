@@ -68,14 +68,9 @@ export const getPedidoRechazadoAnonimo = async (clienteAnonimoId: string, pedido
 };
 
 export const getEstadoPedido = async (pedidoId: string): Promise<string> => {
-  const { data, error } = await supabase
-    .from('pedidos')
-    .select('estado')
-    .eq('id', pedidoId)
-    .single();
-  
+  const { data, error } = await supabase.rpc('obtener_estado_pedido_cliente', { p_pedido_id: pedidoId });
   if (error) throw error;
-  return data.estado;
+  return data as string;
 };
 
 export const getEstadoPedidoAnonimo = async (clienteAnonimoId: string, pedidoId: string): Promise<string> => {
@@ -151,4 +146,32 @@ export async function actualizarEstadoItemSector(detalleId: string, estado: 'pen
 export async function entregarPedido(id: string) {
   const { error } = await supabase.rpc('entregar_pedido_mozo', { p_pedido_id: id });
   if (error) throw error;
+}
+
+export async function confirmarRecepcionPedido(pedidoId: string, clienteAnonimoId?: string) {
+  const { error } = clienteAnonimoId
+    ? await supabase.rpc('confirmar_recepcion_pedido_anonimo', {
+      p_cliente_anonimo_id: clienteAnonimoId,
+      p_pedido_id: pedidoId,
+    })
+    : await supabase.rpc('confirmar_recepcion_pedido_cliente', { p_pedido_id: pedidoId });
+  if (error) throw error;
+}
+
+export async function solicitarCuentaPedido(pedidoId: string, clienteAnonimoId?: string) {
+  const { error } = clienteAnonimoId
+    ? await supabase.rpc('solicitar_cuenta_pedido_anonimo', {
+      p_cliente_anonimo_id: clienteAnonimoId,
+      p_pedido_id: pedidoId,
+    })
+    : await supabase.rpc('solicitar_cuenta_pedido_cliente', { p_pedido_id: pedidoId });
+  if (error) throw error;
+}
+
+export type SolicitudCuentaMozo = { mesa_id: string; numero: number; solicitada_at: string; cliente: string };
+
+export async function getSolicitudesCuentaMozo(): Promise<SolicitudCuentaMozo[]> {
+  const { data, error } = await supabase.rpc('obtener_solicitudes_cuenta_mozo');
+  if (error) throw error;
+  return (data ?? []) as SolicitudCuentaMozo[];
 }

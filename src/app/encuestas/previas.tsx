@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colores } from '../../theme/colores';
 import { obtenerResultadosEncuestas, resumirEncuestas, ResultadoEncuesta } from '../../../lib/encuestas';
+import { Header } from '../../components/Header';
 
 type NombreIcono = ComponentProps<typeof Ionicons>['name'];
 
@@ -32,61 +33,98 @@ export default function EncuestasPrevias() {
 
   const resumen = resumirEncuestas(resultados);
   const hayDatos = resumen.total > 0;
-  // Sin encuestas se muestra un guion en vez de 0 para no confundir con una calificación real
-  const valor = (texto: string) => (hayDatos ? texto : '–');
+  const valorRecomendacion = (texto: string) => (hayDatos ? texto : '-');
 
   return (
-    // Los paddings dejan todo entre la barra de estado y la barra de navegación de Android, sin scroll
-    <View
-      className="flex-1"
-      style={{
-        backgroundColor: colores.fondo,
-        paddingTop: insets.top + 12,
-        paddingHorizontal: 16,
-        paddingBottom: Math.max(insets.bottom, 16) + 8,
-        gap: 12,
-      }}
-    >
+    <View className="flex-1 bg-chido-fondo">
       <Stack.Screen options={{ headerShown: false }} />
+      <Header userName="Cliente" role="Estadísticas" />
 
-      {/* Encabezado */}
       <View
-        className="flex-row items-center rounded-3xl p-4 border-2 border-white/70"
-        style={{ backgroundColor: colores.superficieTerracota }}
+        className="flex-1"
+        style={{
+          paddingHorizontal: 16,
+          paddingTop: 12,
+          paddingBottom: Math.max(insets.bottom, 16),
+          gap: 12,
+        }}
       >
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel="Volver"
-          onPress={() => router.back()}
-          className="w-14 h-14 rounded-2xl items-center justify-center"
-          style={{ backgroundColor: colores.botonPrincipal }}
-        >
-          <Ionicons name="arrow-back" size={30} color={colores.textoSobreOscuro} />
-        </TouchableOpacity>
-        <View className="flex-1 ml-4">
-          <Text className="text-sm font-bold tracking-widest" style={{ color: colores.textoSecundarioSobreOscuro }}>
-            ENCUESTAS
-          </Text>
-          <Text className="text-3xl font-bold" style={{ color: colores.textoSobreOscuro }}>
-            Estadísticas
-          </Text>
-          <Text className="text-base" style={{ color: colores.textoSecundarioSobreOscuro }}>
-            {hayDatos ? 'Opiniones de nuestros clientes.' : 'Todavía no hay encuestas.'}
-          </Text>
-        </View>
+        <Text className="text-xl font-bold" style={{ color: colores.textoSecundarioSobreOscuro }}>
+          {hayDatos ? 'Opiniones de nuestros clientes.' : 'Todavía no hay encuestas.'}
+        </Text>
+        
         {cargando && <ActivityIndicator color={colores.textoSobreOscuro} />}
-      </View>
 
-      {/* Recomiendan / no recomiendan */}
-      <View className="flex-row" style={{ flex: 1.6, gap: 10 }}>
-        <TarjetaRecomendacion icono="thumbs-up-outline" valor={valor(String(resumen.recomiendan))} etiqueta="Sí recomiendan" />
-        <TarjetaRecomendacion icono="thumbs-down-outline" valor={valor(String(resumen.noRecomiendan))} etiqueta="No recomiendan" />
-      </View>
+        {/* Promedios de Comida y Atención (Nuevo) */}
+        <View className="flex-row" style={{ height: 130, gap: 12 }}>
+          <TarjetaPromedio 
+            icono="restaurant-outline" 
+            valor={resumen.promedioComida} 
+            etiqueta="Comida" 
+          />
+          <TarjetaPromedio 
+            icono="people-outline" 
+            valor={resumen.promedioAtencion} 
+            etiqueta="Atención" 
+          />
+        </View>
 
-      {/* Gráficos — sin destino todavía */}
-      <FilaGrafico icono="pie-chart-outline" titulo="Recomendación" subtitulo="Ver gráfico de clientes" />
-      <FilaGrafico icono="bar-chart-outline" titulo="Comida y atención" subtitulo="Comparar promedios" />
-      <FilaGrafico icono="trending-up-outline" titulo="Encuestas por día" subtitulo="Evolución de respuestas" />
+        {/* Recomiendan / no recomiendan */}
+        <View className="flex-row" style={{ height: 130, gap: 12 }}>
+          <TarjetaRecomendacion 
+            icono="thumbs-up-outline" 
+            valor={valorRecomendacion(String(resumen.recomiendan))} 
+            etiqueta="Recomienda" 
+          />
+          <TarjetaRecomendacion 
+            icono="thumbs-down-outline" 
+            valor={valorRecomendacion(String(resumen.noRecomiendan))} 
+            etiqueta="No recomienda" 
+          />
+        </View>
+
+        {/* Gráficos */}
+        <View className="flex-1" style={{ gap: 12, marginTop: 4 }}>
+          <FilaGrafico 
+            icono="pie-chart-outline" 
+            titulo="Recomendación" 
+            subtitulo="Ver gráfico de clientes" 
+            onPress={() => router.push('/encuestas/grafico-torta')}
+          />
+          <FilaGrafico 
+            icono="bar-chart-outline" 
+            titulo="Comida y atención" 
+            subtitulo="Comparar promedios" 
+            onPress={() => router.push('/encuestas/grafico-barra')}
+          />
+          <FilaGrafico 
+            icono="trending-up-outline" 
+            titulo="Encuestas por día" 
+            subtitulo="Evolución de respuestas" 
+            onPress={() => router.push('/encuestas/grafico-lineal')}
+          />
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function TarjetaPromedio({ valor, etiqueta, icono }: { valor: number; etiqueta: string; icono: NombreIcono }) {
+  const valorStr = valor > 0 ? `${valor.toFixed(1)}/5` : '-/5';
+  return (
+    <View
+      className="flex-1 rounded-3xl p-5 justify-center items-center border-2 border-white/70"
+      style={{ backgroundColor: colores.cabecera }}
+    >
+      <View className="flex-row items-center justify-center gap-2">
+        <Ionicons name={icono} size={32} color={colores.textoSobreOscuro} />
+        <Text className="text-3xl font-bold" style={{ color: colores.textoSobreOscuro }}>
+          {valorStr}
+        </Text>
+      </View>
+      <Text className="text-sm font-bold mt-2" style={{ color: colores.textoSecundarioSobreOscuro }}>
+        {etiqueta}
+      </Text>
     </View>
   );
 }
@@ -94,23 +132,26 @@ export default function EncuestasPrevias() {
 function TarjetaRecomendacion({ valor, etiqueta, icono }: { valor: string; etiqueta: string; icono: NombreIcono }) {
   return (
     <View
-      className="flex-1 rounded-3xl p-4 justify-center border-2 border-white/70"
+      className="flex-1 rounded-3xl p-5 justify-center items-center border-2 border-white/70"
       style={{ backgroundColor: colores.superficieTerracota }}
     >
-      <Ionicons name={icono} size={40} color={colores.textoSobreOscuro} />
-      <Text className="text-5xl font-bold mt-2" style={{ color: colores.textoSobreOscuro }}>
-        {valor}
-      </Text>
-      <Text className="text-lg" style={{ color: colores.textoSecundarioSobreOscuro }}>
+      <View className="flex-row items-center justify-center gap-2">
+        <Ionicons name={icono} size={32} color={colores.textoSobreOscuro} />
+        <Text className="text-3xl font-bold" style={{ color: colores.textoSobreOscuro }}>
+          {valor}
+        </Text>
+      </View>
+      <Text className="text-sm font-bold mt-2" style={{ color: colores.textoSecundarioSobreOscuro }}>
         {etiqueta}
       </Text>
     </View>
   );
 }
 
-function FilaGrafico({ icono, titulo, subtitulo }: { icono: NombreIcono; titulo: string; subtitulo: string }) {
+function FilaGrafico({ icono, titulo, subtitulo, onPress }: { icono: NombreIcono; titulo: string; subtitulo: string, onPress: () => void }) {
   return (
     <TouchableOpacity
+      onPress={onPress}
       className="flex-1 flex-row items-center rounded-3xl px-4 border-2 border-white/70"
       style={{ backgroundColor: colores.cabecera }}
     >

@@ -27,10 +27,13 @@ export default function GestionMesas() {
   const saliendo = useRef(false);
   const numeroConsulta = useRef(0);
   const modificando = useRef(false);
-  const { mesas, cargando, recargar, cambiarDisponibilidad: persistirDisponibilidad } = useMesas();
+  const { mesas, cargando, recargar, liberar: persistirLiberacion } = useMesas();
   const [actualizando, setActualizando] = useState(false);
   const [mesaQr, setMesaQr] = useState<Mesa | null>(null);
+  const [mesaParaLiberar, setMesaParaLiberar] = useState<Mesa | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [tituloAviso, setTituloAviso] = useState('Atención');
+  const [tipoAviso, setTipoAviso] = useState<'error' | 'exito'>('error');
   const [errorCarga, setErrorCarga] = useState(false);
 
   function volverAlInicio() {
@@ -40,11 +43,25 @@ export default function GestionMesas() {
     router.dismissTo("/(app)/home");
   }
 
-  async function mostrarError(mensaje: string) {
+  async function mostrarError(mensaje: string, titulo = 'Atención') {
     if (saliendo.current || !navigation.isFocused()) return;
     setAviso(mensaje);
+    setTituloAviso(titulo);
+    setTipoAviso('error');
     try {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } catch {
+      // La ausencia de hápticos no debe ocultar el aviso.
+    }
+  }
+
+  async function mostrarExito(mensaje: string, titulo: string) {
+    if (saliendo.current || !navigation.isFocused()) return;
+    setAviso(mensaje);
+    setTituloAviso(titulo);
+    setTipoAviso('exito');
+    try {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch {
       // La ausencia de hápticos no debe ocultar el aviso.
     }
@@ -82,15 +99,27 @@ export default function GestionMesas() {
     };
   }, [navigation, permitido]);
 
-  async function cambiarDisponibilidad(mesa: Mesa) {
-    if (bloquear('cambiar la disponibilidad de las mesas') || !permitido || mode !== 'authenticated') return;
+  function solicitarLiberacion(mesa: Mesa) {
+    if (bloquear('liberar una mesa') || !permitido || mode !== 'authenticated') return;
+    setMesaParaLiberar(mesa);
+  }
+
+  async function confirmarLiberacion() {
+    const mesa = mesaParaLiberar;
+    if (!mesa || bloquear('liberar una mesa') || !permitido || mode !== 'authenticated') return;
     if (modificando.current || cargando) return;
     modificando.current = true;
     setActualizando(true);
     try {
-      await persistirDisponibilidad(mesa.id, mesa.disponibilidad === "vacía" ? "ocupada" : "vacía");
+      await persistirLiberacion(mesa.id);
+      setMesaParaLiberar(null);
+      await mostrarExito(`La Mesa ${mesa.numero} quedó disponible.`, 'Mesa liberada');
     } catch (error) {
-      await mostrarError(error instanceof Error ? error.message : "No se pudo actualizar la disponibilidad.");
+      setMesaParaLiberar(null);
+      await mostrarError(
+        error instanceof Error ? error.message : "No se pudo actualizar la disponibilidad.",
+        `La Mesa ${mesa.numero} no se puede liberar`,
+      );
     } finally {
       modificando.current = false;
       if (!saliendo.current) setActualizando(false);
@@ -141,7 +170,7 @@ export default function GestionMesas() {
           <View className="flex-1">
             <View className="flex-1" accessibilityElementsHidden={cargando || actualizando} importantForAccessibility={cargando || actualizando ? "no-hide-descendants" : "auto"}>
             {mesas.length > 0 ? (
-              <ListadoMesas mesas={mesas} onCambiarDisponibilidad={cambiarDisponibilidad} onVerQr={mesa => { if (!bloquear('generar un QR de mesa')) setMesaQr(mesa); }} />
+              <ListadoMesas mesas={mesas} onLiberar={solicitarLiberacion} onVerQr={mesa => { if (!bloquear('generar un QR de mesa')) setMesaQr(mesa); }} />
             ) : !cargando ? (
               <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}>
                 <View className="m-5 rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-acento p-5">
@@ -169,6 +198,26 @@ export default function GestionMesas() {
         </View>
       </SafeAreaView>
 
+      <Modal visible={mesaParaLiberar !== null} transparent animationType="fade" onRequestClose={() => setMesaParaLiberar(null)}>
+        <View className="flex-1 items-center justify-center bg-black/60 px-5">
+          <View className="w-full max-w-lg rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera p-5">
+            <Ionicons name="exit-outline" size={38} color={colores.textoSobreOscuro} style={{ alignSelf: "center" }} />
+            <Text className="mt-3 text-center text-2xl font-bold text-chido-texto-sobre-oscuro">Liberar mesa {mesaParaLiberar?.numero}</Text>
+            <Text className="mt-3 text-center text-base text-chido-texto-secundario-sobre-oscuro">
+              La mesa quedará disponible y se quitará la asignación del cliente. Solo se podrá liberar si no tiene un pedido en curso o pendiente de pago.
+            </Text>
+            <View className="mt-5 flex-row gap-3">
+              <Pressable accessibilityRole="button" disabled={actualizando} onPress={() => setMesaParaLiberar(null)} className="min-h-12 flex-1 items-center justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo bg-chido-acento px-3 py-3">
+                <Text className="text-center font-bold text-chido-texto-sobre-oscuro">Cancelar</Text>
+              </Pressable>
+              <Pressable accessibilityRole="button" disabled={actualizando} onPress={() => void confirmarLiberacion()} className="min-h-12 flex-1 items-center justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo bg-chido-botonPrincipal px-3 py-3">
+                {actualizando ? <ActivityIndicator color={colores.textoSobreOscuro} /> : <Text className="text-center font-bold text-chido-texto-sobre-oscuro">Confirmar</Text>}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <Modal visible={mesaQr !== null} animationType="slide" onRequestClose={() => setMesaQr(null)}>
         <ImageBackground source={require("../../../assets/images/fondo.jpeg")} resizeMode="cover" blurRadius={2} className="flex-1">
           <View className="absolute inset-0 bg-chido-cabecera/35" />
@@ -185,18 +234,22 @@ export default function GestionMesas() {
         </ImageBackground>
       </Modal>
 
-      <Modal visible={aviso !== null} animationType="fade" onRequestClose={() => setAviso(null)}>
-        <View className="flex-1 bg-chido-superficie">
-          <SafeAreaView className="flex-1">
-            <Pressable accessibilityRole="button" className="mx-5 mt-2 rounded-xl bg-chido-cabecera p-3" onPress={volverAlInicio}><Text className="text-center text-lg font-bold text-chido-texto-sobre-oscuro">Volver al inicio</Text></Pressable>
-            <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}>
-              <View className="m-5 rounded-3xl border-2 border-chido-acento bg-chido-superficie p-5">
-                <Text className="text-center text-xl font-bold text-chido-texto-sobre-claro">Atención</Text>
-                <Text className="mt-3 text-center text-base text-chido-texto-secundario-sobre-claro">{aviso}</Text>
-                <Pressable accessibilityRole="button" className="mt-5 rounded-xl bg-chido-acento p-4" onPress={() => setAviso(null)}><Text className="text-center text-lg font-bold text-chido-texto-sobre-oscuro">Entendido</Text></Pressable>
-              </View>
-            </ScrollView>
-          </SafeAreaView>
+      <Modal visible={aviso !== null} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setAviso(null)}>
+        <View className="flex-1 items-center justify-center px-5" style={{ backgroundColor: "rgba(43, 22, 14, 0.68)" }}>
+          <View accessibilityViewIsModal className="w-full max-w-lg rounded-3xl border-2 bg-chido-cabecera p-6" style={{ borderColor: colores.bordeNaranja }}>
+            <View className="mb-3 h-16 w-16 self-center items-center justify-center rounded-full" style={{ backgroundColor: colores.superficieTerracota }}>
+              <Ionicons name={tipoAviso === 'exito' ? 'checkmark-circle-outline' : 'alert-circle-outline'} size={42} color={tipoAviso === 'exito' ? colores.activo : colores.bordeError} />
+            </View>
+            <Text accessibilityRole="header" className="text-center text-2xl font-bold text-chido-texto-sobre-oscuro">
+              {tituloAviso}
+            </Text>
+            <Text accessibilityLiveRegion="assertive" className="mt-3 text-center text-base leading-6 text-chido-texto-secundario-sobre-oscuro">
+              {aviso}
+            </Text>
+            <Pressable accessibilityRole="button" className="mt-6 min-h-14 items-center justify-center rounded-2xl border px-4 py-3 bg-chido-botonPrincipal" style={{ borderColor: colores.textoSecundarioSobreOscuro }} onPress={() => setAviso(null)}>
+              <Text className="text-center text-lg font-bold text-chido-texto-sobre-oscuro">Entendido</Text>
+            </Pressable>
+          </View>
         </View>
       </Modal>
     </View>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Image, TouchableOpacity, Alert, FlatList, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Alert, FlatList, ScrollView, Dimensions, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAppSession } from '../../contexts/AppSessionContext';
@@ -37,12 +37,12 @@ export default function MenuCliente() {
   const enviandoRef = useRef(false);
   const solicitudId = useRef(Crypto.randomUUID());
   
-  const [filtro, setFiltro] = useState<'todos' | 'plato' | 'bebida'>('todos');
+  const [filtro, setFiltro] = useState<'todos' | 'plato' | 'bebida' | 'postre'>('todos');
 
   async function cargarProductos() {
     try {
       const data = await getProductos();
-      setProductos(data.filter(producto => producto.tipo === 'plato' || producto.tipo === 'bebida'));
+      setProductos(data.filter(producto => producto.tipo === 'plato' || producto.tipo === 'bebida' || producto.tipo === 'postre'));
     } catch (err: unknown) {
       console.log('Error fetching productos:', err);
       Alert.alert('Error', 'No se pudieron cargar los productos.');
@@ -171,7 +171,7 @@ export default function MenuCliente() {
       {!!errorCargaPedido && <Text className="bg-chido-error p-3 text-center text-chido-texto-sobre-oscuro">{errorCargaPedido}</Text>}
       
       <View className="flex-row items-center p-4 bg-chido-acento">
-        <View className="flex-row gap-2 mr-auto">
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }} contentContainerStyle={{ gap: 8, paddingRight: 8 }}>
           <TouchableOpacity
             className={`px-4 py-2 rounded-full border-2 ${filtro === 'plato' ? 'bg-chido-texto-secundario-sobre-oscuro border-chido-texto-secundario-sobre-oscuro' : 'bg-chido-acento border-chido-texto-secundario-sobre-oscuro'}`}
             onPress={() => setFiltro(filtro === 'plato' ? 'todos' : 'plato')}
@@ -179,12 +179,18 @@ export default function MenuCliente() {
             <Text className={`font-bold ${filtro === 'plato' ? 'text-chido-cabecera' : 'text-chido-texto-secundario-sobre-oscuro'}`}>Platos</Text>
           </TouchableOpacity>
           <TouchableOpacity
+            className={`px-4 py-2 rounded-full border-2 ${filtro === 'postre' ? 'bg-chido-texto-secundario-sobre-oscuro border-chido-texto-secundario-sobre-oscuro' : 'bg-chido-acento border-chido-texto-secundario-sobre-oscuro'}`}
+            onPress={() => setFiltro(filtro === 'postre' ? 'todos' : 'postre')}
+          >
+            <Text className={`font-bold ${filtro === 'postre' ? 'text-chido-cabecera' : 'text-chido-texto-secundario-sobre-oscuro'}`}>Postres</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             className={`px-4 py-2 rounded-full border-2 ${filtro === 'bebida' ? 'bg-chido-texto-secundario-sobre-oscuro border-chido-texto-secundario-sobre-oscuro' : 'bg-chido-acento border-chido-texto-secundario-sobre-oscuro'}`}
             onPress={() => setFiltro(filtro === 'bebida' ? 'todos' : 'bebida')}
           >
             <Text className={`font-bold ${filtro === 'bebida' ? 'text-chido-cabecera' : 'text-chido-texto-secundario-sobre-oscuro'}`}>Bebidas</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
 
         <TouchableOpacity 
           className="flex-row items-center bg-chido-cabecera border-2 border-white/70 px-4 py-2 rounded-full"

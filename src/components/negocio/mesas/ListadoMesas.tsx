@@ -6,11 +6,11 @@ import { MesaCard } from "./MesaCard";
 
 type ListadoMesasProps = {
   mesas: Mesa[];
-  onCambiarDisponibilidad: (mesa: Mesa) => void;
+  onLiberar: (mesa: Mesa) => void;
   onVerQr: (mesa: Mesa) => void;
 };
 
-export function ListadoMesas({ mesas, onCambiarDisponibilidad, onVerQr }: ListadoMesasProps) {
+export function ListadoMesas({ mesas, onLiberar, onVerQr }: ListadoMesasProps) {
   const scroll = useRef<ScrollView>(null);
   const [alto, setAlto] = useState(0);
   const [alturas, setAlturas] = useState<Record<string, number>>({});
@@ -71,7 +71,7 @@ export function ListadoMesas({ mesas, onCambiarDisponibilidad, onVerQr }: Listad
                             const altura = Math.ceil(event.nativeEvent.layout.height);
                             setAlturas((anteriores) => anteriores[mesa.id] === altura ? anteriores : { ...anteriores, [mesa.id]: altura });
                           }}>
-                            <MesaCard mesa={mesa} actualizando={false} onCambiarDisponibilidad={onCambiarDisponibilidad} onVerQr={onVerQr} />
+                            <MesaCard mesa={mesa} actualizando={false} onLiberar={onLiberar} onVerQr={onVerQr} />
                           </View>
                         );
                       })}

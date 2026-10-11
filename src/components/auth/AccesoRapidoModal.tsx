@@ -16,7 +16,6 @@ import { useAppSession } from '../../contexts/AppSessionContext';
 import { AppRole } from '../../types/roles';
 import ChidoLoader from '../ui/ChidoLoader';
 import { colores } from '../../theme/colores';
-import { ENTRADA_APP } from '../../utils/inicioPorPerfil';
 
 type Props = {
   visible: boolean;

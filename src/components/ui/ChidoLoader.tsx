@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Animated, Easing, Text, View } from 'react-native';
 
 export default function ChidoLoader({ mensaje = 'Cargando…' }: { mensaje?: string }) {
-  const giro = useRef(new Animated.Value(0)).current;
+  const [giro] = useState(() => new Animated.Value(0));
   useEffect(() => {
     const animacion = Animated.loop(Animated.timing(giro, {
       toValue: 1, duration: 1800, easing: Easing.linear, useNativeDriver: true,

@@ -2,11 +2,11 @@ import { useAppSession } from '../contexts/AppSessionContext';
 import { mesasDemostracion } from '../data/demostracion';
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  actualizarDisponibilidadMesa,
   crearMesa,
+  liberarMesa,
   obtenerMesas,
 } from "../services/mesas";
-import type { DisponibilidadMesa, Mesa, NuevaMesa } from "../types/mesa";
+import type { Mesa, NuevaMesa } from "../types/mesa";
 
 export function useMesas() {
   const { mode } = useAppSession();
@@ -61,17 +61,14 @@ export function useMesas() {
     return nuevaMesa;
   };
 
-  const cambiarDisponibilidad = async (
-    mesaId: string,
-    disponibilidad: DisponibilidadMesa,
-  ): Promise<Mesa> => {
+  const liberar = async (mesaId: string): Promise<Mesa> => {
     if (mode !== 'authenticated') throw new Error('Se requiere una cuenta autorizada.');
-    const mesaActualizada = await actualizarDisponibilidadMesa(mesaId, disponibilidad);
+    const mesaActualizada = await liberarMesa(mesaId);
     if (activa.current) setMesas((actuales) =>
       actuales.map((mesa) => (mesa.id === mesaId ? mesaActualizada : mesa)),
     );
     return mesaActualizada;
   };
 
-  return { mesas: mode === 'simulation' ? mesasDemostracion : mesas, cargando, recargar, agregar, cambiarDisponibilidad };
+  return { mesas: mode === 'simulation' ? mesasDemostracion : mesas, cargando, recargar, agregar, liberar };
 }

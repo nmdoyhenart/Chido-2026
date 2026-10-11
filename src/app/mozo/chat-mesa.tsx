@@ -47,7 +47,7 @@ export default function ChatMesaMozo() {
     try {
       // esMozo = true
       await enviarMensaje(mesaId, usuario.id, texto, true);
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'No se pudo enviar el mensaje.');
     }
   };

@@ -26,7 +26,6 @@ import ChidoLoader from '../ui/ChidoLoader';
 import { validarCorreo } from '../../../shared/registro-cliente';
 import AccesoRapidoModal from './AccesoRapidoModal';
 import { colores } from '../../theme/colores';
-import { ENTRADA_APP } from '../../utils/inicioPorPerfil';
 import { useCampoVisibleConTeclado } from '../../hooks/useCampoVisibleConTeclado';
 
 export default function Login() {

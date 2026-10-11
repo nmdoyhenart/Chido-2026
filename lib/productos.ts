@@ -2,7 +2,7 @@ import { supabase } from './supabase';
 import * as FileSystem from 'expo-file-system/legacy';
 import { decode } from 'base64-arraybuffer';
 
-export type TipoProducto = 'plato' | 'bebida';
+export type TipoProducto = 'plato' | 'bebida' | 'postre';
 
 type NuevoProducto = {
     nombre: string;

@@ -64,7 +64,7 @@ BEGIN
     RAISE EXCEPTION 'Tu perfil no puede actualizar este producto.' USING ERRCODE = '42501';
   END IF;
   IF v_estado_pedido NOT IN ('confirmado', 'en_preparacion') THEN
-    RAISE EXCEPTION 'El pedido todavía no fue confirmado por el mozo.' USING ERRCODE = '40001';
+    RAISE EXCEPTION 'El pedido todavía no fue confirmado por el mozo.' USING ERRCODE = 'P0001';
   END IF;
   UPDATE public.pedido_detalles SET estado_sector = p_estado WHERE id = p_detalle_id;
   UPDATE public.pedidos SET estado = 'en_preparacion' WHERE id = (
@@ -74,8 +74,7 @@ END;
 $$;
 
 CREATE OR REPLACE FUNCTION public.confirmar_recepcion_pedido_cliente(
-  p_pedido_id uuid,
-  p_cliente_anonimo_id uuid DEFAULT NULL
+  p_pedido_id uuid
 )
 RETURNS text
 LANGUAGE plpgsql
@@ -86,31 +85,41 @@ DECLARE
   v_cliente_id uuid;
   v_estado text;
 BEGIN
-  IF p_cliente_anonimo_id IS NULL THEN
-    SELECT id INTO v_cliente_id FROM public.usuarios
-    WHERE auth_id = auth.uid() AND perfil::text = 'cliente registrado'
-      AND estado_registro::text = 'aceptado';
-    IF v_cliente_id IS NULL THEN RAISE EXCEPTION 'No se pudo validar tu cuenta de cliente.' USING ERRCODE = '42501'; END IF;
-    SELECT estado INTO v_estado FROM public.pedidos
-    WHERE id = p_pedido_id AND cliente_id = v_cliente_id FOR UPDATE;
-  ELSE
-    SELECT p.estado INTO v_estado
-    FROM public.pedidos p
-    JOIN public.lista_espera l ON l.id = p.lista_espera_id
-    WHERE p.id = p_pedido_id AND l.identificador = p_cliente_anonimo_id::text
-      AND l.tipo_cliente = 'anonimo' FOR UPDATE OF p;
-  END IF;
+  SELECT id INTO v_cliente_id FROM public.usuarios
+  WHERE auth_id = auth.uid() AND perfil::text = 'cliente registrado'
+    AND estado_registro::text = 'aceptado';
+  IF v_cliente_id IS NULL THEN RAISE EXCEPTION 'No se pudo validar tu cuenta de cliente.' USING ERRCODE = '42501'; END IF;
+  SELECT estado INTO v_estado FROM public.pedidos
+  WHERE id = p_pedido_id AND cliente_id = v_cliente_id FOR UPDATE;
   IF v_estado IS NULL THEN RAISE EXCEPTION 'No encontramos este pedido para tu cliente.' USING ERRCODE = '42501'; END IF;
   IF v_estado = 'recibido' THEN RETURN v_estado; END IF;
-  IF v_estado <> 'entregado' THEN RAISE EXCEPTION 'El mozo todavía no marcó el pedido como entregado.' USING ERRCODE = '40001'; END IF;
+  IF v_estado <> 'entregado' THEN RAISE EXCEPTION 'El mozo todavía no marcó el pedido como entregado.' USING ERRCODE = 'P0001'; END IF;
+  UPDATE public.pedidos SET estado = 'recibido' WHERE id = p_pedido_id;
+  RETURN 'recibido';
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.confirmar_recepcion_pedido_anonimo(
+  p_cliente_anonimo_id uuid,
+  p_pedido_id uuid
+)
+RETURNS text LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+DECLARE v_estado text;
+BEGIN
+  SELECT p.estado INTO v_estado FROM public.pedidos p
+  JOIN public.lista_espera l ON l.id = p.lista_espera_id
+  WHERE p.id = p_pedido_id AND l.identificador = p_cliente_anonimo_id::text AND l.tipo_cliente = 'anonimo'
+  FOR UPDATE OF p;
+  IF v_estado IS NULL THEN RAISE EXCEPTION 'No encontramos este pedido para tu sesión.' USING ERRCODE = '42501'; END IF;
+  IF v_estado = 'recibido' THEN RETURN v_estado; END IF;
+  IF v_estado <> 'entregado' THEN RAISE EXCEPTION 'El mozo todavía no marcó el pedido como entregado.' USING ERRCODE = 'P0001'; END IF;
   UPDATE public.pedidos SET estado = 'recibido' WHERE id = p_pedido_id;
   RETURN 'recibido';
 END;
 $$;
 
 CREATE OR REPLACE FUNCTION public.solicitar_cuenta_pedido_cliente(
-  p_pedido_id uuid,
-  p_cliente_anonimo_id uuid DEFAULT NULL
+  p_pedido_id uuid
 )
 RETURNS timestamptz
 LANGUAGE plpgsql
@@ -122,21 +131,14 @@ DECLARE
   v_estado text;
   v_solicitada timestamptz;
 BEGIN
-  IF p_cliente_anonimo_id IS NULL THEN
-    SELECT id INTO v_cliente_id FROM public.usuarios
-    WHERE auth_id = auth.uid() AND perfil::text = 'cliente registrado'
-      AND estado_registro::text = 'aceptado';
-    IF v_cliente_id IS NULL THEN RAISE EXCEPTION 'No se pudo validar tu cuenta de cliente.' USING ERRCODE = '42501'; END IF;
-    SELECT estado, cuenta_solicitada_at INTO v_estado, v_solicitada FROM public.pedidos
-    WHERE id = p_pedido_id AND cliente_id = v_cliente_id FOR UPDATE;
-  ELSE
-    SELECT p.estado, p.cuenta_solicitada_at INTO v_estado, v_solicitada
-    FROM public.pedidos p JOIN public.lista_espera l ON l.id = p.lista_espera_id
-    WHERE p.id = p_pedido_id AND l.identificador = p_cliente_anonimo_id::text
-      AND l.tipo_cliente = 'anonimo' FOR UPDATE OF p;
-  END IF;
+  SELECT id INTO v_cliente_id FROM public.usuarios
+  WHERE auth_id = auth.uid() AND perfil::text = 'cliente registrado'
+    AND estado_registro::text = 'aceptado';
+  IF v_cliente_id IS NULL THEN RAISE EXCEPTION 'No se pudo validar tu cuenta de cliente.' USING ERRCODE = '42501'; END IF;
+  SELECT estado, cuenta_solicitada_at INTO v_estado, v_solicitada FROM public.pedidos
+  WHERE id = p_pedido_id AND cliente_id = v_cliente_id FOR UPDATE;
   IF v_estado IS NULL THEN RAISE EXCEPTION 'No encontramos este pedido para tu cliente.' USING ERRCODE = '42501'; END IF;
-  IF v_estado <> 'recibido' THEN RAISE EXCEPTION 'Confirmá primero la recepción del pedido.' USING ERRCODE = '40001'; END IF;
+  IF v_estado <> 'recibido' THEN RAISE EXCEPTION 'Confirmá primero la recepción del pedido.' USING ERRCODE = 'P0001'; END IF;
   IF v_solicitada IS NULL THEN
     UPDATE public.pedidos SET cuenta_solicitada_at = now()
     WHERE id = p_pedido_id RETURNING cuenta_solicitada_at INTO v_solicitada;
@@ -145,38 +147,56 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.obtener_pedidos_mozo()
+CREATE OR REPLACE FUNCTION public.solicitar_cuenta_pedido_anonimo(
+  p_cliente_anonimo_id uuid,
+  p_pedido_id uuid
+)
+RETURNS timestamptz LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+DECLARE v_estado text; v_solicitada timestamptz;
+BEGIN
+  SELECT p.estado, p.cuenta_solicitada_at INTO v_estado, v_solicitada
+  FROM public.pedidos p JOIN public.lista_espera l ON l.id = p.lista_espera_id
+  WHERE p.id = p_pedido_id AND l.identificador = p_cliente_anonimo_id::text AND l.tipo_cliente = 'anonimo'
+  FOR UPDATE OF p;
+  IF v_estado IS NULL THEN RAISE EXCEPTION 'No encontramos este pedido para tu sesión.' USING ERRCODE = '42501'; END IF;
+  IF v_estado <> 'recibido' THEN RAISE EXCEPTION 'Confirmá primero la recepción del pedido.' USING ERRCODE = 'P0001'; END IF;
+  IF v_solicitada IS NULL THEN
+    UPDATE public.pedidos SET cuenta_solicitada_at = now()
+    WHERE id = p_pedido_id RETURNING cuenta_solicitada_at INTO v_solicitada;
+  END IF;
+  RETURN v_solicitada;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.obtener_solicitudes_cuenta_mozo()
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
 DECLARE v_perfil text; v_resultado jsonb;
 BEGIN
-  SELECT u.perfil::text INTO v_perfil FROM public.usuarios u
-  WHERE u.auth_id = auth.uid() AND u.estado_registro::text = 'aceptado';
-  IF v_perfil <> 'mozo' THEN RAISE EXCEPTION 'Solo un mozo puede consultar esta bandeja.' USING ERRCODE = '42501'; END IF;
+  SELECT perfil::text INTO v_perfil FROM public.usuarios
+  WHERE auth_id = auth.uid() AND estado_registro::text = 'aceptado';
+  IF v_perfil <> 'mozo' THEN RAISE EXCEPTION 'Solo un mozo puede consultar las solicitudes de cuenta.' USING ERRCODE = '42501'; END IF;
   SELECT COALESCE(jsonb_agg(jsonb_build_object(
-    'id', p.id, 'cliente_id', p.cliente_id, 'lista_espera_id', p.lista_espera_id,
-    'mesa_id', p.mesa_id, 'estado', p.estado, 'total', p.total,
-    'cuenta_solicitada_at', p.cuenta_solicitada_at, 'created_at', p.created_at,
-    'mesas', jsonb_build_object('numero', m.numero, 'tipo', m.tipo, 'cantidad_comensales', m.cantidad_comensales),
-    'usuarios', CASE WHEN u.id IS NULL THEN NULL ELSE jsonb_build_object('nombres', u.nombres, 'apellidos', u.apellidos) END,
-    'cliente_nombre', COALESCE(NULLIF(l.nombre, ''), concat_ws(' ', u.nombres, u.apellidos), 'Cliente anónimo'),
-    'pedido_detalles', (SELECT COALESCE(jsonb_agg(jsonb_build_object(
-      'id', d.id, 'cantidad', d.cantidad, 'precio_unitario', d.precio_unitario,
-      'estado_sector', d.estado_sector, 'productos', jsonb_build_object('nombre', pr.nombre, 'tipo', pr.tipo)
-    ) ORDER BY pr.nombre), '[]'::jsonb)
-      FROM public.pedido_detalles d JOIN public.productos pr ON pr.id = d.producto_id WHERE d.pedido_id = p.id)
-  ) ORDER BY p.created_at DESC), '[]'::jsonb) INTO v_resultado
+    'pedido_id', p.id, 'mesa_id', m.id, 'numero', m.numero, 'solicitada_at', p.cuenta_solicitada_at,
+    'cliente', COALESCE(NULLIF(l.nombre, ''), concat_ws(' ', u.nombres, u.apellidos), 'Cliente anónimo')
+  ) ORDER BY p.cuenta_solicitada_at), '[]'::jsonb) INTO v_resultado
   FROM public.pedidos p JOIN public.mesas m ON m.id = p.mesa_id
   LEFT JOIN public.usuarios u ON u.id = p.cliente_id
-  LEFT JOIN public.lista_espera l ON l.id = p.lista_espera_id;
+  LEFT JOIN public.lista_espera l ON l.id = p.lista_espera_id
+  WHERE p.cuenta_solicitada_at IS NOT NULL;
   RETURN v_resultado;
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.confirmar_recepcion_pedido_cliente(uuid, uuid) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.solicitar_cuenta_pedido_cliente(uuid, uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.confirmar_recepcion_pedido_cliente(uuid, uuid) TO authenticated, anon;
-GRANT EXECUTE ON FUNCTION public.solicitar_cuenta_pedido_cliente(uuid, uuid) TO authenticated, anon;
-GRANT EXECUTE ON FUNCTION public.obtener_pedidos_mozo() TO authenticated;
+REVOKE ALL ON FUNCTION public.confirmar_recepcion_pedido_cliente(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.confirmar_recepcion_pedido_anonimo(uuid, uuid) FROM PUBLIC, authenticated;
+REVOKE ALL ON FUNCTION public.solicitar_cuenta_pedido_cliente(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.solicitar_cuenta_pedido_anonimo(uuid, uuid) FROM PUBLIC, authenticated;
+REVOKE ALL ON FUNCTION public.obtener_solicitudes_cuenta_mozo() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.confirmar_recepcion_pedido_cliente(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.confirmar_recepcion_pedido_anonimo(uuid, uuid) TO anon;
+GRANT EXECUTE ON FUNCTION public.solicitar_cuenta_pedido_cliente(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.solicitar_cuenta_pedido_anonimo(uuid, uuid) TO anon;
+GRANT EXECUTE ON FUNCTION public.obtener_solicitudes_cuenta_mozo() TO authenticated;
 
 -- Si hay postres, también deben entrar en la cola de cocina al confirmar el pedido.
 DO $$ BEGIN

@@ -68,7 +68,7 @@ export default function ChatCliente() {
     
     try {
       await enviarMensaje(mesaId, usuario.id, texto, false);
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'No se pudo enviar el mensaje.');
     }
   };

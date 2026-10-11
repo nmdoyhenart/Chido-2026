@@ -5,7 +5,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { colores } from '../../theme/colores';
 import { obtenerClienteEnListaPorId, suscribirseAMiEstado } from '../../../lib/clientesAnonimos';
-import { useAppSession } from '../../contexts/AppSessionContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CLIENTE_ANONIMO_ID_KEY = 'cliente_anonimo_id';
@@ -14,7 +13,6 @@ const CLIENTE_ANONIMO_FOTO_KEY = 'cliente_anonimo_foto_url';
 
 export default function EsperaClienteAnonimo() {
     
-    const { cerrarSesion } = useAppSession();
     const insets = useSafeAreaInsets();
     const [fueEliminado, setFueEliminado] = useState(false);
     const [mesaAsignada, setMesaAsignada] = useState<string | null>(null);

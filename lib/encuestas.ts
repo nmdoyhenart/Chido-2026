@@ -1,4 +1,3 @@
-import { supabase } from './supabase';
 export type ResultadoEncuesta = {
     id: string;
     fecha: string;

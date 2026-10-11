@@ -127,7 +127,7 @@ export default function PedidosMozo() {
           <Ionicons name="receipt-outline" size={24} color={colores.textoSobreOscuro} />
           <Text className="ml-2 text-lg font-extrabold text-chido-texto-sobre-oscuro">Pidieron la cuenta</Text>
         </View>
-        {solicitudesCuenta.map(solicitud => <Text key={solicitud.mesa_id} className="py-1 text-base font-semibold text-chido-texto-sobre-oscuro">
+        {solicitudesCuenta.map(solicitud => <Text key={solicitud.pedido_id} className="py-1 text-base font-semibold text-chido-texto-sobre-oscuro">
           Mesa {solicitud.numero} · {solicitud.cliente}
         </Text>)}
       </View>}

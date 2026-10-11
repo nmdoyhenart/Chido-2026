@@ -1,4 +1,4 @@
-import { useEffect, useState, type ComponentProps } from 'react';
+import { useCallback, useEffect, useState, type ComponentProps } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,11 +14,7 @@ export default function EncuestasPrevias() {
   const [resultados, setResultados] = useState<ResultadoEncuesta[]>([]);
   const [cargando, setCargando] = useState(true);
 
-  useEffect(() => {
-    cargar();
-  }, []);
-
-  async function cargar() {
+  const cargar = useCallback(async () => {
     setCargando(true);
     try {
       const data = await obtenerResultadosEncuestas();
@@ -28,7 +24,12 @@ export default function EncuestasPrevias() {
     } finally {
       setCargando(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    const inicio = setTimeout(() => { void cargar(); }, 0);
+    return () => clearTimeout(inicio);
+  }, [cargar]);
 
   const resumen = resumirEncuestas(resultados);
   const hayDatos = resumen.total > 0;

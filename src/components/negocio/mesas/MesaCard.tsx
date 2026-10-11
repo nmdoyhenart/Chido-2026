@@ -6,11 +6,11 @@ import { colores } from "../../../theme/colores";
 type MesaCardProps = {
   mesa: Mesa;
   actualizando: boolean;
-  onCambiarDisponibilidad: (mesa: Mesa) => void;
+  onLiberar: (mesa: Mesa) => void;
   onVerQr: (mesa: Mesa) => void;
 };
 
-export function MesaCard({ mesa, actualizando, onCambiarDisponibilidad, onVerQr }: MesaCardProps) {
+export function MesaCard({ mesa, actualizando, onLiberar, onVerQr }: MesaCardProps) {
   const { width, fontScale } = useWindowDimensions();
   const compacta = width >= 350 && fontScale <= 1.3;
   const estaVacia = mesa.disponibilidad === "vacía";
@@ -39,20 +39,26 @@ export function MesaCard({ mesa, actualizando, onCambiarDisponibilidad, onVerQr 
         <View className="min-w-0 flex-1">
           <Text className="text-3xl font-bold text-chido-texto-sobre-oscuro" accessibilityRole="header">Mesa {mesa.numero}</Text>
           <Text className="mt-1 text-lg text-chido-texto-secundario-sobre-oscuro">{mesa.tipo === "VIP" ? "Preferencial" : mesa.tipo === "estándar" ? "Estándar" : "Movilidad reducida"} · {mesa.cantidad_comensales} comensales</Text>
-          <Pressable
-            className={`mt-3 min-h-11 self-start flex-row items-center gap-2 rounded-full px-3 py-2 ${estaVacia ? "bg-chido-exito/55" : "bg-chido-error/55"}`}
-            onPress={() => onCambiarDisponibilidad(mesa)}
-            disabled={actualizando}
-            accessibilityRole="button"
-            accessibilityLabel={`Mesa ${mesa.numero} ${estaVacia ? "vacía" : "ocupada"}. Marcar como ${estaVacia ? "ocupada" : "vacía"}`}
-            accessibilityState={{ disabled: actualizando }}
-          >
+          <View className={`mt-3 min-h-11 self-start flex-row items-center gap-2 rounded-full px-3 py-2 ${estaVacia ? "bg-chido-exito/55" : "bg-chido-error/55"}`}>
             <View className={`h-3 w-3 rounded-full ${estaVacia ? "bg-chido-activo" : "bg-chido-notificacion"}`} />
             <Text className="shrink text-lg font-bold text-chido-texto-sobre-oscuro">{estaVacia ? "Vacía" : "Ocupada"}</Text>
-          </Pressable>
+          </View>
         </View>
         {compacta ? botonQr : null}
       </View>
+      {!estaVacia ? (
+        <Pressable
+          className="mt-4 min-h-12 flex-row items-center justify-center gap-2 rounded-2xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera px-4 py-3"
+          onPress={() => onLiberar(mesa)}
+          disabled={actualizando}
+          accessibilityRole="button"
+          accessibilityLabel={`Liberar mesa ${mesa.numero}`}
+          accessibilityState={{ disabled: actualizando }}
+        >
+          <Ionicons name="exit-outline" size={21} color={colores.textoSobreOscuro} />
+          <Text className="text-center font-bold text-chido-texto-sobre-oscuro">Liberar mesa</Text>
+        </Pressable>
+      ) : null}
       {!compacta ? <View className="mt-3">{botonQr}</View> : null}
     </View>
   );

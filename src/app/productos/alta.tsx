@@ -297,9 +297,7 @@ export default function AltaPlato() {
 
                     <View className="flex-row gap-4">
                         <Campo
-                            compacto={compacto}
-                            label="Tiempo"
-                            onFocus={alEnfocar}
+                            label="Tiempo "
                             value={tiempoElaboracion}
                             onChangeText={setTiempoElaboracion}
                             keyboardType="numeric"

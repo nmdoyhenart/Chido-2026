@@ -2,7 +2,6 @@ import { supabase } from "../../lib/supabase";
 import type { MesaQr } from "../types/qr";
 import { parseQrPayload } from "../utils/qr";
 import type {
-  DisponibilidadMesa,
   Mesa,
   ClienteRegistradoSolicitudMesa,
   NuevaMesa,
@@ -62,22 +61,6 @@ export async function crearMesa(datos: NuevaMesa): Promise<Mesa> {
   return data as Mesa;
 }
 
-export async function actualizarDisponibilidadMesa(
-  mesaId: string,
-  disponibilidad: DisponibilidadMesa,
-): Promise<Mesa> {
-  const { data, error } = await supabase
-    .from("mesas")
-    .update({ disponibilidad })
-    .eq("id", mesaId)
-    .select(CAMPOS_MESA)
-    .single();
-
-  if (error) throw new Error("No se pudo actualizar la disponibilidad de la mesa.");
-
-  return data as Mesa;
-}
-
 export async function asignarClienteAMesa(
   mesaId: string,
   clienteId: string,
@@ -114,18 +97,17 @@ export async function asignarClienteAMesa(
 }
 
 export async function liberarMesa(mesaId: string): Promise<Mesa> {
-  const { data, error } = await supabase
-    .from("mesas")
-    .update({
-      cliente_id: null,
-      disponibilidad: "vacía",
-      qr_confirmado_at: null,
-    })
-    .eq("id", mesaId)
-    .select(CAMPOS_MESA)
-    .single();
+  const { data, error } = await supabase.rpc("liberar_mesa_admin", {
+    p_mesa_id: mesaId,
+  });
 
-  if (error) throw new Error("No se pudo liberar la mesa.");
+  if (error) {
+    if (error.message.includes("pedido en curso")) {
+      throw new Error("No se puede liberar esta mesa porque tiene un pedido en curso o pendiente de pago.");
+    }
+    throw new Error(error.message || "No se pudo liberar la mesa.");
+  }
+  if (!data) throw new Error("Supabase no confirmó la liberación de la mesa.");
 
   return data as Mesa;
 }

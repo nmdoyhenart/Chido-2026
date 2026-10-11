@@ -7,7 +7,7 @@ import { colores } from '../../theme/colores';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { getPedidosMozo, actualizarEstadoPedido, entregarPedido } from '../../services/pedidos.service';
 
-const ESTADOS = ['todos', 'pendiente_mozo', 'confirmado', 'en_preparacion', 'entregado', 'rechazado'];
+const ESTADOS = ['todos', 'pendiente_mozo', 'confirmado', 'en_preparacion', 'entregado', 'recibido', 'rechazado'];
 
 const ITEM_HEIGHT = 120;
 const ITEM_MARGIN = 12;
@@ -160,6 +160,11 @@ export default function PedidosMozo() {
                   {detalle.cantidad} × {detalle.productos?.nombre ?? 'Producto'} · {detalle.estado_sector === 'listo' ? 'Listo' : (detalle.estado_sector === 'en_preparacion' ? 'En preparación' : 'Pendiente')}
                 </Text>)}
               </View>}
+              {!!item.cuenta_solicitada_at && (
+                <View className="mt-2 rounded-lg bg-chido-aviso px-3 py-2">
+                  <Text className="text-chido-texto-sobre-oscuro text-center font-bold">El cliente pidió la cuenta</Text>
+                </View>
+              )}
               
               <View className="mt-auto pt-2 flex-row justify-end items-center gap-3">
                 {item.estado === 'pendiente_mozo' && (
@@ -191,11 +196,12 @@ export default function PedidosMozo() {
                 )}
                 
                 {/* Textos de tiempo para los estados sin botones */}
-                {(item.estado === 'en_preparacion' && !item.pedido_detalles?.every((detalle: { estado_sector: string }) => detalle.estado_sector === 'listo') || item.estado === 'entregado' || item.estado === 'rechazado') && (
+                {(item.estado === 'en_preparacion' && !item.pedido_detalles?.every((detalle: { estado_sector: string }) => detalle.estado_sector === 'listo') || item.estado === 'entregado' || item.estado === 'recibido' || item.estado === 'rechazado') && (
                   <View className="flex-1 items-center justify-center">
                     <Text className="text-chido-texto-secundario-sobre-oscuro font-semibold text-sm text-center">
                       {item.estado === 'en_preparacion' && 'Esperando que cocina y bar terminen.'}
                       {item.estado === 'entregado' && `Finalizado - Pedido de las ${new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                      {item.estado === 'recibido' && 'El cliente confirmó la recepción.'}
                       {item.estado === 'rechazado' && `Cancelado - Pedido de las ${new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                     </Text>
                   </View>

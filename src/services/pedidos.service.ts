@@ -86,6 +86,22 @@ export const getEstadoPedidoAnonimo = async (clienteAnonimoId: string, pedidoId:
   return data as string;
 };
 
+export const confirmarRecepcionPedido = async (pedidoId: string, clienteAnonimoId?: string) => {
+  const { error } = await supabase.rpc('confirmar_recepcion_pedido_cliente', {
+    p_pedido_id: pedidoId,
+    p_cliente_anonimo_id: clienteAnonimoId ?? null,
+  });
+  if (error) throw new Error(error.message || 'No se pudo confirmar la recepción.');
+};
+
+export const solicitarCuentaPedido = async (pedidoId: string, clienteAnonimoId?: string) => {
+  const { error } = await supabase.rpc('solicitar_cuenta_pedido_cliente', {
+    p_pedido_id: pedidoId,
+    p_cliente_anonimo_id: clienteAnonimoId ?? null,
+  });
+  if (error) throw new Error(error.message || 'No se pudo solicitar la cuenta.');
+};
+
 export const confirmarMesaAnonima = async (clienteAnonimoId: string, mesaId: string) => {
   const { error } = await supabase.rpc('confirmar_mesa_qr_anonimo', {
     p_cliente_anonimo_id: clienteAnonimoId, p_mesa_id: mesaId,
@@ -124,6 +140,7 @@ export const getPedidosMozo = async () => {
   if (error) throw error;
   return (data ?? []) as {
     id: string; estado: string; total: number; created_at: string;
+    cuenta_solicitada_at?: string | null;
     mesas: { numero: number; tipo: string; cantidad_comensales: number };
     usuarios: { nombres: string; apellidos: string | null } | null;
     cliente_nombre?: string;

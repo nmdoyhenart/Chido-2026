@@ -67,12 +67,12 @@ export default function HomeCliente() {
             <Ionicons name="chevron-forward" size={30} color={colores.textoSobreOscuro} />
           </View>
         </Pressable>
-        <View accessibilityLabel="Encuestas próximamente disponibles" className="rounded-2xl border-2 border-white/70 bg-chido-cabecera" style={tarjeta}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Encuestas próximamente disponibles" className="rounded-2xl border-2 border-white/70 bg-chido-cabecera" style={tarjeta} onPress={() => router.push('/encuestas/previas')}>
           <View className="flex-row items-center">
             <Ionicons name="bar-chart-outline" size={52} color={colores.textoSobreOscuro} />
             <View className="ml-4 flex-1"><Text className="font-extrabold text-chido-texto-sobre-oscuro" style={{ fontSize: 34, lineHeight: 40 }}>Ver encuestas</Text></View>
           </View>
-        </View>
+        </Pressable>
         <Pressable accessibilityRole="button" accessibilityLabel="Solicitar una mesa" disabled={solicitandoMesa} onPress={() => void solicitarUnaMesa()} className="rounded-2xl border-2 border-white/70 bg-chido-cabecera" style={tarjeta}>
           {solicitandoMesa ? <ChidoLoader mensaje="Enviando solicitud…" /> : <View className="flex-row items-center">
             <Ionicons name="people-outline" size={52} color={colores.textoSobreOscuro} />

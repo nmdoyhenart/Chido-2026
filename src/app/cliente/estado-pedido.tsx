@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
-import { useRouter, useLocalSearchParams, type Href } from 'expo-router';
+import { View, Text, TouchableOpacity, Alert, Image } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/Header';
 import { getEstadoPedido, getEstadoPedidoAnonimo, suscribirEstadoPedido, confirmarRecepcionPedido, solicitarCuentaPedido } from '../../services/pedidos.service';
@@ -17,30 +17,64 @@ const textosEstado: Record<string, string> = {
 
 export default function EstadoPedido() {
   const router = useRouter();
-  const { pedidoId, clienteAnonimoId } = useLocalSearchParams<{ pedidoId: string; clienteAnonimoId?: string }>();
+  
+  // Extract query params safely
+  const params = useLocalSearchParams();
+  const pedidoId = Array.isArray(params.pedidoId) ? params.pedidoId[0] : params.pedidoId;
+  const clienteAnonimoId = Array.isArray(params.clienteAnonimoId) ? params.clienteAnonimoId[0] : params.clienteAnonimoId;
+  const manualView = Array.isArray(params.manualView) ? params.manualView[0] : params.manualView;
+
   const [estado, setEstado] = useState<string>('pendiente_mozo');
   const [cargandoAccion, setCargandoAccion] = useState(false);
   const [cuentaSolicitada, setCuentaSolicitada] = useState(false);
   const [error, setError] = useState('');
 
+  const estadoRef = React.useRef(estado);
+  useEffect(() => {
+    estadoRef.current = estado;
+  }, [estado]);
+
   useEffect(() => {
     if (!pedidoId) return;
-    let activo = true;
+
+    const checkAndRedirect = (estadoActual: string) => {
+      if (estadoActual !== 'pendiente_mozo' && estadoActual !== 'rechazado' && manualView !== 'true') {
+        if (estadoRef.current === 'pendiente_mozo' && estadoActual === 'confirmado') {
+          Alert.alert('Pedido Confirmado', 'Tu pedido ya está en preparación.', [
+            { text: 'OK', onPress: () => router.replace({ pathname: '/cliente/pedido-realizado', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } }) }
+          ]);
+        } else {
+          router.replace({ pathname: '/cliente/pedido-realizado', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } });
+        }
+      }
+    };
+
     const fetchEstado = async () => {
       try {
         const estadoActual = clienteAnonimoId
           ? await getEstadoPedidoAnonimo(clienteAnonimoId, pedidoId)
           : await getEstadoPedido(pedidoId);
-        if (activo) setEstado(estadoActual);
-      } catch (caught) {
-        if (activo) console.error('No se pudo consultar el estado del pedido:', caught);
+        checkAndRedirect(estadoActual);
+        setEstado(estadoActual);
+      } catch (e) {
+        console.error(e);
       }
     };
+    
     void fetchEstado();
+
     const intervalo = setInterval(() => { void fetchEstado(); }, 5000);
-    const desuscribir = clienteAnonimoId ? () => {} : suscribirEstadoPedido(pedidoId, setEstado);
-    return () => { activo = false; clearInterval(intervalo); desuscribir(); };
-  }, [pedidoId, clienteAnonimoId]);
+
+    const desuscribir = clienteAnonimoId ? () => {} : suscribirEstadoPedido(pedidoId, (nuevoEstado) => {
+      checkAndRedirect(nuevoEstado);
+      setEstado(nuevoEstado);
+    });
+
+    return () => {
+      clearInterval(intervalo);
+      desuscribir();
+    };
+  }, [pedidoId, clienteAnonimoId, manualView]);
 
   const confirmarRecepcion = async () => {
     if (!pedidoId || cargandoAccion) return;
@@ -78,54 +112,51 @@ export default function EstadoPedido() {
   return (
     <View className="flex-1 bg-chido-fondo">
       <Header userName="Cliente" role="Tu Pedido" />
-      <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 24, justifyContent: 'center' }}>
-        <View className="items-center rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera p-6">
-          <Ionicons
-            name={estado === 'recibido' ? 'checkmark-circle-outline' : estado === 'entregado' ? 'hand-left-outline' : estado === 'pendiente_mozo' ? 'time-outline' : 'restaurant-outline'}
-            size={76}
-            color={colores.textoSobreOscuro}
+      
+      <View className="flex-1 p-2 items-center justify-center">
+        {estado === 'pendiente_mozo' || estado === 'confirmado' ? (
+          <Image
+            source={require('../../../assets/images/mascota-espera.png')}
+            style={{ width: '100%', height: 350, alignSelf: 'center', marginVertical: 8 }}
+            resizeMode="contain"
           />
-          <Text className="mt-5 text-center text-3xl font-extrabold text-chido-texto-sobre-oscuro">
-            {estado === 'entregado' ? '¿Recibiste tu pedido?' : estado === 'recibido' ? '¡Que lo disfrutes!' : 'Estado del pedido'}
-          </Text>
-          <Text className="mt-3 text-center text-lg font-semibold text-chido-texto-secundario-sobre-oscuro">
-            {textosEstado[estado] ?? `Estado actual: ${estado.replaceAll('_', ' ')}`}
-          </Text>
+        ) : (
+          <Ionicons 
+            name="restaurant-outline" 
+            size={80} 
+            color={colores.textoSobreOscuro} 
+          />
+        )}
+        
+        <Text className="text-3xl font-bold text-chido-texto-sobre-oscuro mt-6 mb-2 text-center">
+          Estado del Pedido
+        </Text>
+        
+        <Text className="text-xl text-chido-texto-secundario-sobre-oscuro font-bold mt-4 text-center">
+          {estado === 'pendiente_mozo' && 'Esperando confirmación del mozo...'}
+          {estado === 'en_preparacion' && 'Cocina y bar están preparando tu pedido.'}
+          {estado === 'entregado' && '¡Tu pedido ha sido entregado! ¡Que lo disfrutes!'}
+          {estado === 'rechazado' && 'El mozo rechazó el pedido. Podés cambiar productos o cantidades y volver a enviarlo.'}
+        </Text>
 
-          {!!error && <Text accessibilityLiveRegion="assertive" className="mt-4 text-center font-semibold text-chido-texto-sobre-oscuro">{error}</Text>}
+        {manualView === 'true' && (
+          <TouchableOpacity 
+            className="bg-chido-cabecera p-4 rounded-xl mt-10 w-full"
+            onPress={() => router.back()}
+          >
+            <Text className="text-chido-texto-sobre-oscuro text-center font-bold text-lg">Volver</Text>
+          </TouchableOpacity>
+        )}
 
-          {estado === 'entregado' && (
-            <TouchableOpacity accessibilityRole="button" disabled={cargandoAccion} onPress={confirmarRecepcion} className="mt-6 w-full rounded-2xl border-2 border-white/70 bg-chido-botonPrincipal p-4">
-              {cargandoAccion ? <ActivityIndicator color={colores.textoSobreOscuro} /> : <Text className="text-center text-lg font-extrabold text-chido-texto-sobre-oscuro">Confirmar recepción</Text>}
-            </TouchableOpacity>
-          )}
-
-          {estado === 'rechazado' && (
-            <TouchableOpacity accessibilityRole="button" onPress={volverAModificar} className="mt-6 w-full rounded-2xl border-2 border-white/70 bg-chido-botonPrincipal p-4">
-              <Text className="text-center text-lg font-extrabold text-chido-texto-sobre-oscuro">Modificar pedido</Text>
-            </TouchableOpacity>
-          )}
-
-          {estado === 'recibido' && (
-            <View className="mt-6 w-full gap-3">
-              <TouchableOpacity accessibilityRole="button" onPress={() => router.push('/juegos' as Href)} className="flex-row items-center justify-center rounded-2xl border-2 border-white/70 bg-chido-botonPrincipal p-4">
-                <Ionicons name="game-controller-outline" size={24} color={colores.textoSobreOscuro} />
-                <Text className="ml-2 text-center text-lg font-extrabold text-chido-texto-sobre-oscuro">Ir a los juegos</Text>
-              </TouchableOpacity>
-              <TouchableOpacity accessibilityRole="button" onPress={() => router.push({ pathname: '/encuestas/responder', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } } as unknown as Href)} className="flex-row items-center justify-center rounded-2xl border-2 border-white/70 bg-chido-botonPrincipal p-4">
-                <Ionicons name="clipboard-outline" size={24} color={colores.textoSobreOscuro} />
-                <Text className="ml-2 text-center text-lg font-extrabold text-chido-texto-sobre-oscuro">Completar encuesta</Text>
-              </TouchableOpacity>
-              <TouchableOpacity accessibilityRole="button" disabled={cargandoAccion || cuentaSolicitada} onPress={pedirCuenta} className="flex-row items-center justify-center rounded-2xl border-2 border-white/70 bg-chido-acento p-4">
-                {cargandoAccion ? <ActivityIndicator color={colores.textoSobreOscuro} /> : <>
-                  <Ionicons name={cuentaSolicitada ? 'checkmark-circle-outline' : 'receipt-outline'} size={24} color={colores.textoSobreOscuro} />
-                  <Text className="ml-2 text-center text-lg font-extrabold text-chido-texto-sobre-oscuro">{cuentaSolicitada ? 'Cuenta solicitada al mozo' : 'Pedir la cuenta'}</Text>
-                </>}
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-      </ScrollView>
+        {estado === 'rechazado' && (
+          <TouchableOpacity 
+            className="bg-chido-cabecera p-4 rounded-xl mt-10 w-full"
+            onPress={() => router.replace({ pathname: '/cliente/menu', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } })}
+          >
+            <Text className="text-chido-texto-sobre-oscuro text-center font-bold text-lg">Modificar pedido</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 }

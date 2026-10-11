@@ -123,7 +123,7 @@ RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pu
 DECLARE v_perfil text; v_resultado jsonb;
 BEGIN
   SELECT u.perfil::text INTO v_perfil FROM public.usuarios u WHERE u.auth_id = auth.uid() AND u.estado_registro::text = 'aceptado';
-  IF v_perfil <> 'mozo' THEN RAISE EXCEPTION 'Solo un mozo puede consultar esta bandeja.' USING ERRCODE = '42501'; END IF;
+  IF v_perfil IS DISTINCT FROM 'mozo' THEN RAISE EXCEPTION 'Solo un mozo puede consultar esta bandeja.' USING ERRCODE = '42501'; END IF;
   SELECT COALESCE(jsonb_agg(jsonb_build_object(
     'id', p.id, 'cliente_id', p.cliente_id, 'lista_espera_id', p.lista_espera_id, 'mesa_id', p.mesa_id,
     'estado', p.estado, 'total', p.total, 'created_at', p.created_at,

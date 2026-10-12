@@ -124,7 +124,8 @@ DECLARE
 BEGIN
   SELECT perfil::text INTO v_perfil FROM public.usuarios
   WHERE auth_id = auth.uid() AND estado_registro::text = 'aceptado';
-  IF v_perfil <> 'metre' THEN
+  -- IS DISTINCT FROM también bloquea cuando v_perfil es NULL (usuario inexistente o no aceptado).
+  IF v_perfil IS DISTINCT FROM 'metre' THEN
     RAISE EXCEPTION 'Solo el metre puede consultar la lista de espera.' USING ERRCODE = '42501';
   END IF;
 
@@ -156,21 +157,23 @@ DECLARE
 BEGIN
   SELECT perfil::text INTO v_perfil FROM public.usuarios
   WHERE auth_id = auth.uid() AND estado_registro::text = 'aceptado';
-  IF v_perfil <> 'metre' THEN
+  -- IS DISTINCT FROM también bloquea cuando v_perfil es NULL (usuario inexistente o no aceptado).
+  IF v_perfil IS DISTINCT FROM 'metre' THEN
     RAISE EXCEPTION 'Solo el metre puede asignar mesas.' USING ERRCODE = '42501';
   END IF;
 
+  -- Errores de negocio con P0001: NO usar 40001, porque PostgREST lo reintenta en loop.
   SELECT usuario_id INTO v_usuario_id FROM public.lista_espera
   WHERE id = p_lista_id AND estado = 'esperando' FOR UPDATE;
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'El cliente ya no está esperando.' USING ERRCODE = '40001';
+    RAISE EXCEPTION 'El cliente ya no está esperando.' USING ERRCODE = 'P0001';
   END IF;
 
   PERFORM 1 FROM public.mesas
   WHERE id = p_mesa_id AND disponibilidad::text = 'vacía' AND cliente_id IS NULL
   FOR UPDATE;
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'La mesa ya no está disponible.' USING ERRCODE = '40001';
+    RAISE EXCEPTION 'La mesa ya no está disponible.' USING ERRCODE = 'P0001';
   END IF;
 
   UPDATE public.mesas
@@ -192,12 +195,13 @@ DECLARE v_perfil text;
 BEGIN
   SELECT perfil::text INTO v_perfil FROM public.usuarios
   WHERE auth_id = auth.uid() AND estado_registro::text = 'aceptado';
-  IF v_perfil <> 'metre' THEN
+  -- IS DISTINCT FROM también bloquea cuando v_perfil es NULL (usuario inexistente o no aceptado).
+  IF v_perfil IS DISTINCT FROM 'metre' THEN
     RAISE EXCEPTION 'Solo el metre puede quitar clientes de la lista.' USING ERRCODE = '42501';
   END IF;
   UPDATE public.lista_espera SET estado = 'eliminado'
   WHERE id = p_lista_id AND estado = 'esperando';
-  IF NOT FOUND THEN RAISE EXCEPTION 'El cliente ya no está esperando.' USING ERRCODE = '40001'; END IF;
+  IF NOT FOUND THEN RAISE EXCEPTION 'El cliente ya no está esperando.' USING ERRCODE = 'P0001'; END IF;
 END;
 $$;
 

@@ -33,21 +33,7 @@ export default function ListaEsperaMetre() {
     const { mesas, recargar: recargarMesas } = useMesas();
     const insets = useSafeAreaInsets();
 
-    useEffect(() => {
-        cargarLista();
-        recargarMesas();
-        const desuscribirse = suscribirseALista('metre-lista-espera-pantalla', cargarLista);
-        return desuscribirse;
-    }, []);
-
-    useFocusEffect(
-        useCallback(() => {
-            cargarLista();
-            recargarMesas();
-        }, [])
-    );
-
-    async function cargarLista() {
+    const cargarLista = useCallback(async () => {
         setError('');
         try {
             const data = await obtenerListaEspera();
@@ -58,7 +44,29 @@ export default function ListaEsperaMetre() {
         } finally {
             setCargando(false);
         }
-    }
+    }, []);
+
+    useEffect(() => {
+        const inicio = setTimeout(() => {
+            void cargarLista();
+            void recargarMesas();
+        }, 0);
+        const desuscribirse = suscribirseALista('metre-lista-espera-pantalla', cargarLista);
+        return () => {
+            clearTimeout(inicio);
+            desuscribirse();
+        };
+    }, [cargarLista, recargarMesas]);
+
+    useFocusEffect(
+        useCallback(() => {
+            const inicio = setTimeout(() => {
+                void cargarLista();
+                void recargarMesas();
+            }, 0);
+            return () => clearTimeout(inicio);
+        }, [cargarLista, recargarMesas])
+    );
 
     async function eliminarCliente(id: string) {
         setEliminando(id);

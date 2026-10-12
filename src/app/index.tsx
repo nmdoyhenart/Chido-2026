@@ -1,11 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, ImageBackground, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { setAudioModeAsync, setIsAudioActiveAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-
-import { Link } from 'expo-router';
-import { supabase } from '../../lib/supabase';
 import TacoSpinner from '../components/ui/TacoSpinner';
 import Animated, {
   BounceIn,
@@ -61,6 +58,8 @@ export default function SplashScreenAnimado() {
     return () => { clearTimeout(minimo); clearTimeout(maximo); };
   }, []);
 
+  // Expo AudioPlayer expone propiedades mutables para configurar la reproducción.
+  /* eslint-disable react-hooks/immutability */
   useEffect(() => {
     if (!audioPreparado || !estadoAudio.isLoaded || falloAudio || esperaAgotada || reproduccionIniciada.current) return;
     reproduccionIniciada.current = true;
@@ -71,16 +70,19 @@ export default function SplashScreenAnimado() {
       player.play();
     } catch (error) {
       console.warn('SPLASH_AUDIO_REPRODUCCION', error);
-      setFalloAudio(true);
+      setTimeout(() => setFalloAudio(true), 0);
     }
   }, [audioPreparado, estadoAudio.isLoaded, falloAudio, esperaAgotada, player]);
+  /* eslint-enable react-hooks/immutability */
 
   useEffect(() => {
-    if (estadoAudio.didJustFinish) setSonidoTerminado(true);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    if (estadoAudio.didJustFinish) timer = setTimeout(() => setSonidoTerminado(true), 0);
     if (estadoAudio.error) {
       console.warn('SPLASH_AUDIO_ARCHIVO', estadoAudio.error);
-      setFalloAudio(true);
+      timer = setTimeout(() => setFalloAudio(true), 0);
     }
+    return () => { if (timer) clearTimeout(timer); };
   }, [estadoAudio.didJustFinish, estadoAudio.error]);
 
   useEffect(() => {

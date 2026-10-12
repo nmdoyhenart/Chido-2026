@@ -39,7 +39,7 @@ export default function TacoSpinner() {
       cancelAnimation(rotacion);
       cancelAnimation(escala);
     };
-  }, []);
+  }, [escala, rotacion]);
 
   const estiloTaco = useAnimatedStyle(() => ({
     transform: [

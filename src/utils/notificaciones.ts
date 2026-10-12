@@ -1,9 +1,11 @@
+import type { Href } from 'expo-router';
 import type { NotificacionPush, RutaNotificacion } from '../types/notificaciones';
 
 const RUTA_CLIENTES_PENDIENTES: RutaNotificacion = '/(app)/clientes-pendientes';
 const RUTA_LISTA_ESPERA_METRE: RutaNotificacion = '/metre/listaEspera';
 const RUTA_PEDIDOS_CLIENTE: RutaNotificacion = '/cliente/estado-pedido';
-const RUTAS_VALIDAS = new Set<string>([RUTA_CLIENTES_PENDIENTES, RUTA_LISTA_ESPERA_METRE, RUTA_PEDIDOS_CLIENTE, '/cocina/pedidos', '/bar/pedidos']);
+const RUTA_MESA_ASIGNADA_CLIENTE: RutaNotificacion = '/cliente/espera-mesa';
+const RUTAS_VALIDAS = new Set<string>([RUTA_CLIENTES_PENDIENTES, RUTA_LISTA_ESPERA_METRE, RUTA_PEDIDOS_CLIENTE, RUTA_MESA_ASIGNADA_CLIENTE, '/cocina/pedidos', '/bar/pedidos']);
 
 export function crearAvisoClienteRegistrado(): NotificacionPush {
   return {

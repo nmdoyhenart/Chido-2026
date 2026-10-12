@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Animated, Pressable, ScrollView, Text, View } from 'react-native';
 import type { DatosDni } from '../../../shared/registro-cliente';
 import { colores } from '../../theme/colores';
@@ -12,7 +12,7 @@ type Props = {
 };
 
 export default function ConfirmacionDni({ datos, onConfirmar, onReintentar, onCancelar }: Props) {
-  const opacidad = useRef(new Animated.Value(0)).current;
+  const [opacidad] = useState(() => new Animated.Value(0));
   useEffect(() => {
     const animacion = Animated.timing(opacidad, { toValue: 1, duration: 250, useNativeDriver: true });
     animacion.start();

@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/Header';
 import { supabase } from '../../../lib/supabase';
 import { colores } from '../../theme/colores';
 import { useAppSession } from '../../contexts/AppSessionContext';
-import { getPedidosMozo, actualizarEstadoPedido, entregarPedido } from '../../services/pedidos.service';
+import { getPedidosMozo, getSolicitudesCuentaMozo, actualizarEstadoPedido, entregarPedido, type SolicitudCuentaMozo } from '../../services/pedidos.service';
 
-const ESTADOS = ['todos', 'pendiente_mozo', 'confirmado', 'en_preparacion', 'entregado', 'rechazado'];
+const ESTADOS = ['todos', 'pendiente_mozo', 'confirmado', 'en_preparacion', 'entregado', 'recibido', 'rechazado'];
 
 const ITEM_HEIGHT = 120;
 const ITEM_MARGIN = 12;
@@ -22,6 +23,7 @@ export default function PedidosMozo() {
   const [filtro, setFiltro] = useState<string>('todos');
   const [pagina, setPagina] = useState(0);
   const [altoLista, setAltoLista] = useState(0);
+  const [solicitudesCuenta, setSolicitudesCuenta] = useState<SolicitudCuentaMozo[]>([]);
 
   useEffect(() => {
     const cargarPedidos = async () => {
@@ -33,11 +35,19 @@ export default function PedidosMozo() {
       } finally {
         setLoading(false);
       }
+      try {
+        setSolicitudesCuenta(await getSolicitudesCuentaMozo());
+      } catch (error) {
+        console.error('No se pudieron cargar las solicitudes de cuenta:', error);
+      }
     };
     cargarPedidos();
     const channel = supabase
       .channel('pedidos_mozo')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => {
+        cargarPedidos();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'mesas' }, () => {
         cargarPedidos();
       })
       .subscribe();
@@ -71,6 +81,7 @@ export default function PedidosMozo() {
       case 'confirmado': return 'bg-chido-exito text-chido-texto-sobre-oscuro';
       case 'en_preparacion': return 'bg-chido-botonPrincipal text-chido-texto-sobre-oscuro';
       case 'entregado': return 'bg-chido-superficieTerracota text-white';
+      case 'recibido': return 'bg-chido-exito text-chido-texto-sobre-oscuro';
       case 'rechazado': return 'bg-chido-error text-chido-texto-sobre-oscuro';
       default: return 'bg-chido-superficieTerracota text-white';
     }
@@ -110,6 +121,16 @@ export default function PedidosMozo() {
           ))}
         </ScrollView>
       </View>
+
+      {solicitudesCuenta.length > 0 && <View className="mx-5 mb-2 rounded-2xl border-2 border-white/70 bg-chido-botonPrincipal p-4">
+        <View className="mb-2 flex-row items-center">
+          <Ionicons name="receipt-outline" size={24} color={colores.textoSobreOscuro} />
+          <Text className="ml-2 text-lg font-extrabold text-chido-texto-sobre-oscuro">Pidieron la cuenta</Text>
+        </View>
+        {solicitudesCuenta.map(solicitud => <Text key={solicitud.pedido_id} className="py-1 text-base font-semibold text-chido-texto-sobre-oscuro">
+          Mesa {solicitud.numero} · {solicitud.cliente}
+        </Text>)}
+      </View>}
 
       {loading ? (
         <ActivityIndicator size="large" color="#fff" style={{ marginTop: 20 }} />
@@ -160,6 +181,11 @@ export default function PedidosMozo() {
                   {detalle.cantidad} × {detalle.productos?.nombre ?? 'Producto'} · {detalle.estado_sector === 'listo' ? 'Listo' : (detalle.estado_sector === 'en_preparacion' ? 'En preparación' : 'Pendiente')}
                 </Text>)}
               </View>}
+              {!!item.cuenta_solicitada_at && (
+                <View className="mt-2 rounded-lg bg-chido-aviso px-3 py-2">
+                  <Text className="text-chido-texto-sobre-oscuro text-center font-bold">El cliente pidió la cuenta</Text>
+                </View>
+              )}
               
               <View className="mt-auto pt-2 flex-row justify-end items-center gap-3">
                 {item.estado === 'pendiente_mozo' && (
@@ -191,11 +217,12 @@ export default function PedidosMozo() {
                 )}
                 
                 {/* Textos de tiempo para los estados sin botones */}
-                {(item.estado === 'en_preparacion' && !item.pedido_detalles?.every((detalle: { estado_sector: string }) => detalle.estado_sector === 'listo') || item.estado === 'entregado' || item.estado === 'rechazado') && (
+                {(item.estado === 'en_preparacion' && !item.pedido_detalles?.every((detalle: { estado_sector: string }) => detalle.estado_sector === 'listo') || item.estado === 'entregado' || item.estado === 'recibido' || item.estado === 'rechazado') && (
                   <View className="flex-1 items-center justify-center">
                     <Text className="text-chido-texto-secundario-sobre-oscuro font-semibold text-sm text-center">
                       {item.estado === 'en_preparacion' && 'Esperando que cocina y bar terminen.'}
                       {item.estado === 'entregado' && `Finalizado - Pedido de las ${new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                      {item.estado === 'recibido' && 'El cliente confirmó la recepción.'}
                       {item.estado === 'rechazado' && `Cancelado - Pedido de las ${new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                     </Text>
                   </View>

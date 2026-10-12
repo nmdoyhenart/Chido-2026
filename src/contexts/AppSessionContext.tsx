@@ -88,6 +88,8 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
     });
     return () => {
       activa.current = false;
+      // Invalidar las sincronizaciones pendientes al desmontar el provider.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       revision.current++;
       for (const timer of timers) clearTimeout(timer);
       subscription.unsubscribe();

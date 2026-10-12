@@ -183,12 +183,12 @@ DECLARE
 BEGIN
   SELECT u.perfil::text INTO v_perfil FROM public.usuarios AS u
   WHERE u.auth_id = auth.uid() AND u.estado_registro::text = 'aceptado';
-  IF v_perfil <> 'mozo' THEN RAISE EXCEPTION 'Solo un mozo puede decidir este pedido.' USING ERRCODE = '42501'; END IF;
+  IF v_perfil IS DISTINCT FROM 'mozo' THEN RAISE EXCEPTION 'Solo un mozo puede decidir este pedido.' USING ERRCODE = '42501'; END IF;
   IF p_decision NOT IN ('confirmado', 'rechazado') THEN RAISE EXCEPTION 'La decisión no es válida.' USING ERRCODE = '22023'; END IF;
   SELECT estado INTO v_estado FROM public.pedidos WHERE id = p_pedido_id FOR UPDATE;
   IF v_estado IS NULL THEN RAISE EXCEPTION 'No encontramos ese pedido.' USING ERRCODE = 'P0002'; END IF;
   IF v_estado = p_decision THEN RETURN; END IF;
-  IF v_estado <> 'pendiente_mozo' THEN RAISE EXCEPTION 'El pedido ya fue atendido.' USING ERRCODE = '40001'; END IF;
+  IF v_estado <> 'pendiente_mozo' THEN RAISE EXCEPTION 'El pedido ya fue atendido.' USING ERRCODE = 'P0001'; END IF;
   IF p_decision = 'confirmado' AND NOT EXISTS (SELECT 1 FROM public.pedido_detalles WHERE pedido_id = p_pedido_id) THEN
     RAISE EXCEPTION 'No se puede confirmar un pedido sin productos.' USING ERRCODE = '22023';
   END IF;
@@ -208,7 +208,7 @@ DECLARE
 BEGIN
   SELECT u.perfil::text INTO v_perfil FROM public.usuarios AS u
   WHERE u.auth_id = auth.uid() AND u.estado_registro::text = 'aceptado';
-  IF v_perfil <> 'mozo' THEN RAISE EXCEPTION 'Solo un mozo puede consultar esta bandeja.' USING ERRCODE = '42501'; END IF;
+  IF v_perfil IS DISTINCT FROM 'mozo' THEN RAISE EXCEPTION 'Solo un mozo puede consultar esta bandeja.' USING ERRCODE = '42501'; END IF;
   SELECT COALESCE(jsonb_agg(jsonb_build_object(
     'id', p.id, 'cliente_id', p.cliente_id, 'mesa_id', p.mesa_id,
     'estado', p.estado, 'total', p.total, 'created_at', p.created_at,
@@ -283,7 +283,7 @@ BEGIN
   IF NOT ((v_tipo = 'plato' AND v_perfil = 'cocinero') OR (v_tipo = 'bebida' AND v_perfil = 'cantinero')) THEN
     RAISE EXCEPTION 'Tu perfil no puede actualizar este producto.' USING ERRCODE = '42501';
   END IF;
-  IF v_estado_pedido NOT IN ('confirmado', 'en_preparacion') THEN RAISE EXCEPTION 'El pedido todavía no fue confirmado por el mozo.' USING ERRCODE = '40001'; END IF;
+  IF v_estado_pedido NOT IN ('confirmado', 'en_preparacion') THEN RAISE EXCEPTION 'El pedido todavía no fue confirmado por el mozo.' USING ERRCODE = 'P0001'; END IF;
   UPDATE public.pedido_detalles SET estado_sector = p_estado WHERE id = p_detalle_id;
   UPDATE public.pedidos SET estado = 'en_preparacion' WHERE id = (
     SELECT pedido_id FROM public.pedido_detalles WHERE id = p_detalle_id
@@ -302,11 +302,11 @@ DECLARE
 BEGIN
   SELECT u.perfil::text INTO v_perfil FROM public.usuarios AS u
   WHERE u.auth_id = auth.uid() AND u.estado_registro::text = 'aceptado';
-  IF v_perfil <> 'mozo' THEN RAISE EXCEPTION 'Solo un mozo puede entregar el pedido.' USING ERRCODE = '42501'; END IF;
+  IF v_perfil IS DISTINCT FROM 'mozo' THEN RAISE EXCEPTION 'Solo un mozo puede entregar el pedido.' USING ERRCODE = '42501'; END IF;
   PERFORM 1 FROM public.pedidos WHERE id = p_pedido_id AND estado = 'en_preparacion' FOR UPDATE;
   IF NOT FOUND OR NOT EXISTS (SELECT 1 FROM public.pedido_detalles WHERE pedido_id = p_pedido_id)
     OR EXISTS (SELECT 1 FROM public.pedido_detalles WHERE pedido_id = p_pedido_id AND estado_sector <> 'listo') THEN
-    RAISE EXCEPTION 'Cocina y bar todavía no terminaron este pedido.' USING ERRCODE = '40001';
+    RAISE EXCEPTION 'Cocina y bar todavía no terminaron este pedido.' USING ERRCODE = 'P0001';
   END IF;
   UPDATE public.pedidos SET estado = 'entregado' WHERE id = p_pedido_id;
 END;

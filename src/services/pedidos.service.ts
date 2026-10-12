@@ -174,5 +174,26 @@ export type SolicitudCuentaMozo = { pedido_id: string; mesa_id: string; numero: 
 export async function getSolicitudesCuentaMozo(): Promise<SolicitudCuentaMozo[]> {
   const { data, error } = await supabase.rpc('obtener_solicitudes_cuenta_mozo');
   if (error) throw error;
-  return (data ?? []) as SolicitudCuentaMozo[];
+
+  // La función SQL devuelve jsonb (un arreglo), pero algunas versiones del
+  // cliente pueden entregar el JSON serializado. Normalizamos la respuesta
+  // antes de que la pantalla intente recorrerla.
+  let resultado: unknown = data;
+  if (typeof resultado === 'string') {
+    try {
+      resultado = JSON.parse(resultado);
+    } catch {
+      return [];
+    }
+  }
+  if (!Array.isArray(resultado)) return [];
+
+  return resultado.filter((item): item is SolicitudCuentaMozo =>
+    !!item && typeof item === 'object' &&
+    typeof item.pedido_id === 'string' &&
+    typeof item.mesa_id === 'string' &&
+    Number.isFinite(Number(item.numero)) &&
+    typeof item.solicitada_at === 'string' &&
+    typeof item.cliente === 'string'
+  ).map(item => ({ ...item, numero: Number(item.numero) }));
 }

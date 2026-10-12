@@ -99,9 +99,27 @@ export default function GestionMesas() {
     };
   }, [navigation, permitido]);
 
-  function solicitarLiberacion(mesa: Mesa) {
+  async function solicitarLiberacion(mesa: Mesa) {
     if (bloquear('liberar una mesa') || !permitido || mode !== 'authenticated') return;
-    setMesaParaLiberar(mesa);
+    if (modificando.current || cargando) return;
+    modificando.current = true;
+    setActualizando(true);
+    try {
+      const resultado = await persistirLiberacion(mesa.id);
+      if (!resultado.liberada) {
+        setMesaParaLiberar(mesa);
+        return;
+      }
+      await mostrarExito(`La Mesa ${mesa.numero} quedó disponible.`, 'Mesa liberada');
+    } catch (error) {
+      await mostrarError(
+        error instanceof Error ? error.message : "No se pudo actualizar la disponibilidad.",
+        `La Mesa ${mesa.numero} no se puede liberar`,
+      );
+    } finally {
+      modificando.current = false;
+      if (!saliendo.current) setActualizando(false);
+    }
   }
 
   async function confirmarLiberacion() {
@@ -111,7 +129,8 @@ export default function GestionMesas() {
     modificando.current = true;
     setActualizando(true);
     try {
-      await persistirLiberacion(mesa.id);
+      const resultado = await persistirLiberacion(mesa.id, true);
+      if (!resultado.liberada) throw new Error("No se pudo confirmar la liberación de la mesa.");
       setMesaParaLiberar(null);
       await mostrarExito(`La Mesa ${mesa.numero} quedó disponible.`, 'Mesa liberada');
     } catch (error) {
@@ -204,14 +223,14 @@ export default function GestionMesas() {
             <Ionicons name="exit-outline" size={38} color={colores.textoSobreOscuro} style={{ alignSelf: "center" }} />
             <Text className="mt-3 text-center text-2xl font-bold text-chido-texto-sobre-oscuro">Liberar mesa {mesaParaLiberar?.numero}</Text>
             <Text className="mt-3 text-center text-base text-chido-texto-secundario-sobre-oscuro">
-              La mesa quedará disponible y se quitará la asignación del cliente. Solo se podrá liberar si no tiene un pedido en curso o pendiente de pago.
+              Hay una cuenta solicitada que todavía no figura como pagada. Si continuás, la mesa quedará disponible y la cuenta pendiente permanecerá registrada. ¿Estás seguro?
             </Text>
             <View className="mt-5 flex-row gap-3">
               <Pressable accessibilityRole="button" disabled={actualizando} onPress={() => setMesaParaLiberar(null)} className="min-h-12 flex-1 items-center justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo bg-chido-acento px-3 py-3">
                 <Text className="text-center font-bold text-chido-texto-sobre-oscuro">Cancelar</Text>
               </Pressable>
               <Pressable accessibilityRole="button" disabled={actualizando} onPress={() => void confirmarLiberacion()} className="min-h-12 flex-1 items-center justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo bg-chido-botonPrincipal px-3 py-3">
-                {actualizando ? <ActivityIndicator color={colores.textoSobreOscuro} /> : <Text className="text-center font-bold text-chido-texto-sobre-oscuro">Confirmar</Text>}
+                {actualizando ? <ActivityIndicator color={colores.textoSobreOscuro} /> : <Text className="text-center font-bold text-chido-texto-sobre-oscuro">Sí, liberar igualmente</Text>}
               </Pressable>
             </View>
           </View>

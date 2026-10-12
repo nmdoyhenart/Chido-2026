@@ -96,20 +96,29 @@ export async function asignarClienteAMesa(
   return data as Mesa;
 }
 
-export async function liberarMesa(mesaId: string): Promise<Mesa> {
-  const { data, error } = await supabase.rpc("liberar_mesa_admin", {
+export type ResultadoLiberacionMesa =
+  | { liberada: true; mesa: Mesa }
+  | { liberada: false; requiere_confirmacion: true };
+
+export async function liberarMesa(
+  mesaId: string,
+  confirmarCuentaPendiente = false,
+): Promise<ResultadoLiberacionMesa> {
+  const { data, error } = await supabase.rpc("liberar_mesa_admin_v2", {
     p_mesa_id: mesaId,
+    p_confirmar_cuenta_pendiente: confirmarCuentaPendiente,
   });
 
-  if (error) {
-    if (error.message.includes("pedido en curso")) {
-      throw new Error("No se puede liberar esta mesa porque tiene un pedido en curso o pendiente de pago.");
-    }
-    throw new Error(error.message || "No se pudo liberar la mesa.");
-  }
+  if (error) throw new Error(error.message || "No se pudo liberar la mesa.");
   if (!data) throw new Error("Supabase no confirmó la liberación de la mesa.");
 
-  return data as Mesa;
+  if (data.requiere_confirmacion === true) {
+    return { liberada: false, requiere_confirmacion: true };
+  }
+  if (data.liberada !== true || !data.mesa) {
+    throw new Error("Supabase no confirmÃ³ la liberaciÃ³n de la mesa.");
+  }
+  return { liberada: true, mesa: data.mesa as Mesa };
 }
 
 export async function obtenerMesaAsignada(usuarioId: string): Promise<MesaQr | null> {

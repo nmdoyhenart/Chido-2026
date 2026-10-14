@@ -21,6 +21,14 @@ export default function PedidoRealizado() {
   const [estado, setEstado] = useState<string>('pendiente_mozo');
   const [cargando, setCargando] = useState(true);
   const [encuestaCompletada, setEncuestaCompletada] = useState(false);
+  const estadoLegible: Record<string, string> = {
+    pendiente_mozo: 'Esperando confirmación del mozo',
+    confirmado: 'Pedido confirmado · enviado a los sectores',
+    en_preparacion: 'Tu pedido está en preparación',
+    entregado: 'El mozo marcó el pedido como entregado',
+    recibido: 'Recepción confirmada',
+    rechazado: 'Pedido rechazado · podés modificarlo',
+  };
 
   // Verificar si la encuesta ya se llenó cada vez que volvemos a esta pantalla
   useFocusEffect(
@@ -103,6 +111,13 @@ export default function PedidoRealizado() {
         >
           ¿Qué deseas hacer?
         </Text>
+
+        <View accessibilityLiveRegion="polite" className="rounded-xl border border-white/60 bg-chido-superficieTerracota px-4 py-3">
+          <Text className="text-sm font-semibold text-chido-texto-secundario-sobre-oscuro">Estado de tu pedido</Text>
+          <Text className="mt-1 text-lg font-extrabold text-chido-texto-sobre-oscuro">
+            {estadoLegible[estado] ?? 'Actualizando estado…'}
+          </Text>
+        </View>
 
         <Pressable 
           accessibilityRole="button" 

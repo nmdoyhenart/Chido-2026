@@ -1,6 +1,7 @@
 export type MarcaTateti = 'X' | 'O' | null;
 export type TableroTateti = [MarcaTateti, MarcaTateti, MarcaTateti, MarcaTateti, MarcaTateti, MarcaTateti, MarcaTateti, MarcaTateti, MarcaTateti];
 export type EstadoJuego = 'en_curso' | 'ganado' | 'perdido' | 'empate';
+export type EstadoRondaTateti = 'en_curso' | 'cliente' | 'aplicacion' | 'empate';
 
 export type PartidaTateti = {
   tablero: TableroTateti;
@@ -8,6 +9,7 @@ export type PartidaTateti = {
   ronda: number;
   puntosCliente: number;
   puntosAplicacion: number;
+  estadoRonda: EstadoRondaTateti;
 };
 
 export type IntentoJuego = {

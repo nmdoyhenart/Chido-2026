@@ -18,24 +18,20 @@ export default function JuegosCliente() {
           <Text className="ml-2 text-base font-bold text-chido-texto-sobre-oscuro">Volver al pedido</Text>
         </Pressable>
         <View className="rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera p-5">
-          <Text className="text-3xl font-extrabold text-chido-texto-sobre-oscuro">Juegos</Text>
-          <Text className="mt-2 text-lg text-chido-texto-secundario-sobre-oscuro">Ganando en tu primer intento podés obtener un descuento para esta cuenta.</Text>
+          <Text className="text-5xl font-extrabold text-chido-texto-sobre-oscuro">Juegos</Text>
         </View>
         <Pressable onPress={() => router.push(`/cliente/juegos/ta-te-ti?pedidoId=${encodeURIComponent(pedidoId ?? '')}` as never)} accessibilityRole="button" className="min-h-40 rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera p-5">
           <View className="flex-row items-center justify-between">
             <Ionicons name="grid-outline" size={48} color={colores.textoSobreOscuro} />
-            <View className="rounded-full bg-chido-acento px-4 py-2"><Text className="text-base font-extrabold text-chido-texto-sobre-oscuro">10% de descuento</Text></View>
+            <View className="rounded-full bg-chido-acento px-5 py-3"><Text className="text-2xl font-extrabold text-chido-texto-sobre-oscuro">10%</Text></View>
           </View>
-          <Text className="mt-4 text-2xl font-extrabold text-chido-texto-sobre-oscuro">Ta-te-ti</Text>
-          <Text className="mt-1 text-base text-chido-texto-secundario-sobre-oscuro">Vencenos formando una línea de tres X.</Text>
+          <Text className="mt-5 text-4xl font-extrabold text-chido-texto-sobre-oscuro">Ta-te-ti</Text>
         </Pressable>
         <View className="rounded-3xl border-2 border-chido-borde-naranja bg-chido-acento p-5 opacity-80">
-          <Text className="text-xl font-extrabold text-chido-texto-sobre-oscuro">Memotest exprés</Text>
-          <Text className="mt-1 text-base text-chido-texto-secundario-sobre-oscuro">Próximamente: 15% de descuento.</Text>
+          <View className="flex-row items-center justify-between"><Text className="text-3xl font-extrabold text-chido-texto-sobre-oscuro">Memotest exprés</Text><Text className="text-2xl font-extrabold text-chido-texto-sobre-oscuro">15%</Text></View>
         </View>
         <View className="rounded-3xl border-2 border-chido-borde-naranja bg-chido-acento p-5 opacity-80">
-          <Text className="text-xl font-extrabold text-chido-texto-sobre-oscuro">Ahorcado</Text>
-          <Text className="mt-1 text-base text-chido-texto-secundario-sobre-oscuro">Próximamente: 20% de descuento.</Text>
+          <View className="flex-row items-center justify-between"><Text className="text-3xl font-extrabold text-chido-texto-sobre-oscuro">Ahorcado</Text><Text className="text-2xl font-extrabold text-chido-texto-sobre-oscuro">20%</Text></View>
         </View>
       </ScrollView>
     </SafeAreaView>

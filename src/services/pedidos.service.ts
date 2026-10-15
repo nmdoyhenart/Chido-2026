@@ -1,5 +1,27 @@
 import { supabase } from '../lib/supabase';
 
+export async function encolarPushSegura(
+  evento: string,
+  titulo: string,
+  cuerpo: string,
+  datos: any,
+  perfiles: string[],
+  claveOrigen: string
+) {
+  try {
+    await supabase.rpc('chido_encolar_push_evento', {
+      p_evento: evento,
+      p_titulo: titulo,
+      p_cuerpo: cuerpo,
+      p_datos: datos,
+      p_perfiles: perfiles,
+      p_clave_origen: claveOrigen,
+    });
+  } catch (err) {
+    console.log('Aviso encolarPushSegura rpc:', err);
+  }
+}
+
 export const crearPedido = async (
   mesaId: string, 
   solicitudId: string,
@@ -17,6 +39,17 @@ export const crearPedido = async (
   if (!resultado?.pedido_id || typeof resultado.total !== 'number') {
     throw new Error('Supabase no confirmó el pedido completo.');
   }
+
+  // Notificar al mozo del nuevo pedido (Punto 12 del TP)
+  void encolarPushSegura(
+    'nuevo_pedido',
+    'Nuevo pedido recibido',
+    'Hay un nuevo pedido pendiente de confirmación en una mesa.',
+    { ruta: '/mozo/pedidos', pedidoId: resultado.pedido_id },
+    ['mozo'],
+    `pedido_nuevo:${resultado.pedido_id}:${Date.now()}`
+  );
+
   return resultado;
 };
 
@@ -37,6 +70,17 @@ export const crearPedidoAnonimo = async (
   if (error) throw new Error(error.message || 'No se pudo guardar el pedido.');
   const resultado = data as { pedido_id?: string; total?: number } | null;
   if (!resultado?.pedido_id || typeof resultado.total !== 'number') throw new Error('No se confirmó el pedido.');
+
+  // Notificar al mozo del nuevo pedido anónimo (Punto 12 del TP)
+  void encolarPushSegura(
+    'nuevo_pedido',
+    'Nuevo pedido recibido',
+    'Hay un nuevo pedido pendiente de confirmación en una mesa.',
+    { ruta: '/mozo/pedidos', pedidoId: resultado.pedido_id },
+    ['mozo'],
+    `pedido_nuevo:${resultado.pedido_id}:${Date.now()}`
+  );
+
   return resultado;
 };
 
@@ -90,7 +134,7 @@ export const confirmarMesaAnonima = async (clienteAnonimoId: string, mesaId: str
 
 export const suscribirEstadoPedido = (pedidoId: string, callback: (estado: string) => void) => {
   const channel = supabase
-    .channel(`pedido_${pedidoId}`)
+    .channel(`pedido_${pedidoId}_${Date.now()}_${Math.random().toString(36).slice(2)}`)
     .on('postgres_changes', {
       event: 'UPDATE',
       schema: 'public',
@@ -102,7 +146,7 @@ export const suscribirEstadoPedido = (pedidoId: string, callback: (estado: strin
     .subscribe();
 
   return () => {
-    supabase.removeChannel(channel);
+    void supabase.removeChannel(channel);
   };
 };
 
@@ -160,19 +204,52 @@ export async function confirmarRecepcionPedido(pedidoId: string, clienteAnonimoI
 }
 
 export async function solicitarCuentaPedido(pedidoId: string, clienteAnonimoId?: string) {
-  const { error } = clienteAnonimoId
-    ? await supabase.rpc('solicitar_cuenta_pedido_anonimo', {
-      p_cliente_anonimo_id: clienteAnonimoId,
-      p_pedido_id: pedidoId,
-    })
-    : await supabase.rpc('solicitar_cuenta_pedido_cliente', { p_pedido_id: pedidoId });
-  if (error) throw error;
+  try {
+    const { error } = clienteAnonimoId
+      ? await supabase.rpc('solicitar_cuenta_pedido_anonimo', {
+        p_cliente_anonimo_id: clienteAnonimoId,
+        p_pedido_id: pedidoId,
+      })
+      : await supabase.rpc('solicitar_cuenta_pedido_cliente', { p_pedido_id: pedidoId });
+    if (error) console.log('Aviso al solicitar cuenta rpc:', error.message);
+
+    // Notificar a los mozos mediante push notification para que revisen la solicitud en /mozo/pedidos
+    try {
+      const { data: pedidoData } = await supabase
+        .from('pedidos')
+        .select('mesa_id, mesas(numero)')
+        .eq('id', pedidoId)
+        .maybeSingle();
+
+      const mesaNum = (pedidoData?.mesas as any)?.numero;
+      const mesaTexto = mesaNum ? `Mesa ${mesaNum}` : 'una mesa';
+
+      await encolarPushSegura(
+        'cuenta_solicitada',
+        'Solicitud de cuenta',
+        `El cliente de ${mesaTexto} solicitó la cuenta.`,
+        { ruta: '/mozo/pedidos', pedidoId },
+        ['mozo'],
+        `cuenta_solicitada:${pedidoId}:${Date.now()}`
+      );
+    } catch (pushErr) {
+      console.log('Aviso push de cuenta opcional:', pushErr);
+    }
+  } catch (err: any) {
+    console.log('Error al solicitar cuenta:', err?.message);
+  }
 }
 
-export type SolicitudCuentaMozo = { pedido_id: string; mesa_id: string; numero: number; solicitada_at: string; cliente: string };
+export type SolicitudCuentaMozo = { pedido_id: string; mesa_id: string; numero: number; solicitada_at: string; cliente: any };
 
 export async function getSolicitudesCuentaMozo(): Promise<SolicitudCuentaMozo[]> {
-  const { data, error } = await supabase.rpc('obtener_solicitudes_cuenta_mozo');
-  if (error) throw error;
-  return (data ?? []) as SolicitudCuentaMozo[];
+  try {
+    const { data, error } = await supabase.rpc('obtener_solicitudes_cuenta_mozo');
+    if (error) return [];
+    if (!Array.isArray(data)) return [];
+    return data as SolicitudCuentaMozo[];
+  } catch {
+    return [];
+  }
 }
+

@@ -14,8 +14,9 @@ import { useCampoVisibleConTeclado } from '../../hooks/useCampoVisibleConTeclado
 export default function EncuestaCliente() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { pedidoId, clienteAnonimoId } = useLocalSearchParams<{ pedidoId: string; clienteAnonimoId?: string }>();
+  const { pedidoId, clienteAnonimoId: rawAnonimoId } = useLocalSearchParams<{ pedidoId: string; clienteAnonimoId?: string }>();
   const { usuario } = useAppSession();
+  const clienteAnonimoId = !usuario?.id && rawAnonimoId ? rawAnonimoId : undefined;
 
   const scroll = useRef<ScrollView>(null);
   const { alDesplazar, alEnfocar, rellenoInferior } = useCampoVisibleConTeclado(scroll);
@@ -26,12 +27,10 @@ export default function EncuestaCliente() {
   const [comentario, setComentario] = useState<string>('');
   const [enviando, setEnviando] = useState(false);
 
-  const emojisExperiencia = ['😡', '🙁', '😐', '🙂', '😍'];
-
   const handleSubmit = async () => {
     Keyboard.dismiss();
     if (comida === 0 || atencion === 0 || experiencia === 0) {
-      Alert.alert('Incompleto', 'Por favor califica todos los aspectos (comida, atención y experiencia).');
+      Alert.alert('Incompleto', 'Por favor califica todos los aspectos (comida, atención y recomendación).');
       return;
     }
 
@@ -111,19 +110,51 @@ export default function EncuestaCliente() {
               </View>
             </View>
 
-            {/* 3. Control: Emojis para Experiencia general */}
+            {/* 3. Control: Botones de Recomendación */}
             <View className="mb-8">
-              <Text className="text-xl text-chido-texto-sobre-oscuro mb-3 font-bold">Experiencia General</Text>
-              <View className="flex-row justify-between">
-                {[1, 2, 3, 4, 5].map((val, idx) => (
-                  <TouchableOpacity 
-                    key={`exp-${val}`} 
-                    onPress={() => setExperiencia(val)}
-                    className={`w-14 h-14 rounded-full items-center justify-center ${val === experiencia ? 'bg-white/20' : ''}`}
-                  >
-                    <Text style={{ fontSize: 36 }}>{emojisExperiencia[idx]}</Text>
-                  </TouchableOpacity>
-                ))}
+              <Text className="text-xl text-chido-texto-sobre-oscuro mb-3 font-bold">
+                ¿Recomendarías este lugar a otra persona?
+              </Text>
+              <View className="flex-row gap-3">
+                <TouchableOpacity 
+                  accessibilityRole="button"
+                  accessibilityLabel="Sí, lo recomiendo"
+                  onPress={() => setExperiencia(5)}
+                  className={`flex-1 flex-row items-center justify-center py-4 px-3 rounded-2xl border-2 ${
+                    experiencia === 5 
+                      ? 'bg-chido-acento border-white' 
+                      : 'bg-chido-cabecera border-white/50'
+                  }`}
+                >
+                  <Ionicons 
+                    name={experiencia === 5 ? "thumbs-up" : "thumbs-up-outline"} 
+                    size={24} 
+                    color={colores.textoSobreOscuro} 
+                  />
+                  <Text className="ml-2 text-base font-extrabold text-chido-texto-sobre-oscuro text-center">
+                    Sí, lo recomiendo
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  accessibilityRole="button"
+                  accessibilityLabel="No lo recomiendo"
+                  onPress={() => setExperiencia(1)}
+                  className={`flex-1 flex-row items-center justify-center py-4 px-3 rounded-2xl border-2 ${
+                    experiencia === 1 
+                      ? 'bg-chido-error border-white' 
+                      : 'bg-chido-cabecera border-white/50'
+                  }`}
+                >
+                  <Ionicons 
+                    name={experiencia === 1 ? "thumbs-down" : "thumbs-down-outline"} 
+                    size={24} 
+                    color={colores.textoSobreOscuro} 
+                  />
+                  <Text className="ml-2 text-base font-extrabold text-chido-texto-sobre-oscuro text-center">
+                    No lo recomiendo
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
 

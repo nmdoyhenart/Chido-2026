@@ -21,6 +21,16 @@ export default function PedidoRealizado() {
   const clienteAnonimoId = !usuario?.id && rawAnonimoId ? rawAnonimoId : undefined;
   const [cargando, setCargando] = useState(() => Boolean(pedidoId));
   const [encuestaCompletada, setEncuestaCompletada] = useState(false);
+  const [estado, setEstado] = useState<string | null>(null);
+  const estadoLegible: Record<string, string> = {
+    pendiente_mozo: 'Esperando confirmación del mozo',
+    confirmado: 'Pedido confirmado · enviado a los sectores',
+    en_preparacion: 'Tu pedido está en preparación',
+    entregado: 'El mozo marcó el pedido como entregado',
+    recibido: 'Recepción confirmada',
+    rechazado: 'Pedido rechazado · podés modificarlo',
+  };
+
   const [altoDisponible, setAltoDisponible] = useState(0);
   const compacto = altoDisponible > 0 && altoDisponible < 620;
   const espacio = compacto ? 10 : 14;
@@ -39,7 +49,8 @@ export default function PedidoRealizado() {
     let activa = true;
     const consultarEstado = async () => {
       try {
-        await (clienteAnonimoId ? getEstadoPedidoAnonimo(clienteAnonimoId, pedidoId) : getEstadoPedido(pedidoId));
+        const estadoActual = await (clienteAnonimoId ? getEstadoPedidoAnonimo(clienteAnonimoId, pedidoId) : getEstadoPedido(pedidoId));
+        if (activa) setEstado(estadoActual);
       } catch (caught) {
         console.error(caught);
       } finally {
@@ -48,7 +59,9 @@ export default function PedidoRealizado() {
     };
     void consultarEstado();
     const intervalo = setInterval(() => { void consultarEstado(); }, 5000);
-    const desuscribir = clienteAnonimoId ? () => {} : suscribirEstadoPedido(pedidoId, () => { void consultarEstado(); });
+    const desuscribir = clienteAnonimoId ? () => {} : suscribirEstadoPedido(pedidoId, (nuevoEstado) => {
+      if (activa) setEstado(nuevoEstado);
+    });
     return () => {
       activa = false;
       clearInterval(intervalo);
@@ -66,11 +79,92 @@ export default function PedidoRealizado() {
   return (
     <View className="flex-1 bg-chido-fondo">
       <Header userName="Cliente" role="Tu Mesa" />
-      <ScrollView className="flex-1" onLayout={({ nativeEvent }) => setAltoDisponible(nativeEvent.layout.height)} contentContainerStyle={{ flexGrow: 1, gap: espacio, paddingHorizontal: 16, paddingTop: espacio, paddingBottom: Math.max(insets.bottom, espacio) }} showsVerticalScrollIndicator={false} bounces={false} overScrollMode="never">
-        <Text className="mb-2 text-center text-3xl font-bold text-chido-texto-sobre-oscuro" style={{ paddingVertical: compacto ? 6 : 10 }}>¿Qué deseás hacer?</Text>
-        {!clienteAnonimoId && <Pressable accessibilityRole="button" accessibilityLabel="Juegos con premios" className="rounded-2xl border-2 border-white/70 bg-chido-cabecera" style={tarjeta} onPress={() => router.push({ pathname: '/cliente/juegos', params: { pedidoId } })}><View className="flex-row items-center"><Ionicons name="game-controller-outline" size={52} color={colores.textoSobreOscuro} /><View className="ml-4 flex-1"><Text className="font-extrabold text-chido-texto-sobre-oscuro" style={{ fontSize: 34, lineHeight: 40 }}>Jugar</Text><Text className="mt-1 text-base font-bold text-chido-texto-secundario-sobre-oscuro">Ganá descuentos para tu cuenta</Text></View><Ionicons name="chevron-forward" size={30} color={colores.textoSobreOscuro} /></View></Pressable>}
-        <Pressable accessibilityRole="button" accessibilityLabel="Completar encuesta de satisfacción" disabled={encuestaCompletada} className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera ${encuestaCompletada ? 'opacity-50' : ''}`} style={tarjeta} onPress={() => router.push({ pathname: '/cliente/encuesta', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } })}><View className="flex-row items-center"><Ionicons name="star-outline" size={52} color={colores.textoSobreOscuro} /><View className="ml-4 flex-1"><Text className="font-extrabold text-chido-texto-sobre-oscuro" style={{ fontSize: 34, lineHeight: 40 }}>Encuesta</Text><Text className="mt-1 text-base font-bold text-chido-texto-secundario-sobre-oscuro">{encuestaCompletada ? '¡Gracias por tu opinión!' : 'Dejanos tu opinión'}</Text></View><Ionicons name="chevron-forward" size={30} color={colores.textoSobreOscuro} /></View></Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="Pedir la cuenta" className="rounded-2xl border-2 border-white/70 bg-chido-cabecera" style={tarjeta} onPress={abrirCuenta}><View className="flex-row items-center"><Ionicons name="receipt-outline" size={52} color={colores.textoSobreOscuro} /><View className="ml-4 flex-1"><Text className="font-extrabold text-chido-texto-sobre-oscuro" style={{ fontSize: 34, lineHeight: 40 }}>Pedir cuenta</Text><Text className="mt-1 text-base font-bold text-chido-texto-secundario-sobre-oscuro">Escaneá la propina y pagá tu cuenta</Text></View><Ionicons name="chevron-forward" size={30} color={colores.textoSobreOscuro} /></View></Pressable>
+      <ScrollView
+        className="flex-1"
+        onLayout={({ nativeEvent }) => setAltoDisponible(nativeEvent.layout.height)}
+        contentContainerStyle={{
+          flexGrow: 1,
+          gap: espacio,
+          paddingHorizontal: 16,
+          paddingTop: espacio,
+          paddingBottom: Math.max(insets.bottom, espacio)
+        }}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        overScrollMode="never"
+      >
+        <Text
+          className="text-3xl font-bold text-chido-texto-sobre-oscuro text-center mb-2"
+          style={{ paddingVertical: compacto ? 6 : 10 }}
+        >
+          ¿Qué deseas hacer?
+        </Text>
+
+        <View accessibilityLiveRegion="polite" className="rounded-xl border border-white/60 bg-chido-superficieTerracota px-4 py-3">
+          <Text className="text-sm font-semibold text-chido-texto-secundario-sobre-oscuro">Estado de tu pedido</Text>
+          <Text className="mt-1 text-lg font-extrabold text-chido-texto-sobre-oscuro">
+            {estado ? estadoLegible[estado] ?? 'Actualizando estado…' : 'Actualizando estado…'}
+          </Text>
+        </View>
+
+        {!clienteAnonimoId && <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Juegos con premios"
+          className="rounded-2xl border-2 border-white/70 bg-chido-cabecera"
+          style={tarjeta}
+          onPress={() => router.push({ pathname: '/cliente/juegos', params: { pedidoId } })}
+        >
+          <View className="flex-row items-center">
+            <Ionicons name="game-controller-outline" size={52} color={colores.textoSobreOscuro} />
+            <View className="ml-4 flex-1">
+              <Text className="font-extrabold text-chido-texto-sobre-oscuro" style={{ fontSize: 34, lineHeight: 40 }}>Jugar</Text>
+              <Text className="mt-1 text-base font-bold text-chido-texto-secundario-sobre-oscuro">Ganá descuentos para tu cuenta</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={30} color={colores.textoSobreOscuro} />
+          </View>
+        </Pressable>}
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Completar encuesta de satisfacción"
+          disabled={encuestaCompletada}
+          className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera ${encuestaCompletada ? 'opacity-50' : ''}`}
+          style={tarjeta}
+          onPress={() => router.push({ pathname: '/cliente/encuesta', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } })}
+        >
+          <View className="flex-row items-center">
+            <Ionicons name="star-outline" size={52} color={colores.textoSobreOscuro} />
+            <View className="ml-4 flex-1">
+              <Text className="font-extrabold text-chido-texto-sobre-oscuro" style={{ fontSize: 34, lineHeight: 40 }}>Encuesta</Text>
+              <Text className="mt-1 text-base font-bold text-chido-texto-secundario-sobre-oscuro">
+                {encuestaCompletada ? '¡Gracias por tu opinión!' : 'Dejanos tu opinión'}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={30} color={colores.textoSobreOscuro} />
+          </View>
+        </Pressable>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Pedir la cuenta"
+          className="rounded-2xl border-2 border-white/70 bg-chido-cabecera mt-2"
+          style={tarjeta}
+          onPress={abrirCuenta}
+        >
+          <View className="flex-row items-center">
+            <Ionicons name="receipt-outline" size={52} color={colores.textoSobreOscuro} />
+            <View className="ml-4 flex-1">
+              <Text className="font-extrabold text-chido-texto-sobre-oscuro" style={{ fontSize: 34, lineHeight: 40 }}>
+                Pedir cuenta
+              </Text>
+              <Text className="mt-1 text-base font-bold text-chido-texto-sobre-oscuro">
+                Escaneá la propina y pagá tu cuenta
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={30} color={colores.textoSobreOscuro} />
+          </View>
+        </Pressable>
+
       </ScrollView>
     </View>
   );

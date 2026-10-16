@@ -8,7 +8,7 @@ type ChidoLoaderOverlayProps = {
 // El cargador se superpone al contenido para no alterar el tamaño de la pantalla activa.
 export default function ChidoLoaderOverlay({ mensaje }: ChidoLoaderOverlayProps) {
   return (
-    <View pointerEvents="none" className="absolute inset-0 items-center justify-center bg-chido-fondo/85">
+    <View pointerEvents="none" className="absolute inset-0 items-center justify-center">
       <ChidoLoader mensaje={mensaje} />
     </View>
   );

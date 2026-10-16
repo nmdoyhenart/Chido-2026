@@ -6,7 +6,6 @@ import { Image, Pressable, Text, useWindowDimensions, Vibration, View } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '../../../components/Header';
 import ChidoLoader from '../../../components/ui/ChidoLoader';
-import ChidoLoaderOverlay from '../../../components/ui/ChidoLoaderOverlay';
 import { iniciarMemotest, voltearMemotest } from '../../../services/juegos';
 import { colores } from '../../../theme/colores';
 import type { CartaMemotest, EstadoMemotest } from '../../../types/juegos';
@@ -180,18 +179,18 @@ export default function Memotest() {
           <Text className="mt-1 text-2xl font-extrabold text-chido-texto-sobre-oscuro">Pares {emparejadas.length / 2} de 4</Text>
         </View>
         {mensajeError && <View className="mt-3 rounded-2xl bg-chido-error p-3"><Text className="text-center font-bold text-chido-texto-sobre-oscuro">{mensajeError}</Text></View>}
-        <View className="relative mt-5 flex-1">
-          <View onLayout={({ nativeEvent }) => setAltoGrilla(Math.round(nativeEvent.layout.height))} className="flex-1 flex-row flex-wrap justify-between" style={{ rowGap: 12 }}>
-            {cartas.map((carta, indice) => {
-              const imagen = obtenerImagenCarta(carta);
-              return (
-                <Pressable key={indice} onPress={() => void elegir(indice)} disabled={bloqueado || carta !== null} style={{ width: anchoCarta, height: altoCarta }} className="items-center justify-center overflow-hidden rounded-2xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera">
-                  {imagen ? <Image source={imagen} resizeMode="contain" className="h-full w-full" /> : <Ionicons name="restaurant-outline" size={48} color={colores.textoSobreOscuro} />}
-                </Pressable>
-              );
-            })}
-          </View>
-          {bloqueado && <ChidoLoaderOverlay mensaje="Recordá las cartas…" />}
+        <View className="mt-3 h-16 items-center justify-center">
+          {bloqueado && <ChidoLoader mensaje="Recordá las cartas…" compacto />}
+        </View>
+        <View onLayout={({ nativeEvent }) => setAltoGrilla(Math.round(nativeEvent.layout.height))} className="flex-1 flex-row flex-wrap justify-between" style={{ rowGap: 12 }}>
+          {cartas.map((carta, indice) => {
+            const imagen = obtenerImagenCarta(carta);
+            return (
+              <Pressable key={indice} onPress={() => void elegir(indice)} disabled={bloqueado || carta !== null} style={{ width: anchoCarta, height: altoCarta }} className="items-center justify-center overflow-hidden rounded-2xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera">
+                {imagen ? <Image source={imagen} resizeMode="contain" className="h-full w-full" /> : <Ionicons name="restaurant-outline" size={48} color={colores.textoSobreOscuro} />}
+              </Pressable>
+            );
+          })}
         </View>
       </View>
     </SafeAreaView>

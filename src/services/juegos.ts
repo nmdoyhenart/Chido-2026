@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import type { EstadoMemotest, IntentoJuego, PartidaTateti } from '../types/juegos';
+import type { EstadoAhorcado, EstadoMemotest, IntentoJuego, PartidaTateti } from '../types/juegos';
 
 export async function obtenerPedidoConfirmadoParaJuegos(clienteId: string) {
   const { data, error } = await supabase
@@ -42,4 +42,16 @@ export async function voltearMemotest(pedidoId: string, indice: number) {
   const { data, error } = await supabase.rpc('voltear_memotest', { p_pedido_id: pedidoId, p_indice: indice });
   if (error || !data) throw new Error(error?.message ?? 'No se pudo voltear la carta.');
   return data as EstadoMemotest;
+}
+
+export async function iniciarAhorcado(pedidoId: string) {
+  const { data, error } = await supabase.rpc('iniciar_ahorcado', { p_pedido_id: pedidoId });
+  if (error || !data) throw new Error(error?.message ?? 'No se pudo iniciar Ahorcado.');
+  return data as EstadoAhorcado;
+}
+
+export async function intentarLetraAhorcado(pedidoId: string, letra: string) {
+  const { data, error } = await supabase.rpc('intentar_letra_ahorcado', { p_pedido_id: pedidoId, p_letra: letra });
+  if (error || !data) throw new Error(error?.message ?? 'No se pudo registrar la letra.');
+  return data as EstadoAhorcado;
 }

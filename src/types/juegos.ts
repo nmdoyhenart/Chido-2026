@@ -3,6 +3,7 @@ export type TableroTateti = [MarcaTateti, MarcaTateti, MarcaTateti, MarcaTateti,
 export type EstadoJuego = 'en_curso' | 'ganado' | 'perdido' | 'empate';
 export type CartaMemotest = 'taco' | 'chile' | 'sombrero' | 'cupon';
 export type EstadoRondaTateti = 'en_curso' | 'cliente' | 'aplicacion' | 'empate';
+export type PalabraAhorcado = { palabra: string; categoria: string };
 
 export type PartidaTateti = {
   tablero: TableroTateti;
@@ -29,4 +30,15 @@ export type EstadoMemotest = {
   intentos: number;
   descuento_otorgado: number;
   ocultar: boolean;
+};
+
+export type EstadoAhorcado = {
+  estado: EstadoJuego;
+  palabra: (string | null)[];
+  palabra_resuelta: string | null;
+  categoria: string;
+  letras_intentadas: string[];
+  errores: number;
+  max_errores: number;
+  descuento_otorgado: number;
 };

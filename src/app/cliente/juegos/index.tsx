@@ -23,9 +23,7 @@ export default function JuegosCliente() {
         </View>
         <JuegoPromoCard titulo="Ta-te-ti" descuento="10%" icono="grid-outline" onPress={() => router.push(`/cliente/juegos/ta-te-ti?pedidoId=${encodeURIComponent(pedidoId ?? '')}` as never)} />
         <JuegoPromoCard titulo="Memotest exprés" descuento="15%" icono="layers-outline" onPress={() => router.push(`/cliente/juegos/memotest?pedidoId=${encodeURIComponent(pedidoId ?? '')}` as never)} />
-        <View className="rounded-3xl border-2 border-chido-borde-naranja bg-chido-acento p-5 opacity-80">
-          <View className="flex-row items-center justify-between"><Text className="text-3xl font-extrabold text-chido-texto-sobre-oscuro">Ahorcado</Text><Text className="text-2xl font-extrabold text-chido-texto-sobre-oscuro">20%</Text></View>
-        </View>
+        <JuegoPromoCard titulo="Ahorcado" descuento="20%" icono="text-outline" onPress={() => router.push(`/cliente/juegos/ahorcado?pedidoId=${encodeURIComponent(pedidoId ?? '')}` as never)} />
       </ScrollView>
     </SafeAreaView>
   );

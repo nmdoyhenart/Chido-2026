@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { Header } from '../Header';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { getPedidosSector } from '../../services/pedidos.service';
@@ -16,6 +18,8 @@ type Props = {
 export default function InicioCocinero({ usuario, role }: Props) {
   const router = useRouter();
   const { mode } = useAppSession();
+  const { width } = useWindowDimensions();
+  const escala = Math.min(width / 393, 1.25);
   const [pedidos, setPedidos] = useState(0);
 
   const cargarPedidos = useCallback(async () => {
@@ -47,18 +51,22 @@ export default function InicioCocinero({ usuario, role }: Props) {
   const nombre = [usuario?.nombres, usuario?.apellidos].filter(Boolean).join(' ').trim() || 'Cocinero';
   const saludo = usuario?.nombres?.trim().split(/\s+/)[0] || 'Cocinero';
   const etiquetaRol = role ? `${role.charAt(0).toUpperCase()}${role.slice(1)}` : 'Cocinero';
+  const tamanoTitulo = { fontSize: 20 * escala, lineHeight: 25 * escala };
   const opciones = [
     { titulo: 'Alta de plato', icono: 'restaurant-outline' as const, destino: '/productos/alta' as const },
-    { titulo: 'Pedidos entrantes en cocina', icono: 'file-tray-full-outline' as const, destino: '/cocina/pedidos' as const, cantidad: pedidos },
-    { titulo: 'Ver / gestionar la carta', icono: 'book-outline' as const, destino: '/cocina/carta' as const },
+    { titulo: 'Pedidos entrantes', icono: 'file-tray-full-outline' as const, destino: '/cocina/pedidos' as const, cantidad: pedidos },
+    { titulo: 'Ver la carta', icono: 'book-outline' as const, destino: '/cocina/carta' as const },
   ];
 
   return (
-    <View className="flex-1 bg-chido-fondo">
+    <View style={styles.pantalla}>
+      <StatusBar style="light" />
       <Header userName={nombre} role={etiquetaRol} />
-      <View className="flex-1 px-5 pt-6 pb-5">
-        <Text className="mb-5 text-3xl font-extrabold text-chido-texto-sobre-oscuro">Hola, {saludo}</Text>
-        <View className="flex-1 gap-4">
+      <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.contenido}>
+        <View style={{ flex: 1, padding: 20 * escala, paddingTop: 24 * escala }}>
+        <Text style={[styles.saludo, { fontSize: 30 * escala, marginBottom: 24 * escala }]}>Hola, {saludo}</Text>
+        {mode === 'simulation' && <Text style={[styles.detalle, { marginBottom: 18 * escala }]}>Modo demostración · Explorá las pantallas sin modificar datos.</Text>}
+        <View style={[styles.listaTarjetas, { gap: 16 * escala }]}>
           {opciones.map(opcion => (
             <TouchableOpacity
               key={opcion.titulo}
@@ -66,23 +74,46 @@ export default function InicioCocinero({ usuario, role }: Props) {
               accessibilityLabel={opcion.titulo}
               activeOpacity={0.85}
               onPress={() => router.push(opcion.destino)}
-              className="min-h-0 flex-1 flex-row items-center rounded-[28px] border-2 border-white/30 bg-chido-superficieTerracota px-5"
+              style={[styles.tarjeta, { paddingHorizontal: 24 * escala, paddingVertical: 18 * escala, gap: 24 * escala }]}
             >
-              <View className="mr-5 h-[76px] w-[76px] items-center justify-center rounded-[22px] bg-chido-cabecera">
-                <Ionicons name={opcion.icono} size={38} color={colores.textoSobreOscuro} />
+              <Ionicons name={opcion.icono} size={32 * escala} color={colores.textoSobreOscuro} />
+              <View style={styles.textos}>
+                <Text style={[styles.titulo, tamanoTitulo]}>{opcion.titulo}</Text>
               </View>
-              <Text className="flex-1 text-2xl font-extrabold leading-8 text-chido-texto-sobre-oscuro">{opcion.titulo}</Text>
               {typeof opcion.cantidad === 'number' ? (
-                <View className="ml-3 h-14 min-w-14 items-center justify-center rounded-full bg-chido-notificacion px-3">
-                  <Text className="text-xl font-extrabold text-chido-texto-sobre-oscuro">{opcion.cantidad}</Text>
+                <View style={[styles.contador, { minWidth: 32 * escala, minHeight: 32 * escala, paddingHorizontal: 6 }]}>
+                  <Text style={[styles.numero, { fontSize: 17 * escala }]}>{opcion.cantidad}</Text>
                 </View>
               ) : (
-                <Ionicons name="chevron-forward" size={26} color={colores.textoSecundarioSobreOscuro} />
+                <Ionicons name="chevron-forward" size={24 * escala} color={colores.textoSobreOscuro} />
               )}
             </TouchableOpacity>
           ))}
         </View>
-      </View>
+        </View>
+      </SafeAreaView>
     </View>
   );
 }
+
+const paleta = {
+  fondo: colores.fondo,
+  tarjeta: colores.cabecera + 'B3',
+  borde: colores.textoSecundarioAlternativo,
+  crema: colores.textoSobreOscuro,
+  secundario: colores.textoSecundarioSobreOscuro,
+  coral: colores.notificacion,
+};
+
+const styles = StyleSheet.create({
+  pantalla: { flex: 1, backgroundColor: paleta.fondo },
+  contenido: { flex: 1 },
+  saludo: { color: paleta.crema, fontWeight: '700' },
+  detalle: { color: paleta.secundario, fontSize: 14 },
+  listaTarjetas: { flex: 1 },
+  tarjeta: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: paleta.tarjeta, borderColor: paleta.borde, borderWidth: 2, borderRadius: 16 },
+  textos: { flex: 1, minWidth: 0 },
+  titulo: { color: paleta.crema, fontWeight: '800' },
+  contador: { flexShrink: 0, borderRadius: 30, backgroundColor: paleta.coral, alignItems: 'center', justifyContent: 'center' },
+  numero: { color: paleta.crema, fontWeight: '800' },
+});

@@ -61,13 +61,15 @@ export function useMesas() {
     return nuevaMesa;
   };
 
-  const liberar = async (mesaId: string): Promise<Mesa> => {
+  const liberar = async (mesaId: string, confirmarCuentaPendiente = false) => {
     if (mode !== 'authenticated') throw new Error('Se requiere una cuenta autorizada.');
-    const mesaActualizada = await liberarMesa(mesaId);
-    if (activa.current) setMesas((actuales) =>
-      actuales.map((mesa) => (mesa.id === mesaId ? mesaActualizada : mesa)),
-    );
-    return mesaActualizada;
+    const resultado = await liberarMesa(mesaId, confirmarCuentaPendiente);
+    if (resultado.liberada && activa.current) {
+      setMesas((actuales) =>
+        actuales.map((mesa) => (mesa.id === mesaId ? resultado.mesa : mesa)),
+      );
+    }
+    return resultado;
   };
 
   return { mesas: mode === 'simulation' ? mesasDemostracion : mesas, cargando, recargar, agregar, liberar };

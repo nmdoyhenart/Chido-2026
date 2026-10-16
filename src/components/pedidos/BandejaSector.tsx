@@ -78,7 +78,7 @@ export default function BandejaSector({ tipo }: { tipo: TipoSector }) {
   useEffect(() => {
     if (mode !== 'authenticated' || role !== esperado) return;
     const inicial = setTimeout(() => { void cargar(); }, 0);
-    const canal = supabase.channel(`pedidos-sector-${tipo}`)
+    const canal = supabase.channel(`pedidos-sector-${tipo}-${Date.now()}-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => { void cargar(); })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'pedido_detalles' }, () => { void cargar(); })
       .subscribe();

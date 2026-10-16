@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Alert, Image } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/Header';
+import { useAppSession } from '../../contexts/AppSessionContext';
 import { getEstadoPedido, getEstadoPedidoAnonimo, suscribirEstadoPedido, confirmarRecepcionPedido, solicitarCuentaPedido } from '../../services/pedidos.service';
 import { colores } from '../../theme/colores';
 
@@ -17,11 +18,13 @@ const textosEstado: Record<string, string> = {
 
 export default function EstadoPedido() {
   const router = useRouter();
+  const { usuario } = useAppSession();
   
   // Extract query params safely
   const params = useLocalSearchParams();
   const pedidoId = Array.isArray(params.pedidoId) ? params.pedidoId[0] : params.pedidoId;
-  const clienteAnonimoId = Array.isArray(params.clienteAnonimoId) ? params.clienteAnonimoId[0] : params.clienteAnonimoId;
+  const rawAnonimoId = Array.isArray(params.clienteAnonimoId) ? params.clienteAnonimoId[0] : params.clienteAnonimoId;
+  const clienteAnonimoId = !usuario?.id && rawAnonimoId ? rawAnonimoId : undefined;
   const manualView = Array.isArray(params.manualView) ? params.manualView[0] : params.manualView;
 
   const [estado, setEstado] = useState<string>('pendiente_mozo');
@@ -30,6 +33,7 @@ export default function EstadoPedido() {
   const [error, setError] = useState('');
 
   const estadoRef = React.useRef(estado);
+  const haRedirigidoRef = React.useRef(false);
   useEffect(() => {
     estadoRef.current = estado;
   }, [estado]);
@@ -38,13 +42,26 @@ export default function EstadoPedido() {
     if (!pedidoId) return;
 
     const checkAndRedirect = (estadoActual: string) => {
+      if (haRedirigidoRef.current) return;
       if (estadoActual !== 'pendiente_mozo' && estadoActual !== 'rechazado' && manualView !== 'true') {
+        haRedirigidoRef.current = true;
         if (estadoRef.current === 'pendiente_mozo' && estadoActual === 'confirmado') {
           Alert.alert('Pedido Confirmado', 'Tu pedido ya está en preparación.', [
-            { text: 'OK', onPress: () => router.replace({ pathname: '/cliente/pedido-realizado', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } }) }
+            {
+              text: 'OK',
+              onPress: () => {
+                router.replace({
+                  pathname: '/cliente/pedido-realizado',
+                  params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) },
+                });
+              },
+            },
           ]);
         } else {
-          router.replace({ pathname: '/cliente/pedido-realizado', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } });
+          router.replace({
+            pathname: '/cliente/pedido-realizado',
+            params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) },
+          });
         }
       }
     };
@@ -75,6 +92,8 @@ export default function EstadoPedido() {
       desuscribir();
     };
   }, [pedidoId, clienteAnonimoId, manualView]);
+
+
 
   const confirmarRecepcion = async () => {
     if (!pedidoId || cargandoAccion) return;
@@ -136,8 +155,21 @@ export default function EstadoPedido() {
           {estado === 'pendiente_mozo' && 'Esperando confirmación del mozo...'}
           {estado === 'en_preparacion' && 'Cocina y bar están preparando tu pedido.'}
           {estado === 'entregado' && '¡Tu pedido ha sido entregado! ¡Que lo disfrutes!'}
+          {estado === 'recibido' && '¡Recepción confirmada! Ya podés disfrutar tu pedido.'}
           {estado === 'rechazado' && 'El mozo rechazó el pedido. Podés cambiar productos o cantidades y volver a enviarlo.'}
         </Text>
+
+        {estado === 'entregado' && (
+          <TouchableOpacity 
+            className="bg-chido-exito p-4 rounded-xl mt-6 w-full border-2 border-white/70"
+            onPress={confirmarRecepcion}
+            disabled={cargandoAccion}
+          >
+            <Text className="text-chido-texto-sobre-oscuro text-center font-bold text-lg">
+              {cargandoAccion ? 'Confirmando...' : 'Confirmar recepción del pedido'}
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {manualView === 'true' && (
           <TouchableOpacity 

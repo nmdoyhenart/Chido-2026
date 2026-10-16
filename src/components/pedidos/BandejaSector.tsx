@@ -54,6 +54,9 @@ export default function BandejaSector({ tipo }: { tipo: TipoSector }) {
   const paginaActual = Math.min(pagina, Math.max(0, totalPaginas - 1));
   const inicio = paginaActual * PEDIDOS_POR_PAGINA;
   const pedidosVisibles = paginas[paginaActual] ?? [];
+  // Todas las tarjetas de cocina usan la misma altura limitada. Así, la última
+  // página no estira un pedido único para llenar el viewport.
+  const altoTarjetaCocina = Math.min(300, Math.max(160, (altoPagina - 28) / PEDIDOS_POR_PAGINA));
 
   useEffect(() => {
     if (pagina !== paginaActual) setPagina(paginaActual);
@@ -141,7 +144,7 @@ export default function BandejaSector({ tipo }: { tipo: TipoSector }) {
           </View>
         </View> : paginas.map((pedidosPagina, indicePagina) => <View key={`${indicePagina}-${pedidosPagina.map((pedido) => pedido.id).join('-')}`} style={{ height: altoPagina, paddingHorizontal: 16, paddingVertical: 8 }}>
           <View style={{ flex: 1, gap: 12 }}>
-          {pedidosPagina.map((pedido) => <View key={pedido.id} className="flex-1 rounded-3xl border-2 border-white/75 bg-chido-cabecera p-4">
+          {pedidosPagina.map((pedido) => <View key={pedido.id} className={`${tipo === 'bebida' ? 'flex-1' : ''} rounded-3xl border-2 border-white/75 bg-chido-cabecera p-4`} style={tipo === 'plato' ? { flex: 0, height: altoTarjetaCocina, maxHeight: 300 } : undefined}>
             <View className="flex-row items-center justify-between border-b border-white/30 pb-4">
               <View>
                 <Text className="text-sm font-semibold text-chido-texto-secundario-sobre-oscuro">PEDIDO</Text>

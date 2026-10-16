@@ -5,11 +5,13 @@ export const RUTAS_NOTIFICACION = {
     mesaAsignadaCliente: '/cliente/espera-mesa',
     pedidosCocina: '/cocina/pedidos',
     pedidosBar: '/bar/pedidos',
+    pedidosMozo: '/mozo/pedidos',
+    mesasGestion: '/mesas/gestion',
 } as const;
 
 export type RutaNotificacion = typeof RUTAS_NOTIFICACION[keyof typeof RUTAS_NOTIFICACION] | `/cliente/estado-pedido?pedidoId=${string}`;
 export type DestinatarioNotificacion = 'dueño' | 'supervisor' | 'metre' | 'mozo' | 'cocinero' | 'cantinero' | 'cliente registrado';
-export type EventoNotificacion = 'cliente_registrado' | 'cliente_en_espera' | 'mesa_asignada' | 'pedido_confirmado' | 'pedido_rechazado';
+export type EventoNotificacion = 'cliente_registrado' | 'cliente_en_espera' | 'mesa_asignada' | 'pedido_confirmado' | 'pedido_rechazado' | 'cuenta_solicitada' | 'nuevo_pedido' | 'pago_recibido';
 
 export type NotificacionPush = {
     evento: EventoNotificacion;

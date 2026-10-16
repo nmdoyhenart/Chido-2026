@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
 import { useAppSession } from '../contexts/AppSessionContext';
 import { colores } from '../theme/colores';
 
@@ -12,7 +12,6 @@ interface HeaderProps {
 
 export function Header({ userName, role }: HeaderProps) {
     const { cerrarSesion, usuario } = useAppSession();
-    const router = useRouter();
 
     const [saliendo, setSaliendo] = useState(false);
     const [error, setError] = useState('');

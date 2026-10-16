@@ -1,19 +1,25 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, Text, Vibration, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
 import type { Href } from 'expo-router';
 
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { obtenerRutaNotificacion } from '../../utils/notificaciones';
-import { escucharRespuestasPush, permisoNotificacionesConcedido, registrarDispositivoPush, solicitarPermisoNotificaciones } from '../../services/notificaciones-push';
+import {
+  escucharRespuestasPush,
+  permisoNotificacionesConcedido,
+  registrarDispositivoPush,
+  solicitarPermisoNotificaciones,
+  dispararNotificacionLocal,
+} from '../../services/notificaciones-push';
+import { supabase } from '../../lib/supabase';
 import ChidoLoader from '../ui/ChidoLoader';
 
 const claveExplicacion = (usuarioId: string) => `chido:push:explicacion:v1:${usuarioId}`;
 
 export default function PushNotificationsBootstrap() {
   const { mode, usuario, cargando } = useAppSession();
-  const router = useRouter();
   const [mostrar, setMostrar] = useState(false);
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +31,76 @@ export default function PushNotificationsBootstrap() {
       if (ruta) router.push(ruta as Href);
     });
     return detener;
-  }, [router]);
+  }, []);
+
+  // Escuchar eventos en tiempo real para disparar la notificación en el dispositivo
+  useEffect(() => {
+    if (!autenticado || !usuario) return;
+
+    const canalNombre = `push_realtime_${usuario.id}_${Date.now()}`;
+    const canal = supabase
+      .channel(canalNombre)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'pedidos' },
+        async (payload) => {
+          const nuevo = payload.new as any;
+          const viejo = payload.old as any;
+          if (!nuevo) return;
+
+          // 1. Punto 12: Nuevo pedido para el mozo
+          if (
+            (payload.eventType === 'INSERT' || nuevo.estado === 'pendiente_mozo') &&
+            viejo?.estado !== 'pendiente_mozo' &&
+            usuario.perfil === 'mozo'
+          ) {
+            await dispararNotificacionLocal(
+              'Nuevo pedido recibido',
+              'Hay un pedido pendiente de confirmación en una mesa.',
+              { ruta: '/mozo/pedidos', pedidoId: nuevo.id }
+            );
+          }
+
+          // 2. Punto 21: Pago realizado para mozo, dueño y supervisor
+          if (
+            nuevo.estado === 'pagado' &&
+            (!viejo || viejo.estado !== 'pagado') &&
+            ['mozo', 'dueño', 'supervisor'].includes(usuario.perfil)
+          ) {
+            const rutaDestino = usuario.perfil === 'mozo' ? '/mozo/pedidos' : '/mesas/gestion';
+            await dispararNotificacionLocal(
+              'Pago recibido',
+              `El cliente realizó el pago de $${Number(nuevo.total || 0).toLocaleString('es-AR')}. Espera confirmación.`,
+              { ruta: rutaDestino as any, pedidoId: nuevo.id }
+            );
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'mesas' },
+        async (payload) => {
+          const nuevaMesa = payload.new as any;
+          const viejaMesa = payload.old as any;
+          if (
+            nuevaMesa?.cuenta_solicitada_at &&
+            !viejaMesa?.cuenta_solicitada_at &&
+            usuario.perfil === 'mozo'
+          ) {
+            await dispararNotificacionLocal(
+              'Solicitud de cuenta',
+              `El cliente de la Mesa ${nuevaMesa.numero} solicitó la cuenta.`,
+              { ruta: '/mozo/pedidos' }
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(canal);
+    };
+  }, [autenticado, usuario]);
 
   useEffect(() => {
     if (!autenticado || !usuario) {

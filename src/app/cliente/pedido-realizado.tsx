@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +8,7 @@ import { Header } from '../../components/Header';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { colores } from '../../theme/colores';
 import { verificarEncuesta } from '../../services/encuestas.service';
+import { getEstadoPedido, getEstadoPedidoAnonimo, suscribirEstadoPedido } from '../../services/pedidos.service';
 
 export default function PedidoRealizado() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function PedidoRealizado() {
   const clienteAnonimoId = !usuario?.id && rawAnonimoId ? rawAnonimoId : undefined;
   
   const [encuestaCompletada, setEncuestaCompletada] = useState(false);
+  const [estado, setEstado] = useState<string | null>(null);
   const estadoLegible: Record<string, string> = {
     pendiente_mozo: 'Esperando confirmación del mozo',
     confirmado: 'Pedido confirmado · enviado a los sectores',
@@ -29,6 +31,34 @@ export default function PedidoRealizado() {
     recibido: 'Recepción confirmada',
     rechazado: 'Pedido rechazado · podés modificarlo',
   };
+
+  useEffect(() => {
+    if (!pedidoId) return;
+    let activo = true;
+
+    const actualizarEstado = async () => {
+      try {
+        const actual = clienteAnonimoId
+          ? await getEstadoPedidoAnonimo(clienteAnonimoId, pedidoId)
+          : await getEstadoPedido(pedidoId);
+        if (activo) setEstado(actual);
+      } catch (error) {
+        console.error('No se pudo actualizar el estado del pedido:', error);
+      }
+    };
+
+    void actualizarEstado();
+    const intervalo = setInterval(() => { void actualizarEstado(); }, 5000);
+    const desuscribir = clienteAnonimoId
+      ? () => {}
+      : suscribirEstadoPedido(pedidoId, nuevoEstado => { if (activo) setEstado(nuevoEstado); });
+
+    return () => {
+      activo = false;
+      clearInterval(intervalo);
+      desuscribir();
+    };
+  }, [pedidoId, clienteAnonimoId]);
 
   // Verificar si la encuesta ya se llenó cada vez que volvemos a esta pantalla
   useFocusEffect(
@@ -92,7 +122,7 @@ export default function PedidoRealizado() {
         <View accessibilityLiveRegion="polite" className="rounded-xl border border-white/60 bg-chido-superficieTerracota px-4 py-3">
           <Text className="text-sm font-semibold text-chido-texto-secundario-sobre-oscuro">Estado de tu pedido</Text>
           <Text className="mt-1 text-lg font-extrabold text-chido-texto-sobre-oscuro">
-            {estadoLegible[estado] ?? 'Actualizando estado…'}
+            {estado ? estadoLegible[estado] ?? 'Actualizando estado…' : 'Actualizando estado…'}
           </Text>
         </View>
 

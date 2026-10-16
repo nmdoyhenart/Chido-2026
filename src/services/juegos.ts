@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import type { IntentoJuego, PartidaTateti } from '../types/juegos';
+import type { EstadoMemotest, IntentoJuego, PartidaTateti } from '../types/juegos';
 
 export async function obtenerPedidoConfirmadoParaJuegos(clienteId: string) {
   const { data, error } = await supabase
@@ -30,4 +30,16 @@ export async function resolverTateti(pedidoId: string, estado: 'ganado' | 'perdi
   const { data, error } = await supabase.rpc('resolver_tateti', { p_pedido_id: pedidoId, p_estado: estado });
   if (error || !data) throw new Error(error?.message ?? 'No se pudo guardar el resultado.');
   return data as IntentoJuego;
+}
+
+export async function iniciarMemotest(pedidoId: string) {
+  const { data, error } = await supabase.rpc('iniciar_memotest', { p_pedido_id: pedidoId });
+  if (error || !data) throw new Error(error?.message ?? 'No se pudo iniciar Memotest.');
+  return data as EstadoMemotest;
+}
+
+export async function voltearMemotest(pedidoId: string, indice: number) {
+  const { data, error } = await supabase.rpc('voltear_memotest', { p_pedido_id: pedidoId, p_indice: indice });
+  if (error || !data) throw new Error(error?.message ?? 'No se pudo voltear la carta.');
+  return data as EstadoMemotest;
 }

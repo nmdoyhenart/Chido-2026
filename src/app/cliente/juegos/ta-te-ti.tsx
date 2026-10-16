@@ -5,6 +5,7 @@ import { Image, Pressable, Text, useWindowDimensions, Vibration, View } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '../../../components/Header';
 import ChidoLoader from '../../../components/ui/ChidoLoader';
+import ChidoLoaderOverlay from '../../../components/ui/ChidoLoaderOverlay';
 import { guardarTateti, iniciarTateti, resolverTateti } from '../../../services/juegos';
 import { colores } from '../../../theme/colores';
 import type { EstadoJuego, EstadoRondaTateti, IntentoJuego, PartidaTateti } from '../../../types/juegos';
@@ -47,6 +48,7 @@ export default function Tateti() {
   const [modoRecreativo, setModoRecreativo] = useState(false);
   const [mensajeRonda, setMensajeRonda] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [altoTableroDisponible, setAltoTableroDisponible] = useState(0);
 
   useEffect(() => {
     if (!pedidoId) return;
@@ -175,7 +177,7 @@ export default function Tateti() {
       : modoRecreativo && estadoSerie === 'empate' ? 'La serie recreativa terminó sin tres victorias.' : null;
   const rondaTerminada = partida.estadoRonda !== 'en_curso';
   const puedeAvanzar = !estadoSerie && partida.ronda < 5;
-  const tableroSize = Math.min(width - 40, height < 720 ? 200 : height < 820 ? 280 : 340);
+  const tableroSize = Math.min(width - 40, altoTableroDisponible > 0 ? altoTableroDisponible : height < 720 ? 200 : height < 820 ? 280 : 340);
   const tieneDescuentoAplicado = intento?.descuento_otorgado === 10;
   const mensajePromocion = modoRecreativo && tieneDescuentoAplicado
     ? 'Ya tenés el 10% de descuento aplicado.'
@@ -194,7 +196,7 @@ export default function Tateti() {
         <Header userName="Cliente" role="Ta-te-ti" />
         <View className="flex-1 px-5 py-4">
           <Pressable onPress={() => router.back()} accessibilityRole="button" className="min-h-12 self-start flex-row items-center rounded-xl bg-chido-acento px-4"><Ionicons name="arrow-back" size={22} color={colores.textoSobreOscuro} /><Text className="ml-2 text-base font-bold text-chido-texto-sobre-oscuro">Volver a juegos</Text></Pressable>
-          <View className="flex-1 justify-center">
+          <View className="relative flex-1 justify-center">
             <Image source={mascotaFinal} resizeMode="contain" style={{ width: tamanioMascotaFinal, height: tamanioMascotaFinal }} className="mb-3 self-center" />
             <View className="items-center rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera p-6">
               <Ionicons name={iconoResultado} size={64} color={colores.textoSobreOscuro} />
@@ -202,8 +204,8 @@ export default function Tateti() {
               <Text className="mt-3 text-center text-2xl font-bold text-chido-texto-secundario-sobre-oscuro">{resultado}</Text>
               <View className="mt-5 flex-row rounded-2xl bg-chido-acento px-5 py-3"><Text className="text-xl font-extrabold text-chido-texto-sobre-oscuro">Vos {partida.puntosCliente} - {partida.puntosAplicacion} Aplicación</Text></View>
             </View>
-            {guardando && <View className="mt-4"><ChidoLoader mensaje="Guardando el resultado…" /></View>}
             {mensajeError && <View className="mt-4 rounded-2xl bg-chido-error p-4"><Text className="text-center text-base font-bold text-chido-texto-sobre-oscuro">{mensajeError}</Text></View>}
+            {guardando && <ChidoLoaderOverlay mensaje="Guardando el resultado…" />}
           </View>
           {puedeAvanzar && <Pressable disabled={guardando} onPress={() => void siguienteRonda()} accessibilityRole="button" className={`min-h-16 flex-row items-center justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo px-5 py-4 ${guardando ? 'bg-chido-cabecera opacity-60' : 'bg-chido-botonPrincipal'}`}><Ionicons name="arrow-forward-circle-outline" size={28} color={colores.textoSobreOscuro} /><Text className="ml-3 text-center text-xl font-extrabold text-chido-texto-sobre-oscuro">Siguiente ronda</Text></Pressable>}
           {mostrarNuevaPartida && <Pressable onPress={jugarDeNuevo} accessibilityRole="button" className="min-h-16 flex-row items-center justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo bg-chido-botonPrincipal px-5 py-4"><Ionicons name="refresh-outline" size={28} color={colores.textoSobreOscuro} /><Text className="ml-3 text-center text-xl font-extrabold text-chido-texto-sobre-oscuro">Nueva partida recreativa</Text></Pressable>}
@@ -226,14 +228,15 @@ export default function Tateti() {
           <Text className="text-4xl font-extrabold text-chido-texto-sobre-oscuro">Ronda {partida.ronda} de 5</Text>
           <Text className="mt-1 text-2xl font-extrabold text-chido-texto-sobre-oscuro">Vos {partida.puntosCliente} - {partida.puntosAplicacion} Aplicación</Text>
         </View>
-        <View className="flex-1 items-center justify-center">
+        <View onLayout={({ nativeEvent }) => setAltoTableroDisponible(Math.floor(nativeEvent.layout.height))} className="relative flex-1 items-center justify-center">
           <View style={{ width: tableroSize, height: tableroSize }} className="flex-row flex-wrap overflow-hidden rounded-3xl border-4 border-chido-texto-secundario-alternativo bg-chido-cabecera">
             {partida.tablero.map((marca, indice) => <Pressable key={indice} accessibilityRole="button" accessibilityLabel={`Casilla ${indice + 1}${marca ? `, ${marca}` : ''}`} disabled={!intento || finalizado || guardando || partida.estadoRonda !== 'en_curso' || marca !== null} onPress={() => void elegirCasilla(indice)} className="h-1/3 w-1/3 items-center justify-center border border-chido-borde-naranja">
               <Text className={`text-7xl font-extrabold ${marca === 'X' ? 'text-chido-aviso' : 'text-chido-texto-secundario-alternativo'}`}>{marca ?? ''}</Text>
             </Pressable>)}
           </View>
+          {guardando && <ChidoLoaderOverlay mensaje="La aplicación está pensando…" />}
         </View>
-        {rondaTerminada && puedeAvanzar ? <Pressable disabled={guardando} onPress={() => void siguienteRonda()} accessibilityRole="button" className={`min-h-16 flex-row items-center justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo px-5 py-4 ${guardando ? 'bg-chido-cabecera opacity-60' : 'bg-chido-botonPrincipal'}`}><Ionicons name="arrow-forward-circle-outline" size={28} color={colores.textoSobreOscuro} /><Text className="ml-3 text-center text-xl font-extrabold text-chido-texto-sobre-oscuro">Siguiente ronda</Text></Pressable> : <View className="min-h-16 items-center justify-center">{guardando && <ChidoLoader mensaje="La aplicación está pensando…" />}</View>}
+        {rondaTerminada && puedeAvanzar ? <Pressable disabled={guardando} onPress={() => void siguienteRonda()} accessibilityRole="button" className={`min-h-16 flex-row items-center justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo px-5 py-4 ${guardando ? 'bg-chido-cabecera opacity-60' : 'bg-chido-botonPrincipal'}`}><Ionicons name="arrow-forward-circle-outline" size={28} color={colores.textoSobreOscuro} /><Text className="ml-3 text-center text-xl font-extrabold text-chido-texto-sobre-oscuro">Siguiente ronda</Text></Pressable> : <View className="min-h-16" />}
       </View>
     </SafeAreaView>
   );

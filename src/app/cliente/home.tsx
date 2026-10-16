@@ -119,7 +119,6 @@ export default function HomeCliente() {
                 <Ionicons name="receipt-outline" size={52} color={colores.textoSobreOscuro} />
                 <View className="ml-4 flex-1">
                   <Text className="font-extrabold text-chido-texto-sobre-oscuro" style={{ fontSize: 34, lineHeight: 40 }}>Mi pedido</Text>
-                  <Text className="mt-1 text-base font-bold text-chido-texto-secundario-sobre-oscuro">{pedidoConfirmado ? 'Encuesta, juegos y cuenta' : errorPedido ?? 'Se habilita al confirmar tu pedido'}</Text>
                 </View>
                 <Ionicons name={pedidoConfirmado ? 'chevron-forward' : 'lock-closed-outline'} size={30} color={colores.textoSobreOscuro} />
               </View>
@@ -137,11 +136,11 @@ export default function HomeCliente() {
                 <Ionicons name="game-controller-outline" size={52} color={colores.textoSobreOscuro} />
                 <View className="ml-4 flex-1">
                   <Text className="font-extrabold text-chido-texto-sobre-oscuro" style={{ fontSize: 34, lineHeight: 40 }}>Juegos</Text>
-                  <Text className="mt-1 text-base font-bold text-chido-texto-secundario-sobre-oscuro">{pedidoConfirmado ? pedidoConfirmado.descuento_porcentaje > 0 ? `Ya tenés ${pedidoConfirmado.descuento_porcentaje}% de descuento` : 'Jugá por descuentos para tu cuenta' : errorPedido ?? 'Se habilitan al confirmar tu pedido'}</Text>
                 </View>
                 <Ionicons name={pedidoConfirmado ? 'chevron-forward' : 'lock-closed-outline'} size={30} color={colores.textoSobreOscuro} />
               </View>
             </Pressable>
+            {errorPedido && <View className="rounded-2xl bg-chido-error p-4"><Text className="text-center text-base font-bold text-chido-texto-sobre-oscuro">{errorPedido}</Text></View>}
           </>
         )}
         <Pressable accessibilityRole="button" accessibilityLabel="Solicitar una mesa" disabled={solicitandoMesa} onPress={() => void solicitarUnaMesa()} className="rounded-2xl border-2 border-white/70 bg-chido-cabecera" style={tarjeta}>
@@ -149,7 +148,6 @@ export default function HomeCliente() {
             <Ionicons name="people-outline" size={52} color={colores.textoSobreOscuro} />
             <View className="ml-4 flex-1">
               <Text className="font-extrabold text-chido-texto-sobre-oscuro" style={{ fontSize: 34, lineHeight: 40 }}>Solicitar mesa</Text>
-              <Text className="mt-1 text-base font-bold text-chido-texto-secundario-sobre-oscuro">El metre te asignará una mesa disponible</Text>
             </View>
             <Ionicons name="chevron-forward" size={30} color={colores.textoSobreOscuro} />
           </View>}

@@ -142,9 +142,10 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 
 ### Cantinero
 
-| Alta de bebida |
-| :---: |
-| <img width="200" alt="Alta de Bebida" src="https://github.com/user-attachments/assets/2eea65b9-9658-4b4e-badd-e5fb23a6a419" /> |
+| Home | Alta de bebida | Bebidas entrantes | Ver carta |
+| :---: | :---: | :---: | :---: |
+| <img width="200" alt="Home Cantinero" src="https://github.com/user-attachments/assets/be86f032-0d62-43a4-8985-510324f1cb2e" /> | <img width="200" alt="Alta de Bebida" src="https://github.com/user-attachments/assets/2eea65b9-9658-4b4e-badd-e5fb23a6a419" /> | <img width="200" alt="Bebidas Entrantes" src="https://github.com/user-attachments/assets/d78ca99b-d136-4d8c-940b-0dc93f498bde" /> | <img width="200" alt="Ver Carta" src="https://github.com/user-attachments/assets/720ddbc6-fc72-4ffb-881c-4b19e8b3dad8" /> |
+---
 
 ### Cliente
 

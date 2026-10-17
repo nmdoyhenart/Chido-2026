@@ -22,7 +22,7 @@ export default function HomeCliente() {
   const [solicitandoMesa, setSolicitandoMesa] = useState(false);
   const [avisoMesa, setAvisoMesa] = useState<string | null>(null);
   const [pedidoConJuegos, setPedidoConJuegos] = useState<{ id: string; descuento_porcentaje: number } | null>(null);
-  const [pedidoActivo, setPedidoActivo] = useState<{ id: string } | null>(null);
+  const [pedidoActivo, setPedidoActivo] = useState<{ id: string; estado: string } | null>(null);
   const [cargandoPedido, setCargandoPedido] = useState(true);
   const [errorPedido, setErrorPedido] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
@@ -123,17 +123,21 @@ export default function HomeCliente() {
           <>
             <Pressable
               accessibilityRole="button"
-               accessibilityLabel={pedidoActivo ? 'Ver mi pedido' : 'No hay un pedido activo'}
+                accessibilityLabel={pedidoActivo ? pedidoActivo.estado === 'rechazado' ? 'Modificar pedido rechazado' : 'Ver mi pedido' : 'No hay un pedido activo'}
                accessibilityState={{ disabled: !pedidoActivo }}
                disabled={!pedidoActivo}
                className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera ${pedidoActivo ? '' : 'opacity-60'}`}
                style={tarjeta}
-               onPress={() => pedidoActivo && router.push({ pathname: '/cliente/pedido-realizado', params: { pedidoId: pedidoActivo.id } })}
+                onPress={() => pedidoActivo && router.push(
+                  pedidoActivo.estado === 'rechazado'
+                    ? { pathname: '/cliente/estado-pedido', params: { pedidoId: pedidoActivo.id } }
+                    : { pathname: '/cliente/pedido-realizado', params: { pedidoId: pedidoActivo.id } }
+                )}
             >
               <View className="flex-row items-center">
                 <Ionicons name="receipt-outline" size={iconoTarjeta}color={colores.textoSobreOscuro} />
                 <View className="ml-4 flex-1">
-                  <Text className="font-extrabold text-chido-texto-sobre-oscuro" style={tituloTarjeta}>Mi pedido</Text>
+                  <Text className="font-extrabold text-chido-texto-sobre-oscuro" style={tituloTarjeta}>{pedidoActivo?.estado === 'rechazado' ? 'Modificar pedido' : 'Mi pedido'}</Text>
                 </View>
                  <Ionicons name={pedidoActivo ? 'chevron-forward' : 'lock-closed-outline'} size={30} color={colores.textoSobreOscuro} />
               </View>

@@ -216,7 +216,7 @@ export default function MenuCliente() {
           className="flex-1"
           data={productosFiltrados}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+          contentContainerStyle={{ padding: 20, paddingBottom: Math.max(insets.bottom, 40) }}
           snapToAlignment="start"
           decelerationRate="fast"
           snapToInterval={ITEM_HEIGHT + ITEM_MARGIN}

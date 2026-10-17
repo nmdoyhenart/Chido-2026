@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, Pressable, Text, useWindowDimensions, Vibration, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image, Pressable, ScrollView, Text, useWindowDimensions, Vibration, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Line } from 'react-native-svg';
 import { Header } from '../../../components/Header';
 import ChidoLoader from '../../../components/ui/ChidoLoader';
@@ -35,6 +35,7 @@ function FiguraAhorcado({ errores }: { errores: number }) {
 
 export default function Ahorcado() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { pedidoId } = useLocalSearchParams<{ pedidoId: string }>();
   const { height, width } = useWindowDimensions();
   const [juego, setJuego] = useState<EstadoAhorcado | null>(null);
@@ -109,7 +110,8 @@ export default function Ahorcado() {
     return (
       <SafeAreaView className="flex-1 bg-chido-fondo" edges={['left', 'right', 'bottom']}>
         <Header userName="Cliente" role="Ahorcado" />
-        <View className="flex-1 px-5 py-4">
+        <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingTop: 16, paddingBottom: Math.max(insets.bottom, 16) }} showsVerticalScrollIndicator={false}>
+          <View className="flex-1">
           <Pressable onPress={() => router.back()} accessibilityRole="button" className="min-h-12 self-start flex-row items-center rounded-xl bg-chido-acento px-4"><Ionicons name="arrow-back" size={22} color={colores.textoSobreOscuro} /><Text className="ml-2 text-base font-bold text-chido-texto-sobre-oscuro">Volver a juegos</Text></Pressable>
           <View className="flex-1 justify-center">
             <Image source={mascota} resizeMode="contain" style={{ width: tamanioMascotaFinal, height: tamanioMascotaFinal }} className="mb-3 self-center" />
@@ -121,7 +123,8 @@ export default function Ahorcado() {
             </View>
           </View>
           <Pressable onPress={iniciarRecreativo} accessibilityRole="button" className="min-h-16 flex-row items-center justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo bg-chido-botonPrincipal px-5 py-4"><Ionicons name="refresh-outline" size={28} color={colores.textoSobreOscuro} /><Text className="ml-3 text-xl font-extrabold text-chido-texto-sobre-oscuro">Nueva partida recreativa</Text></Pressable>
-        </View>
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -129,7 +132,8 @@ export default function Ahorcado() {
   return (
     <SafeAreaView className="flex-1 bg-chido-fondo" edges={['left', 'right', 'bottom']}>
       <Header userName="Cliente" role="Ahorcado" />
-      <View className="relative flex-1 px-5 py-4">
+      <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingTop: 16, paddingBottom: Math.max(insets.bottom, 16) }} showsVerticalScrollIndicator={false}>
+        <View className="relative flex-1">
         <Pressable onPress={() => router.back()} accessibilityRole="button" className="min-h-12 self-start flex-row items-center rounded-xl bg-chido-acento px-4"><Ionicons name="arrow-back" size={22} color={colores.textoSobreOscuro} /><Text className="ml-2 text-base font-bold text-chido-texto-sobre-oscuro">Volver a juegos</Text></Pressable>
         <View className="mt-4 rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera p-4"><Text className="text-5xl font-extrabold text-chido-texto-sobre-oscuro">Ahorcado</Text><Text className="mt-2 text-2xl text-chido-texto-secundario-sobre-oscuro">Categoría: {categoria || 'Restaurante mexicano'}</Text></View>
         {mensajeError && <View className="mt-3 rounded-2xl bg-chido-error p-3"><Text className="text-center font-bold text-chido-texto-sobre-oscuro">{mensajeError}</Text></View>}
@@ -139,7 +143,8 @@ export default function Ahorcado() {
           <View className="flex-row flex-wrap justify-center" style={{ columnGap: 8, rowGap: 8 }}>{LETRAS_AHORCADO.map((letra) => <Pressable key={letra} onPress={() => void elegirLetra(letra)} disabled={bloqueado || letrasIntentadas.includes(letra)} accessibilityRole="button" accessibilityLabel={`Letra ${letra}`} style={{ width: anchoTecla, height: altoTecla }} className={`items-center justify-center rounded-xl border-2 border-chido-texto-secundario-alternativo ${letrasIntentadas.includes(letra) ? 'bg-chido-cabecera opacity-50' : 'bg-chido-acento'}`}><Text className="text-xl font-extrabold text-chido-texto-sobre-oscuro">{letra}</Text></Pressable>)}</View>
         </View>
         {bloqueado && <ChidoLoaderOverlay mensaje="Registrando la letra…" />}
-      </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

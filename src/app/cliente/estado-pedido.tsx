@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Image, Text, TouchableOpacity, Vibration, View } from 'react-native';
+import { Image, ScrollView, Text, TouchableOpacity, Vibration, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/Header';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { confirmarRecepcionPedido, getEstadoPedido, getEstadoPedidoAnonimo, suscribirEstadoPedido } from '../../services/pedidos.service';
 import { colores } from '../../theme/colores';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const textosEstado: Record<string, string> = {
   pendiente_mozo: 'Esperando confirmación del mozo.',
@@ -18,6 +19,7 @@ const textosEstado: Record<string, string> = {
 
 export default function EstadoPedido() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { usuario } = useAppSession();
   const params = useLocalSearchParams();
   const pedidoId = Array.isArray(params.pedidoId) ? params.pedidoId[0] : params.pedidoId;
@@ -81,7 +83,12 @@ export default function EstadoPedido() {
   return (
     <View className="flex-1 bg-chido-fondo">
       <Header userName="Cliente" role="Tu Pedido" />
-      <View className="flex-1 items-center justify-center p-4">
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 16, paddingBottom: Math.max(insets.bottom, 16) }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="items-center">
         {estado === 'pendiente_mozo' || estado === 'confirmado' ? (
           <Image source={require('../../../assets/images/mascota-espera.png')} style={{ width: '100%', height: 350 }} resizeMode="contain" />
         ) : (
@@ -105,7 +112,8 @@ export default function EstadoPedido() {
             <Text className="text-center text-lg font-bold text-chido-texto-sobre-oscuro">Modificar pedido</Text>
           </TouchableOpacity>
         )}
-      </View>
+        </View>
+      </ScrollView>
     </View>
   );
 }

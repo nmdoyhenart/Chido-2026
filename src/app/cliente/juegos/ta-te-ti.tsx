@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, Pressable, Text, useWindowDimensions, Vibration, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image, Pressable, ScrollView, Text, useWindowDimensions, Vibration, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '../../../components/Header';
 import ChidoLoader from '../../../components/ui/ChidoLoader';
 import ChidoLoaderOverlay from '../../../components/ui/ChidoLoaderOverlay';
@@ -39,6 +39,7 @@ function mensajeDeRonda(estadoRonda: EstadoRondaTateti) {
 
 export default function Tateti() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { height, width } = useWindowDimensions();
   const { pedidoId } = useLocalSearchParams<{ pedidoId: string }>();
   const [intento, setIntento] = useState<IntentoJuego | null>(null);
@@ -194,7 +195,8 @@ export default function Tateti() {
     return (
       <SafeAreaView className="flex-1 bg-chido-fondo" edges={['left', 'right', 'bottom']}>
         <Header userName="Cliente" role="Ta-te-ti" />
-        <View className="flex-1 px-5 py-4">
+        <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingTop: 16, paddingBottom: Math.max(insets.bottom, 16) }} showsVerticalScrollIndicator={false}>
+          <View className="flex-1">
           <Pressable onPress={() => router.back()} accessibilityRole="button" className="min-h-12 self-start flex-row items-center rounded-xl bg-chido-acento px-4"><Ionicons name="arrow-back" size={22} color={colores.textoSobreOscuro} /><Text className="ml-2 text-base font-bold text-chido-texto-sobre-oscuro">Volver a juegos</Text></Pressable>
           <View className="relative flex-1 justify-center">
             <Image source={mascotaFinal} resizeMode="contain" style={{ width: tamanioMascotaFinal, height: tamanioMascotaFinal }} className="mb-3 self-center" />
@@ -209,7 +211,8 @@ export default function Tateti() {
           </View>
           {puedeAvanzar && <Pressable disabled={guardando} onPress={() => void siguienteRonda()} accessibilityRole="button" className={`min-h-16 flex-row items-center justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo px-5 py-4 ${guardando ? 'bg-chido-cabecera opacity-60' : 'bg-chido-botonPrincipal'}`}><Ionicons name="arrow-forward-circle-outline" size={28} color={colores.textoSobreOscuro} /><Text className="ml-3 text-center text-xl font-extrabold text-chido-texto-sobre-oscuro">Siguiente ronda</Text></Pressable>}
           {mostrarNuevaPartida && <Pressable onPress={jugarDeNuevo} accessibilityRole="button" className="min-h-16 flex-row items-center justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo bg-chido-botonPrincipal px-5 py-4"><Ionicons name="refresh-outline" size={28} color={colores.textoSobreOscuro} /><Text className="ml-3 text-center text-xl font-extrabold text-chido-texto-sobre-oscuro">Nueva partida recreativa</Text></Pressable>}
-        </View>
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -217,7 +220,8 @@ export default function Tateti() {
   return (
     <SafeAreaView className="flex-1 bg-chido-fondo" edges={['left', 'right', 'bottom']}>
       <Header userName="Cliente" role="Ta-te-ti" />
-      <View className="flex-1 px-5 py-4">
+      <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingTop: 16, paddingBottom: Math.max(insets.bottom, 16) }} showsVerticalScrollIndicator={false}>
+        <View className="flex-1">
         <Pressable onPress={() => router.back()} accessibilityRole="button" className="min-h-12 self-start flex-row items-center rounded-xl bg-chido-acento px-4"><Ionicons name="arrow-back" size={22} color={colores.textoSobreOscuro} /><Text className="ml-2 text-base font-bold text-chido-texto-sobre-oscuro">Volver a juegos</Text></Pressable>
         <View className="mt-4 rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera p-4">
           <Text className="text-5xl font-extrabold text-chido-texto-sobre-oscuro">Ta-te-ti</Text>
@@ -237,7 +241,8 @@ export default function Tateti() {
           {guardando && <ChidoLoaderOverlay mensaje="La aplicación está pensando…" />}
         </View>
         {rondaTerminada && puedeAvanzar ? <Pressable disabled={guardando} onPress={() => void siguienteRonda()} accessibilityRole="button" className={`min-h-16 flex-row items-center justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo px-5 py-4 ${guardando ? 'bg-chido-cabecera opacity-60' : 'bg-chido-botonPrincipal'}`}><Ionicons name="arrow-forward-circle-outline" size={28} color={colores.textoSobreOscuro} /><Text className="ml-3 text-center text-xl font-extrabold text-chido-texto-sobre-oscuro">Siguiente ronda</Text></Pressable> : <View className="min-h-16" />}
-      </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/Header';
@@ -9,6 +10,7 @@ import { colores } from '../../theme/colores';
 
 export default function EsperaClienteRegistrado() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { usuario } = useAppSession();
   const [estado, setEstado] = useState<EstadoListaEsperaCliente | null>(null);
   const [error, setError] = useState('');
@@ -33,7 +35,12 @@ export default function EsperaClienteRegistrado() {
   return <View className="flex-1 bg-chido-fondo">
     <Stack.Screen options={{ headerShown: false }} />
     <Header userName={[usuario?.nombres, usuario?.apellidos].filter(Boolean).join(' ') || 'Cliente'} role="Lista de espera" />
-    <View className="flex-1 items-center justify-center px-6">
+    <ScrollView
+      className="flex-1"
+      contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 16, paddingBottom: Math.max(insets.bottom, 16) }}
+      showsVerticalScrollIndicator={false}
+    >
+      <View className="items-center">
       <View className="mb-6 h-20 w-20 items-center justify-center rounded-3xl bg-chido-cabecera">
         <Ionicons name={mesaAsignada ? 'restaurant-outline' : 'time-outline'} size={42} color={colores.textoSobreOscuro} />
       </View>
@@ -57,6 +64,7 @@ export default function EsperaClienteRegistrado() {
       <Pressable accessibilityRole="button" onPress={() => router.replace('/cliente/home')} className="mt-5 rounded-2xl border border-white/60 px-6 py-3">
         <Text className="text-center font-bold text-chido-texto-sobre-oscuro">Volver al inicio</Text>
       </Pressable>
-    </View>
+      </View>
+    </ScrollView>
   </View>;
 }

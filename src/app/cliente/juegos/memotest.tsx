@@ -2,8 +2,8 @@ import { Asset } from 'expo-asset';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, Pressable, Text, useWindowDimensions, Vibration, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image, Pressable, ScrollView, Text, useWindowDimensions, Vibration, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '../../../components/Header';
 import ChidoLoader from '../../../components/ui/ChidoLoader';
 import { iniciarMemotest, voltearMemotest } from '../../../services/juegos';
@@ -24,6 +24,7 @@ function obtenerImagenCarta(carta: CartaMemotest | null) {
 
 export default function Memotest() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { pedidoId } = useLocalSearchParams<{ pedidoId: string }>();
   const { height, width } = useWindowDimensions();
   const [juego, setJuego] = useState<EstadoMemotest | null>(null);
@@ -139,7 +140,8 @@ export default function Memotest() {
     return (
       <SafeAreaView className="flex-1 bg-chido-fondo" edges={['left', 'right', 'bottom']}>
         <Header userName="Cliente" role="Memotest" />
-        <View className="flex-1 px-5 py-4">
+        <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingTop: 16, paddingBottom: Math.max(insets.bottom, 16) }} showsVerticalScrollIndicator={false}>
+          <View className="flex-1">
           <Pressable onPress={() => router.back()} accessibilityRole="button" className="min-h-12 self-start flex-row items-center rounded-xl bg-chido-acento px-4">
             <Ionicons name="arrow-back" size={22} color={colores.textoSobreOscuro} />
             <Text className="ml-2 text-base font-bold text-chido-texto-sobre-oscuro">Volver a juegos</Text>
@@ -157,7 +159,8 @@ export default function Memotest() {
             <Ionicons name="refresh-outline" size={28} color={colores.textoSobreOscuro} />
             <Text className="ml-3 text-xl font-extrabold text-chido-texto-sobre-oscuro">Nueva partida recreativa</Text>
           </Pressable>
-        </View>
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -165,7 +168,8 @@ export default function Memotest() {
   return (
     <SafeAreaView className="flex-1 bg-chido-fondo" edges={['left', 'right', 'bottom']}>
       <Header userName="Cliente" role="Memotest" />
-      <View className="flex-1 px-5 py-4">
+      <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingTop: 16, paddingBottom: Math.max(insets.bottom, 16) }} showsVerticalScrollIndicator={false}>
+        <View className="flex-1">
         <Pressable onPress={() => router.back()} accessibilityRole="button" className="min-h-12 self-start flex-row items-center rounded-xl bg-chido-acento px-4">
           <Ionicons name="arrow-back" size={22} color={colores.textoSobreOscuro} />
           <Text className="ml-2 text-base font-bold text-chido-texto-sobre-oscuro">Volver a juegos</Text>
@@ -192,7 +196,8 @@ export default function Memotest() {
             );
           })}
         </View>
-      </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

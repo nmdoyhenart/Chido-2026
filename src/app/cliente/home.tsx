@@ -108,7 +108,7 @@ export default function HomeCliente() {
             <Ionicons name="chevron-forward" size={30} color={colores.textoSobreOscuro} />
           </View>
         </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="Escanear código QR para ver encuestas" className="rounded-2xl border-2 border-white/70 bg-chido-cabecera" style={tarjeta} onPress={() => router.push('/encuestas/acceso')}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Ver encuestas" className="rounded-2xl border-2 border-white/70 bg-chido-cabecera" style={tarjeta} onPress={() => router.push('/encuestas/previas')}>
           <View className="flex-row items-center">
             <Ionicons name="bar-chart-outline" size={52} color={colores.textoSobreOscuro} />
             <View className="ml-4 flex-1"><Text className="font-extrabold text-chido-texto-sobre-oscuro" style={{ fontSize: 34, lineHeight: 40 }}>Ver encuestas</Text></View>

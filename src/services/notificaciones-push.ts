@@ -10,21 +10,23 @@ let registroEnCurso: Promise<boolean> | null = null;
 let moduloNotificaciones: typeof import('expo-notifications') | null | undefined;
 
 function obtenerModuloNotificaciones() {
-  // Expo Go SDK 53 no incluye el soporte de notificaciones push remotas Android.
-  if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient) return null;
   if (moduloNotificaciones) return moduloNotificaciones;
 
-  // eslint-disable-next-line @typescript-eslint/no-require-imports -- Debe evaluarse sólo fuera de Expo Go.
-  moduloNotificaciones = require('expo-notifications') as typeof import('expo-notifications');
-  moduloNotificaciones.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowBanner: true,
-      shouldShowList: true,
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-    }),
-  });
-  return moduloNotificaciones;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    moduloNotificaciones = require('expo-notifications') as typeof import('expo-notifications');
+    moduloNotificaciones.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+      }),
+    });
+    return moduloNotificaciones;
+  } catch {
+    return null;
+  }
 }
 
 type RespuestaFuncion = { ok?: boolean; mensaje?: string };
@@ -42,35 +44,76 @@ async function invocarFuncion(nombre: 'registrar-dispositivo-push' | 'desvincula
 export async function configurarCanalNotificaciones() {
   const notifications = obtenerModuloNotificaciones();
   if (!notifications || Platform.OS !== 'android') return;
-  await notifications.setNotificationChannelAsync(CANAL_ANDROID, {
-    name: 'Avisos de Chido',
-    importance: notifications.AndroidImportance.HIGH,
-    vibrationPattern: [0, 250, 180, 250],
-    lockscreenVisibility: notifications.AndroidNotificationVisibility.PUBLIC,
-  });
+  try {
+    await notifications.setNotificationChannelAsync(CANAL_ANDROID, {
+      name: 'Avisos de Chido',
+      importance: notifications.AndroidImportance.HIGH,
+      vibrationPattern: [0, 250, 180, 250],
+      lockscreenVisibility: notifications.AndroidNotificationVisibility.PUBLIC,
+    });
+  } catch {
+    // Canal opcional según versión de Android
+  }
 }
 
 export async function permisoNotificacionesConcedido() {
   const notifications = obtenerModuloNotificaciones();
-  if (!notifications || Platform.OS !== 'android' || !Device.isDevice) return false;
-  const permiso = await notifications.getPermissionsAsync();
-  return permiso.granted;
+  if (!notifications || Platform.OS !== 'android') return false;
+  try {
+    const permiso = await notifications.getPermissionsAsync();
+    return permiso.granted;
+  } catch {
+    return false;
+  }
 }
 
 export async function solicitarPermisoNotificaciones() {
   const notifications = obtenerModuloNotificaciones();
-  if (!notifications || Platform.OS !== 'android' || !Device.isDevice) return false;
-  const actual = await notifications.getPermissionsAsync();
-  if (actual.granted) return true;
-  const solicitado = await notifications.requestPermissionsAsync();
-  return solicitado.granted;
+  if (!notifications || Platform.OS !== 'android') return false;
+  try {
+    const actual = await notifications.getPermissionsAsync();
+    if (actual.granted) return true;
+    const solicitado = await notifications.requestPermissionsAsync();
+    return solicitado.granted;
+  } catch {
+    return false;
+  }
 }
 
 export async function obtenerTokenFirebase() {
+  if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient) return null;
   const notifications = obtenerModuloNotificaciones();
   if (!notifications || Platform.OS !== 'android' || !Device.isDevice) return null;
-  const token = await notifications.getDevicePushTokenAsync();
-  return token.type === 'android' && typeof token.data === 'string' && token.data.length > 0 ? token.data : null;
+  try {
+    const token = await notifications.getDevicePushTokenAsync();
+    return token.type === 'android' && typeof token.data === 'string' && token.data.length > 0 ? token.data : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function dispararNotificacionLocal(
+  titulo: string,
+  cuerpo: string,
+  datos?: DatosNotificacionPush,
+) {
+  const notifications = obtenerModuloNotificaciones();
+  if (!notifications) return;
+  try {
+    await configurarCanalNotificaciones();
+    await notifications.scheduleNotificationAsync({
+      content: {
+        title: titulo,
+        body: cuerpo,
+        data: datos ?? {},
+        sound: true,
+        vibrate: [0, 250, 180, 250],
+      },
+      trigger: null,
+    });
+  } catch (error) {
+    console.log('Aviso al mostrar notificación local:', error);
+  }
 }
 
 export async function registrarDispositivoPush() {

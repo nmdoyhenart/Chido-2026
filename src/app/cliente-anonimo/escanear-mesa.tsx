@@ -8,10 +8,9 @@ import { obtenerClienteEnListaPorId } from '../../../lib/clientesAnonimos';
 import { parseQrPayload } from '../../utils/qr';
 import { QRScanner } from '../../components/ui/QRScanner';
 import { confirmarMesaAnonima } from '../../services/pedidos.service';
+import { consultarDisponibilidadMesaPorQr } from '../../services/mesas';
 
 const CLIENTE_ANONIMO_ID_KEY = 'cliente_anonimo_id';
-const CLIENTE_ANONIMO_NOMBRE_KEY = 'cliente_anonimo_nombre';
-const CLIENTE_ANONIMO_FOTO_KEY = 'cliente_anonimo_foto_url';
 
 export default function EscanearMesa() {
 
@@ -32,12 +31,8 @@ export default function EscanearMesa() {
 
             try {
                 const clienteEnLista = await obtenerClienteEnListaPorId(identificador);
-                if (!clienteEnLista || clienteEnLista.estado !== 'asignado' || !clienteEnLista.mesa_id) {
-                    setEscaneando(false);
-                    setMensaje('Todavía no tenés una mesa asignada.');
-                    return;
-                }
-                miMesaId.current = clienteEnLista.mesa_id;
+                if (clienteEnLista?.estado === 'asignado' && clienteEnLista.mesa_id) miMesaId.current = clienteEnLista.mesa_id;
+                else setMensaje('Escaneá la mesa para verificar si quedó libre.');
             } catch (err) {
                 console.error(err);
                 setEscaneando(false);
@@ -47,7 +42,6 @@ export default function EscanearMesa() {
     }, []);
 
     const abrirScanner = () => {
-        if (!miMesaId.current) return;
         setMensaje('');
         setEscaneando(true);
     };
@@ -58,18 +52,22 @@ export default function EscanearMesa() {
     };
 
     const confirmarMesa = async (data: string) => {
-        if (!miMesaId.current) {
-            throw new Error('Estamos verificando tu mesa asignada. Probá de nuevo en un momento.');
-        }
-
         const payload = parseQrPayload(data);
 
         if (!payload || payload.tipo !== 'mesa') {
             throw new Error('Este código QR no corresponde a una mesa.');
         }
 
-        if (payload.mesaId !== miMesaId.current) {
+        if (miMesaId.current && payload.mesaId !== miMesaId.current) {
             throw new Error('Esta no es tu mesa asignada. Fijate el número con el metre.');
+        }
+
+        if (!miMesaId.current) {
+            const mesa = await consultarDisponibilidadMesaPorQr(data);
+            if (mesa.disponibilidad !== 'vacía') throw new Error(`La mesa ${mesa.numero} todavía está ocupada.`);
+            mesaConfirmada.current = true;
+            setMensaje(`La mesa ${mesa.numero} está libre nuevamente.`);
+            return;
         }
 
         if (!clienteAnonimoId.current) {

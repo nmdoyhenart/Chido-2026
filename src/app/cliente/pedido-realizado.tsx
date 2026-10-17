@@ -1,115 +1,161 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
-import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import { Pressable, ScrollView, Text, Vibration, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '../../components/Header';
-import { colores } from '../../theme/colores';
-import { getEstadoPedido, getEstadoPedidoAnonimo, suscribirEstadoPedido } from '../../services/pedidos.service';
+import ChidoLoader from '../../components/ui/ChidoLoader';
+import { ResultadoModal } from '../../components/ui/ResultadoModal';
+import { useAppSession } from '../../contexts/AppSessionContext';
 import { verificarEncuesta } from '../../services/encuestas.service';
-import { useCallback } from 'react';
+import { confirmarRecepcionPedido, getEstadoPedido, getEstadoPedidoAnonimo, suscribirEstadoPedido } from '../../services/pedidos.service';
+import { colores } from '../../theme/colores';
 
 export default function PedidoRealizado() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  
-  // Safe extraction of params (handle arrays properly)
+  const { usuario } = useAppSession();
   const params = useLocalSearchParams();
   const pedidoId = Array.isArray(params.pedidoId) ? params.pedidoId[0] : params.pedidoId;
-  const clienteAnonimoId = Array.isArray(params.clienteAnonimoId) ? params.clienteAnonimoId[0] : params.clienteAnonimoId;
-  
-  const [estado, setEstado] = useState<string>('pendiente_mozo');
-  const [cargando, setCargando] = useState(true);
+  const rawAnonimoId = Array.isArray(params.clienteAnonimoId) ? params.clienteAnonimoId[0] : params.clienteAnonimoId;
+  const clienteAnonimoId = !usuario?.id && rawAnonimoId ? rawAnonimoId : undefined;
+  const [cargando, setCargando] = useState(() => Boolean(pedidoId));
   const [encuestaCompletada, setEncuestaCompletada] = useState(false);
+  const [estadoPedido, setEstadoPedido] = useState<string | null>(null);
+  const estadoLegible: Record<string, string> = {
+    pendiente_mozo: 'Esperando confirmación del mozo',
+    confirmado: 'Pedido confirmado · enviado a los sectores',
+    en_preparacion: 'Tu pedido está en preparación',
+    entregado: 'El mozo marcó el pedido como entregado',
+    recibido: 'Recepción confirmada',
+    rechazado: 'Pedido rechazado · podés modificarlo',
+  };
 
-  // Verificar si la encuesta ya se llenó cada vez que volvemos a esta pantalla
-  useFocusEffect(
-    useCallback(() => {
-      if (pedidoId) {
-        import('@react-native-async-storage/async-storage').then(m => m.default.getItem(`encuesta_completada_${pedidoId}`).then(val => { if (val === 'true') setEncuestaCompletada(true); else verificarEncuesta(pedidoId).then(setEncuestaCompletada); }))
-      }
-    }, [pedidoId])
-  );
-
-  useEffect(() => {
-    if (!pedidoId) return;
-
-    const fetchEstado = async () => {
-      try {
-        const estadoActual = clienteAnonimoId
-          ? await getEstadoPedidoAnonimo(clienteAnonimoId, pedidoId)
-          : await getEstadoPedido(pedidoId);
-        setEstado(estadoActual);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setCargando(false);
-      }
-    };
-    
-    void fetchEstado();
-    
-    const intervalo = setInterval(() => { void fetchEstado(); }, 5000);
-    const desuscribir = clienteAnonimoId ? () => {} : suscribirEstadoPedido(pedidoId, (nuevoEstado) => {
-      setEstado(nuevoEstado);
-    });
-
-    return () => {
-      clearInterval(intervalo);
-      desuscribir();
-    };
-  }, [pedidoId, clienteAnonimoId]);
-
+  const [confirmandoRecepcion, setConfirmandoRecepcion] = useState(false);
+  const [aviso, setAviso] = useState<string | null>(null);
   const [altoDisponible, setAltoDisponible] = useState(0);
   const compacto = altoDisponible > 0 && altoDisponible < 620;
   const espacio = compacto ? 10 : 14;
-  const tarjeta = { 
-    flexGrow: 1, 
-    flexBasis: 0, 
-    minHeight: 112, 
-    justifyContent: 'center' as const, 
-    padding: compacto ? 16 : 24 
-  };
+  const tarjeta = { flexGrow: 1, flexBasis: 0, minHeight: 112, justifyContent: 'center' as const, padding: compacto ? 16 : 24 };
 
-  if (cargando) {
-    return (
-      <View className="flex-1 bg-chido-fondo justify-center items-center">
-        <ActivityIndicator size="large" color={colores.textoSobreOscuro} />
-      </View>
-    );
+  useFocusEffect(useCallback(() => {
+    if (!pedidoId) return;
+    void AsyncStorage.getItem(`encuesta_completada_${pedidoId}`).then((valor) => {
+      if (valor === 'true') setEncuestaCompletada(true);
+      else void verificarEncuesta(pedidoId).then(setEncuestaCompletada).catch(() => setEncuestaCompletada(false));
+    });
+  }, [pedidoId]));
+
+  useEffect(() => {
+    if (!pedidoId) return;
+    let activa = true;
+    const consultarEstado = async () => {
+      try {
+        const estadoActual = await (clienteAnonimoId ? getEstadoPedidoAnonimo(clienteAnonimoId, pedidoId) : getEstadoPedido(pedidoId));
+        if (activa) setEstadoPedido(estadoActual);
+      } catch (caught) {
+        console.error(caught);
+      } finally {
+        if (activa) setCargando(false);
+      }
+    };
+    void consultarEstado();
+    const intervalo = setInterval(() => { void consultarEstado(); }, 5000);
+    const desuscribir = clienteAnonimoId ? () => {} : suscribirEstadoPedido(pedidoId, (nuevoEstado) => {
+      if (activa) setEstadoPedido(nuevoEstado);
+    });
+    return () => {
+      activa = false;
+      clearInterval(intervalo);
+      desuscribir();
+    };
+  }, [clienteAnonimoId, pedidoId]);
+
+  if (cargando) return <View className="flex-1 items-center justify-center bg-chido-fondo"><ChidoLoader mensaje="Consultando tu pedido…" /></View>;
+
+  function abrirCuenta() {
+    if (!pedidoId) return;
+    router.push({ pathname: '/cliente/pedir-cuenta', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } });
   }
+
+  async function confirmarRecepcion() {
+    if (!pedidoId || confirmandoRecepcion) return;
+    setConfirmandoRecepcion(true);
+    try {
+      await confirmarRecepcionPedido(pedidoId, clienteAnonimoId);
+      setEstadoPedido('recibido');
+    } catch (error) {
+      Vibration.vibrate(180);
+      setAviso(error instanceof Error ? error.message : 'No se pudo confirmar la recepción del pedido.');
+    } finally {
+      setConfirmandoRecepcion(false);
+    }
+  }
+
+  const puedePedirCuenta = estadoPedido === 'recibido';
 
   return (
     <View className="flex-1 bg-chido-fondo">
       <Header userName="Cliente" role="Tu Mesa" />
-      
       <ScrollView
         className="flex-1"
         onLayout={({ nativeEvent }) => setAltoDisponible(nativeEvent.layout.height)}
-        contentContainerStyle={{ 
-          flexGrow: 1, 
-          gap: espacio, 
-          paddingHorizontal: 16, 
-          paddingTop: espacio, 
-          paddingBottom: Math.max(insets.bottom, espacio) 
+        contentContainerStyle={{
+          flexGrow: 1,
+          gap: espacio,
+          paddingHorizontal: 16,
+          paddingTop: espacio,
+          paddingBottom: Math.max(insets.bottom, espacio)
         }}
         showsVerticalScrollIndicator={false}
         bounces={false}
         overScrollMode="never"
       >
-        <Text 
-          className="text-3xl font-bold text-chido-texto-sobre-oscuro text-center mb-2" 
+        <Text
+          className="text-3xl font-bold text-chido-texto-sobre-oscuro text-center mb-2"
           style={{ paddingVertical: compacto ? 6 : 10 }}
         >
           ¿Qué deseas hacer?
         </Text>
 
-        <Pressable 
-          accessibilityRole="button" 
-          accessibilityLabel="Juegos con premios" 
-          className="rounded-2xl border-2 border-white/70 bg-chido-cabecera" 
-          style={tarjeta} 
-          onPress={() => router.push({ pathname: '/cliente/juegos', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } })}
+        <View accessibilityLiveRegion="polite" className="rounded-xl border border-white/60 bg-chido-superficieTerracota px-4 py-3">
+          <Text className="text-sm font-semibold text-chido-texto-secundario-sobre-oscuro">Estado de tu pedido</Text>
+          <Text className="mt-1 text-lg font-extrabold text-chido-texto-sobre-oscuro">
+            {estadoPedido ? estadoLegible[estadoPedido] ?? 'Actualizando estado…' : 'Actualizando estado…'}
+          </Text>
+        </View>
+
+        {estadoPedido === 'entregado' && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Confirmar recepción del pedido"
+            disabled={confirmandoRecepcion}
+            className="rounded-2xl border-2 border-white/70 bg-chido-exito"
+            style={tarjeta}
+            onPress={() => void confirmarRecepcion()}
+          >
+            {confirmandoRecepcion ? (
+              <ChidoLoader mensaje="Confirmando recepción…" compacto />
+            ) : (
+              <View className="flex-row items-center">
+                <Ionicons name="checkmark-circle-outline" size={52} color={colores.textoSobreOscuro} />
+                <View className="ml-4 flex-1">
+                  <Text className="font-extrabold text-chido-texto-sobre-oscuro" style={{ fontSize: 28, lineHeight: 34 }}>Confirmar recepción</Text>
+                  <Text className="mt-1 text-base font-bold text-chido-texto-secundario-sobre-oscuro">Confirmá que recibiste tu pedido</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={30} color={colores.textoSobreOscuro} />
+              </View>
+            )}
+          </Pressable>
+        )}
+
+        {!clienteAnonimoId && <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Juegos con premios"
+          className="rounded-2xl border-2 border-white/70 bg-chido-cabecera"
+          style={tarjeta}
+          onPress={() => router.push({ pathname: '/cliente/juegos', params: { pedidoId } })}
         >
           <View className="flex-row items-center">
             <Ionicons name="game-controller-outline" size={52} color={colores.textoSobreOscuro} />
@@ -119,14 +165,14 @@ export default function PedidoRealizado() {
             </View>
             <Ionicons name="chevron-forward" size={30} color={colores.textoSobreOscuro} />
           </View>
-        </Pressable>
+        </Pressable>}
 
-        <Pressable 
-          accessibilityRole="button" 
-          accessibilityLabel="Completar encuesta de satisfacción" 
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Completar encuesta de satisfacción"
           disabled={encuestaCompletada}
-          className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera ${encuestaCompletada ? 'opacity-50' : ''}`} 
-          style={tarjeta} 
+          className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera ${encuestaCompletada ? 'opacity-50' : ''}`}
+          style={tarjeta}
           onPress={() => router.push({ pathname: '/cliente/encuesta', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } })}
         >
           <View className="flex-row items-center">
@@ -141,25 +187,30 @@ export default function PedidoRealizado() {
           </View>
         </Pressable>
 
-        <Pressable 
-          accessibilityRole="button" 
-          accessibilityLabel="Pedir la cuenta" 
-          className="rounded-2xl border-2 border-white/70 bg-chido-acento mt-4" 
-          style={tarjeta} 
-          onPress={() => router.push({ pathname: '/cliente/pedir-cuenta', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } })}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Pedir la cuenta"
+          accessibilityState={{ disabled: !puedePedirCuenta }}
+          disabled={!puedePedirCuenta}
+          className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera mt-2 ${puedePedirCuenta ? '' : 'opacity-60'}`}
+          style={tarjeta}
+          onPress={abrirCuenta}
         >
           <View className="flex-row items-center">
             <Ionicons name="receipt-outline" size={52} color={colores.textoSobreOscuro} />
             <View className="ml-4 flex-1">
-              <Text className="font-extrabold text-chido-texto-sobre-oscuro" style={{ fontSize: 34, lineHeight: 40 }}>Pedir cuenta</Text>
-              <Text className="mt-1 text-base font-bold text-chido-texto-sobre-oscuro">Escaneá la propina y finalizá</Text>
+              <Text className="font-extrabold text-chido-texto-sobre-oscuro" style={{ fontSize: 34, lineHeight: 40 }}>
+                Pedir cuenta
+              </Text>
+              <Text className="mt-1 text-base font-bold text-chido-texto-sobre-oscuro">
+                {puedePedirCuenta ? 'Escaneá la propina y pagá tu cuenta' : 'Confirmá primero la recepción del pedido'}
+              </Text>
             </View>
-            <Ionicons name="chevron-forward" size={30} color={colores.textoSobreOscuro} />
+            <Ionicons name={puedePedirCuenta ? 'chevron-forward' : 'lock-closed-outline'} size={30} color={colores.textoSobreOscuro} />
           </View>
         </Pressable>
-
       </ScrollView>
+      <ResultadoModal visible={Boolean(aviso)} tipo="error" titulo="No pudimos confirmar la recepción" mensaje={aviso ?? ''} accion="Entendido" onClose={() => setAviso(null)} />
     </View>
   );
 }
-

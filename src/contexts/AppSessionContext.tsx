@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AppState } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { authService, ErrorAcceso } from '../services/auth.service';
@@ -48,6 +49,7 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
         modoLocal.current = null;
         identidadVerificada.current = usuario.auth_id;
         setEstado({ mode: 'authenticated', role: usuario.perfil, usuario });
+        void AsyncStorage.multiRemove(['cliente_anonimo_id', 'cliente_anonimo_nombre', 'cliente_anonimo_foto_url']).catch(() => undefined);
       }
     } catch (error) {
       if (activa.current && revision.current === numero) {
@@ -111,6 +113,7 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
       if (!activa.current || revision.current !== numero) throw new ErrorAcceso('El ingreso fue interrumpido. Intentá nuevamente.');
       identidadVerificada.current = usuario.auth_id;
       setEstado({ mode: 'authenticated', role: usuario.perfil, usuario });
+      void AsyncStorage.multiRemove(['cliente_anonimo_id', 'cliente_anonimo_nombre', 'cliente_anonimo_foto_url']).catch(() => undefined);
     } catch (error) {
       if (autenticada) await authService.logout().catch(() => undefined);
       identidadVerificada.current = null;

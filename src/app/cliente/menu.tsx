@@ -24,7 +24,7 @@ export default function MenuCliente() {
   const { mesaId: mesaIdParametro, pedidoId, clienteAnonimoId: clienteAnonimoIdParametro } = useLocalSearchParams<{ mesaId?: string; pedidoId?: string; clienteAnonimoId?: string }>();
   const { usuario } = useAppSession();
   const [mesaId, setMesaId] = useState(mesaIdParametro ?? '');
-  const [clienteAnonimoId, setClienteAnonimoId] = useState(clienteAnonimoIdParametro ?? '');
+  const [clienteAnonimoId, setClienteAnonimoId] = useState(usuario?.id ? '' : (clienteAnonimoIdParametro ?? ''));
 
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,12 +58,17 @@ export default function MenuCliente() {
       const { data } = await supabase.from('mesas').select('numero').eq('id', id).single();
       if (activo && data) setMesaNumero(data.numero);
     };
-    void AsyncStorage.getItem('cliente_anonimo_id').then(id => {
-      if (activo && !clienteAnonimoIdParametro && id) setClienteAnonimoId(id);
-    });
+    if (!usuario?.id) {
+      void AsyncStorage.getItem('cliente_anonimo_id').then(id => {
+        if (activo && !clienteAnonimoIdParametro && id) setClienteAnonimoId(id);
+      });
+    } else {
+      setTimeout(() => { if (activo) setClienteAnonimoId(''); }, 0);
+    }
     if (pedidoId) {
-      void (clienteAnonimoIdParametro
-        ? getPedidoRechazadoAnonimo(clienteAnonimoIdParametro, pedidoId)
+      const debeUsarAnonimo = !usuario?.id && !!clienteAnonimoIdParametro;
+      void (debeUsarAnonimo
+        ? getPedidoRechazadoAnonimo(clienteAnonimoIdParametro!, pedidoId)
         : getPedidoRechazado(pedidoId)).then(pedidoAnterior => {
         if (!activo) return;
         setMesaId(pedidoAnterior.mesa_id);
@@ -76,7 +81,7 @@ export default function MenuCliente() {
       if (mesaIdParametro) void mostrarNumeroMesa(mesaIdParametro);
     }
     return () => { activo = false; clearTimeout(cargaInicial); };
-  }, [mesaIdParametro, pedidoId, clienteAnonimoIdParametro]);
+  }, [mesaIdParametro, pedidoId, clienteAnonimoIdParametro, usuario?.id]);
 
   const updateCantidad = (id: string, delta: number) => {
     solicitudId.current = Crypto.randomUUID();
@@ -109,7 +114,8 @@ export default function MenuCliente() {
       Alert.alert('Aviso', 'Agrega productos al pedido.');
       return;
     }
-    if ((!usuario?.id && !clienteAnonimoId) || !mesaId || (pedidoId && !Object.keys(pedido).length)) {
+    const esAnonimo = !usuario?.id && !!clienteAnonimoId;
+    if ((!usuario?.id && !esAnonimo) || !mesaId || (pedidoId && !Object.keys(pedido).length)) {
       Alert.alert('Error', 'No encontramos la mesa o el pedido. Escaneá el QR de tu mesa y volvé a intentarlo.');
       return;
     }
@@ -118,10 +124,10 @@ export default function MenuCliente() {
       enviandoRef.current = true;
       setEnviando(true);
       const detalles = Object.entries(pedido).map(([id, cantidad]) => ({ producto_id: id, cantidad }));
-      const guardado = clienteAnonimoId
+      const guardado = esAnonimo
         ? await crearPedidoAnonimo(clienteAnonimoId, mesaId, solicitudId.current, detalles, pedidoId)
         : await crearPedido(mesaId, solicitudId.current, detalles, pedidoId);
-      router.replace({ pathname: '/cliente/estado-pedido', params: { pedidoId: guardado.pedido_id, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } });
+      router.replace({ pathname: '/cliente/estado-pedido', params: { pedidoId: guardado.pedido_id, ...(esAnonimo ? { clienteAnonimoId } : {}) } });
     } catch (error: unknown) {
       Alert.alert('No se pudo enviar el pedido', error instanceof Error ? error.message : 'Intentá nuevamente.');
     } finally {
@@ -176,19 +182,19 @@ export default function MenuCliente() {
             className={`px-4 py-2 rounded-full border-2 ${filtro === 'plato' ? 'bg-chido-texto-secundario-sobre-oscuro border-chido-texto-secundario-sobre-oscuro' : 'bg-chido-acento border-chido-texto-secundario-sobre-oscuro'}`}
             onPress={() => setFiltro(filtro === 'plato' ? 'todos' : 'plato')}
           >
-            <Text className={`font-bold ${filtro === 'plato' ? 'text-chido-cabecera' : 'text-chido-texto-secundario-sobre-oscuro'}`}>Platos</Text>
+            <Text className={`font-bold ${filtro === 'plato' ? 'text-chido-cabecera' : 'text-chido-texto-secundario-sobre-oscuro'}`}>Plato</Text>
           </TouchableOpacity>
           <TouchableOpacity
             className={`px-4 py-2 rounded-full border-2 ${filtro === 'postre' ? 'bg-chido-texto-secundario-sobre-oscuro border-chido-texto-secundario-sobre-oscuro' : 'bg-chido-acento border-chido-texto-secundario-sobre-oscuro'}`}
             onPress={() => setFiltro(filtro === 'postre' ? 'todos' : 'postre')}
           >
-            <Text className={`font-bold ${filtro === 'postre' ? 'text-chido-cabecera' : 'text-chido-texto-secundario-sobre-oscuro'}`}>Postres</Text>
+            <Text className={`font-bold ${filtro === 'postre' ? 'text-chido-cabecera' : 'text-chido-texto-secundario-sobre-oscuro'}`}>Postre</Text>
           </TouchableOpacity>
           <TouchableOpacity
             className={`px-4 py-2 rounded-full border-2 ${filtro === 'bebida' ? 'bg-chido-texto-secundario-sobre-oscuro border-chido-texto-secundario-sobre-oscuro' : 'bg-chido-acento border-chido-texto-secundario-sobre-oscuro'}`}
             onPress={() => setFiltro(filtro === 'bebida' ? 'todos' : 'bebida')}
           >
-            <Text className={`font-bold ${filtro === 'bebida' ? 'text-chido-cabecera' : 'text-chido-texto-secundario-sobre-oscuro'}`}>Bebidas</Text>
+            <Text className={`font-bold ${filtro === 'bebida' ? 'text-chido-cabecera' : 'text-chido-texto-secundario-sobre-oscuro'}`}>Bebida</Text>
           </TouchableOpacity>
         </ScrollView>
 

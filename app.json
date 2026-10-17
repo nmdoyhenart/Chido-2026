@@ -7,17 +7,16 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/logo.png",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/images/logo.png"
     },
     "android": {
       "package": "com.chido.tfi2026",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#CF6F37",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
@@ -28,20 +27,23 @@
         "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
-      ]
+      ],
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/logo.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "backgroundColor": "#CF6F37",
+          "image": "./assets/images/logo.png",
+          "imageWidth": 200
         }
       ],
       "expo-font",
@@ -56,6 +58,8 @@
       [
         "expo-notifications",
         {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#CF6F37",
           "defaultChannel": "chido-avisos"
         }
       ],
@@ -74,6 +78,9 @@
       "eas": {
         "projectId": "e812e9d4-fd85-4a2e-aa0c-f3f9c3486cf6"
       }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/e812e9d4-fd85-4a2e-aa0c-f3f9c3486cf6"
     }
   }
 }

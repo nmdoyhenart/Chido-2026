@@ -111,13 +111,6 @@ export default function PedidoRealizado() {
           paddingBottom: Math.max(insets.bottom, espacio)
         }}
       >
-        <Text
-          className={`${muyCompacto ? 'text-2xl' : 'text-3xl'} font-bold text-chido-texto-sobre-oscuro text-center`}
-          style={{ paddingVertical: compacto ? 0 : 10 }}
-        >
-          ¿Qué deseas hacer?
-        </Text>
-
         <View accessibilityLiveRegion="polite" className={`rounded-xl border border-white/60 bg-chido-superficieTerracota px-4 ${compacto ? 'py-2' : 'py-3'}`}>
           <Text className="text-sm font-semibold text-chido-texto-secundario-sobre-oscuro">Estado de tu pedido</Text>
           <Text className="mt-1 text-lg font-extrabold text-chido-texto-sobre-oscuro">

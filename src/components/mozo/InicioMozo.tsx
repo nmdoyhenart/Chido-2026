@@ -13,12 +13,16 @@ export default function InicioMozo({ usuario, role }: any) {
   const insets = useSafeAreaInsets();
   const [stats, setStats] = useState({ pendientes: 0, confirmados: 0, ultimo: '' });
   const [altoTarjeta, setAltoTarjeta] = useState(0);
+  const [altoConsulta, setAltoConsulta] = useState(0);
   const escalaTarjeta = altoTarjeta > 0 ? Math.min(1.8, Math.max(1, altoTarjeta / 220)) : 1;
   const iconoTarjeta = Math.round(36 * escalaTarjeta);
   const tituloTarjeta = Math.round(24 * escalaTarjeta);
   const textoTarjeta = Math.round(16 * escalaTarjeta);
   const textoSecundario = Math.round(14 * escalaTarjeta);
   const rellenoTarjeta = Math.round(24 * escalaTarjeta);
+  const escalaConsulta = altoConsulta > 0 ? Math.min(2.05, Math.max(1, altoConsulta / 230)) : 1;
+  const iconoConsulta = Math.round(42 * escalaConsulta);
+  const tituloConsulta = Math.round(28 * escalaConsulta);
   
   useEffect(() => {
     const fetchStats = async () => {
@@ -86,11 +90,12 @@ export default function InicioMozo({ usuario, role }: any) {
           <TouchableOpacity 
             onPress={() => router.push('/mozo/chats')}
             className="flex-1 bg-chido-cabecera border-2 border-white/70 rounded-2xl justify-center items-center flex-row"
+            onLayout={({ nativeEvent }) => setAltoConsulta(Math.round(nativeEvent.layout.height))}
             style={{ paddingHorizontal: rellenoTarjeta }}
           >
-            <Ionicons name="chatbubbles-outline" size={iconoTarjeta} color={colores.textoSobreOscuro} />
-            <Text className="ml-4 flex-1 font-bold text-chido-texto-sobre-oscuro" style={{ fontSize: tituloTarjeta, lineHeight: Math.round(tituloTarjeta * 1.18) }}>Consultas de Mesas</Text>
-            <Ionicons name="chevron-forward" size={Math.round(28 * escalaTarjeta)} color={colores.textoSobreOscuro} />
+            <Ionicons name="chatbubbles-outline" size={iconoConsulta} color={colores.textoSobreOscuro} />
+            <Text className="ml-5 flex-1 font-bold text-chido-texto-sobre-oscuro" style={{ fontSize: tituloConsulta, lineHeight: Math.round(tituloConsulta * 1.16) }}>Consultas de Mesas</Text>
+            <Ionicons name="chevron-forward" size={Math.round(32 * escalaConsulta)} color={colores.textoSobreOscuro} />
           </TouchableOpacity>
         </View>
       </View>

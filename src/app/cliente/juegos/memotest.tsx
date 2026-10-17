@@ -153,7 +153,7 @@ export default function Memotest() {
           <View className={`mb-3 items-center rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera ${compacto ? 'p-4' : 'p-6'}`}>
             <Ionicons name={gano ? 'trophy-outline' : 'game-controller-outline'} size={compacto ? 44 : 64} color={colores.textoSobreOscuro} />
             <Text className={`${compacto ? 'mt-2 text-3xl' : 'mt-4 text-4xl'} text-center font-extrabold text-chido-texto-sobre-oscuro`}>Resultado de Memotest</Text>
-            <Text className={`${compacto ? 'mt-2 text-xl' : 'mt-3 text-2xl'} text-center font-bold text-chido-texto-secundario-sobre-oscuro`}>{gano ? recreativo ? 'Ganaste la partida recreativa.' : 'Aplicamos 15% de descuento a tu cuenta.' : recreativo ? resultadoRec : 'No alcanzaste los cuatro pares.'}</Text>
+            <Text className={`${compacto ? 'mt-2 text-xl' : 'mt-3 text-2xl'} text-center font-bold text-chido-texto-secundario-sobre-oscuro`}>{gano ? recreativo ? 'Ganaste la partida recreativa.' : juego?.descuento_otorgado === 15 ? 'Aplicamos 15% de descuento a tu cuenta.' : 'Ganaste, pero tu cuenta ya tenía un descuento aplicado.' : recreativo ? resultadoRec : 'No alcanzaste los cuatro pares.'}</Text>
             <View className={`${compacto ? 'mt-3 py-2' : 'mt-5 py-3'} rounded-2xl bg-chido-acento px-5`}><Text className="text-xl font-extrabold text-chido-texto-sobre-oscuro">Pares {emparejadas.length / 2} de 4</Text></View>
           </View>
           <Pressable onPress={iniciarRecreativo} accessibilityRole="button" className="min-h-16 flex-row items-center justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo bg-chido-botonPrincipal px-5 py-4">

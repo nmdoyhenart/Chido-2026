@@ -37,7 +37,7 @@ export default function MenuCliente() {
   const enviandoRef = useRef(false);
   const solicitudId = useRef(Crypto.randomUUID());
   
-  const [filtro, setFiltro] = useState<'todos' | 'plato' | 'bebida' | 'postre'>('todos');
+  const [filtro, setFiltro] = useState<'todos' | 'plato' | 'bebida' >('todos');
 
   // Cada tarjeta entra completa en el espacio de la lista (entre filtros y barra del total).
   const { height: altoVentana } = useWindowDimensions();
@@ -49,7 +49,7 @@ export default function MenuCliente() {
   async function cargarProductos() {
     try {
       const data = await getProductos();
-      setProductos(data.filter(producto => producto.tipo === 'plato' || producto.tipo === 'bebida' || producto.tipo === 'postre'));
+      setProductos(data.filter(producto => producto.tipo === 'plato' || producto.tipo === 'bebida'));
     } catch (err: unknown) {
       console.log('Error fetching productos:', err);
       Alert.alert('Error', 'No se pudieron cargar los productos.');
@@ -190,12 +190,6 @@ export default function MenuCliente() {
             onPress={() => setFiltro(filtro === 'plato' ? 'todos' : 'plato')}
           >
             <Text className={`font-bold ${filtro === 'plato' ? 'text-chido-cabecera' : 'text-chido-texto-secundario-sobre-oscuro'}`}>Plato</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className={`px-4 py-2 rounded-full border-2 ${filtro === 'postre' ? 'bg-chido-texto-secundario-sobre-oscuro border-chido-texto-secundario-sobre-oscuro' : 'bg-chido-acento border-chido-texto-secundario-sobre-oscuro'}`}
-            onPress={() => setFiltro(filtro === 'postre' ? 'todos' : 'postre')}
-          >
-            <Text className={`font-bold ${filtro === 'postre' ? 'text-chido-cabecera' : 'text-chido-texto-secundario-sobre-oscuro'}`}>Postre</Text>
           </TouchableOpacity>
           <TouchableOpacity
             className={`px-4 py-2 rounded-full border-2 ${filtro === 'bebida' ? 'bg-chido-texto-secundario-sobre-oscuro border-chido-texto-secundario-sobre-oscuro' : 'bg-chido-acento border-chido-texto-secundario-sobre-oscuro'}`}

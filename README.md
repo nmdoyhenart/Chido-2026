@@ -45,11 +45,17 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 - Emma: Vista Cliente registrado, push notifications y envios correos
 - Juan: Chat entre Cliente y Mozo, generar un pedido + aceptación [Mozo] (punto 11 y 12)
 
-### Sprint 3 (26/09 | 3/10)
+### Sprint 3 (26/09 | 03/10)
 - Silvi: Arreglos en pantalla Cliente Anonimo y Home
 - Nico: Finalización punto 13 y 14, arreglos visuales pantallas varias (scrolls)
 - Emma: Arreglo vistas cliente y juegos
 - Juan: Finalización punto 11 y 12
+
+### Sprint 4 (03/10 | 17/10)
+- Silvi: Arreglo errores Supabase y continuación con vistas Clientes
+- Nico: Arreglos visuales varios, finalización punto 16
+- Emma: Punto 15 completo y refinación juegos
+- Juan: Inicialización punto 20 y 21
 
 ## QR's de la aplicación
 

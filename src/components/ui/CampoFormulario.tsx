@@ -3,11 +3,12 @@ import { Text, TextInput, View, type TextInputProps } from 'react-native';
 import { colores } from '../../theme/colores';
 import ErrorFormulario from './ErrorFormulario';
 
-type Props = TextInputProps & { etiqueta: string; error?: string; ayuda?: string };
+// compacto: reduce sólo los márgenes entre campos; la letra mantiene su tamaño.
+type Props = TextInputProps & { etiqueta: string; error?: string; ayuda?: string; compacto?: boolean };
 
-const CampoFormulario = forwardRef<TextInput, Props>(function CampoFormulario({ etiqueta, error, ayuda, ...props }, ref) {
+const CampoFormulario = forwardRef<TextInput, Props>(function CampoFormulario({ etiqueta, error, ayuda, compacto = false, ...props }, ref) {
   return (
-    <View className="mb-5 gap-2">
+    <View className={compacto ? 'mb-2 gap-1' : 'mb-5 gap-2'}>
       <Text className="text-chido-texto-sobre-oscuro text-lg font-bold">{etiqueta}</Text>
       <TextInput
         ref={ref}

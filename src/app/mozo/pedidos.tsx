@@ -12,10 +12,11 @@ import { confirmarPagoMozo, getPedidosMozo, getSolicitudesCuentaMozo, actualizar
 
 const ESTADOS = ['todos', 'pendiente_mozo', 'confirmado', 'en_preparacion', 'entregado', 'recibido', 'pago_informado', 'pagado', 'rechazado'];
 
-const ITEM_HEIGHT = 180;
+// Alto mínimo para que mesa, cliente, productos y botones entren sin achicar la letra.
+const ITEM_HEIGHT = 224;
 const ITEM_MARGIN = 12;
 const LIST_PADDING = 16;
-const PEDIDOS_POR_PAGINA = 3;
+const MAX_PEDIDOS_POR_PAGINA = 3;
 
 export default function PedidosMozo() {
   const insets = useSafeAreaInsets();
@@ -116,13 +117,17 @@ export default function PedidosMozo() {
     if (pedido.estado !== filtro) return false;
     return filtro !== 'pendiente_mozo' || new Date(pedido.created_at) >= inicioDelDia;
   });
-  const totalPaginas = Math.max(1, Math.ceil(pedidosFiltrados.length / PEDIDOS_POR_PAGINA));
+  // Entran tantos pedidos por página como permita el alto del celular (hasta 3), sin bajar del alto mínimo.
+  const pedidosPorPagina = altoLista > 0
+    ? Math.max(1, Math.min(MAX_PEDIDOS_POR_PAGINA, Math.floor((altoLista - LIST_PADDING * 2 + ITEM_MARGIN) / (ITEM_HEIGHT + ITEM_MARGIN))))
+    : MAX_PEDIDOS_POR_PAGINA;
+  const totalPaginas = Math.max(1, Math.ceil(pedidosFiltrados.length / pedidosPorPagina));
   const paginaActual = Math.min(pagina, totalPaginas - 1);
-  const inicio = paginaActual * PEDIDOS_POR_PAGINA;
-  const pedidosVisibles = pedidosFiltrados.slice(inicio, inicio + PEDIDOS_POR_PAGINA);
-  // Siempre reserva tres lugares: la última página conserva las proporciones.
+  const inicio = paginaActual * pedidosPorPagina;
+  const pedidosVisibles = pedidosFiltrados.slice(inicio, inicio + pedidosPorPagina);
+  // Siempre reserva los lugares de la página: la última conserva las proporciones.
   const altoTarjeta = Math.max(ITEM_HEIGHT,
-    (altoLista - LIST_PADDING * 2 - ITEM_MARGIN * (PEDIDOS_POR_PAGINA - 1)) / PEDIDOS_POR_PAGINA);
+    (altoLista - LIST_PADDING * 2 - ITEM_MARGIN * (pedidosPorPagina - 1)) / pedidosPorPagina);
 
   // Una actualización en tiempo real puede quitar pedidos del filtro actual.
   if (pagina !== paginaActual) setPagina(paginaActual);
@@ -188,7 +193,8 @@ export default function PedidosMozo() {
             return (
             <View 
               className="bg-chido-cabecera border-2 border-white/70 rounded-2xl flex-col"
-              style={{ height: altoTarjeta, padding: 16 }}
+              // minHeight: si aparece "El cliente pidió la cuenta" la tarjeta crece en vez de sacar los botones afuera.
+              style={{ minHeight: altoTarjeta, padding: 16 }}
             >
               <View className="flex-row justify-between items-start">
                 <View className="flex-1 mr-2">

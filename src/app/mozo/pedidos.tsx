@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ScrollView, StyleSheet, Vibration } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/Header';
+import ChidoLoader from '../../components/ui/ChidoLoader';
+import { ResultadoModal } from '../../components/ui/ResultadoModal';
 import { supabase } from '../../../lib/supabase';
 import { colores } from '../../theme/colores';
 import { useAppSession } from '../../contexts/AppSessionContext';
-import { getPedidosMozo, getSolicitudesCuentaMozo, actualizarEstadoPedido, entregarPedido, type SolicitudCuentaMozo } from '../../services/pedidos.service';
+import { confirmarPagoMozo, getPedidosMozo, getSolicitudesCuentaMozo, actualizarEstadoPedido, entregarPedido, type SolicitudCuentaMozo } from '../../services/pedidos.service';
 
-const ESTADOS = ['todos', 'pendiente_mozo', 'confirmado', 'en_preparacion', 'entregado', 'recibido', 'rechazado'];
+const ESTADOS = ['todos', 'pendiente_mozo', 'confirmado', 'en_preparacion', 'entregado', 'recibido', 'pago_informado', 'pagado', 'rechazado'];
 
 const ITEM_HEIGHT = 120;
 const ITEM_MARGIN = 12;
@@ -24,6 +26,8 @@ export default function PedidosMozo() {
   const [pagina, setPagina] = useState(0);
   const [altoLista, setAltoLista] = useState(0);
   const [solicitudesCuenta, setSolicitudesCuenta] = useState<SolicitudCuentaMozo[]>([]);
+  const [confirmandoPagoId, setConfirmandoPagoId] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<{ tipo: 'exito' | 'error'; titulo: string; mensaje: string } | null>(null);
 
   useEffect(() => {
     const cargarPedidos = async () => {
@@ -62,8 +66,9 @@ export default function PedidosMozo() {
   const cambiarEstado = async (id: string, nuevoEstado: string) => {
     try {
       await actualizarEstadoPedido(id, nuevoEstado);
-    } catch {
-      Alert.alert('Error', 'No se pudo actualizar el pedido.');
+    } catch (error) {
+      Vibration.vibrate(180);
+      setAviso({ tipo: 'error', titulo: 'No pudimos actualizar el pedido', mensaje: error instanceof Error ? error.message : 'Intentá nuevamente.' });
     }
   };
 
@@ -71,7 +76,22 @@ export default function PedidosMozo() {
     try {
       await entregarPedido(id);
     } catch (error) {
-      Alert.alert('El pedido todavía no está listo', error instanceof Error ? error.message : 'Cocina y bar deben terminar los productos.');
+      Vibration.vibrate(180);
+      setAviso({ tipo: 'error', titulo: 'El pedido todavía no está listo', mensaje: error instanceof Error ? error.message : 'Cocina y bar deben terminar los productos.' });
+    }
+  };
+
+  const confirmarPago = async (solicitud: SolicitudCuentaMozo) => {
+    setConfirmandoPagoId(solicitud.pedido_id);
+    try {
+      await confirmarPagoMozo(solicitud.pedido_id);
+      setSolicitudesCuenta((actuales) => actuales.filter((actual) => actual.pedido_id !== solicitud.pedido_id));
+      setAviso({ tipo: 'exito', titulo: 'Pago confirmado', mensaje: `La mesa ${solicitud.numero} quedó liberada y avisamos al dueño y al supervisor.` });
+    } catch (error) {
+      Vibration.vibrate(180);
+      setAviso({ tipo: 'error', titulo: 'No pudimos confirmar el pago', mensaje: error instanceof Error ? error.message : 'Actualizá el listado antes de reintentar.' });
+    } finally {
+      setConfirmandoPagoId(null);
     }
   };
 
@@ -82,6 +102,8 @@ export default function PedidosMozo() {
       case 'en_preparacion': return 'bg-chido-botonPrincipal text-chido-texto-sobre-oscuro';
       case 'entregado': return 'bg-chido-superficieTerracota text-white';
       case 'recibido': return 'bg-chido-exito text-chido-texto-sobre-oscuro';
+      case 'pago_informado': return 'bg-chido-aviso text-chido-texto-sobre-oscuro';
+      case 'pagado': return 'bg-chido-exito text-chido-texto-sobre-oscuro';
       case 'rechazado': return 'bg-chido-error text-chido-texto-sobre-oscuro';
       default: return 'bg-chido-superficieTerracota text-white';
     }
@@ -127,13 +149,20 @@ export default function PedidosMozo() {
           <Ionicons name="receipt-outline" size={24} color={colores.textoSobreOscuro} />
           <Text className="ml-2 text-lg font-extrabold text-chido-texto-sobre-oscuro">Pidieron la cuenta</Text>
         </View>
-        {solicitudesCuenta.map(solicitud => <Text key={solicitud.pedido_id} className="py-1 text-base font-semibold text-chido-texto-sobre-oscuro">
-          Mesa {solicitud.numero} · {solicitud.cliente}
-        </Text>)}
+        {solicitudesCuenta.map(solicitud => <View key={solicitud.pedido_id} className="py-2 border-t border-white/20">
+          <Text className="text-base font-semibold text-chido-texto-sobre-oscuro">Mesa {solicitud.numero} · {solicitud.cliente}</Text>
+          <TouchableOpacity
+            disabled={confirmandoPagoId !== null}
+            className="mt-2 min-h-11 items-center justify-center rounded-xl border-2 border-white/70 bg-chido-exito px-3"
+            onPress={() => void confirmarPago(solicitud)}
+          >
+            {confirmandoPagoId === solicitud.pedido_id ? <ChidoLoader compacto mensaje="Confirmando pago…" /> : <Text className="font-bold text-chido-texto-sobre-oscuro">Confirmar pago y liberar mesa</Text>}
+          </TouchableOpacity>
+        </View>)}
       </View>}
 
       {loading ? (
-        <ActivityIndicator size="large" color="#fff" style={{ marginTop: 20 }} />
+        <ChidoLoader mensaje="Cargando pedidos…" />
       ) : (
         <View style={styles.contenido}>
         <FlatList
@@ -258,6 +287,14 @@ export default function PedidosMozo() {
         </View>}
         </View>
       )}
+      <ResultadoModal
+        visible={Boolean(aviso)}
+        tipo={aviso?.tipo ?? 'error'}
+        titulo={aviso?.titulo ?? ''}
+        mensaje={aviso?.mensaje ?? ''}
+        accion="Entendido"
+        onClose={() => setAviso(null)}
+      />
     </View>
   );
 }
@@ -272,4 +309,3 @@ const styles = StyleSheet.create({
   textoBoton: { color: colores.textoSobreOscuro, fontSize: 16, fontWeight: '700', textAlign: 'center' },
   deshabilitado: { opacity: 0.4 },
 });
-

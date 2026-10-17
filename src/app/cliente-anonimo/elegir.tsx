@@ -44,7 +44,7 @@ export default function ElegirOpcion() {
     };
 
     const verEncuestas = () => {
-        router.push('/encuestas/previas');
+        router.push('/encuestas/acceso');
     };
 
     return (

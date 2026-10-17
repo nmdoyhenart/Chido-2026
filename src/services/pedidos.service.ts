@@ -125,6 +125,19 @@ export const getEstadoPedidoAnonimo = async (clienteAnonimoId: string, pedidoId:
   return data as string;
 };
 
+export async function obtenerPedidoActivoCliente(clienteId: string): Promise<{ id: string } | null> {
+  const { data, error } = await supabase
+    .from('pedidos')
+    .select('id')
+    .eq('cliente_id', clienteId)
+    .in('estado', ['pendiente_mozo', 'confirmado', 'en_preparacion', 'entregado', 'recibido', 'pago_informado'])
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error('No se pudo consultar tu pedido activo.');
+  return data as { id: string } | null;
+}
+
 export const confirmarMesaAnonima = async (clienteAnonimoId: string, mesaId: string) => {
   const { error } = await supabase.rpc('confirmar_mesa_qr_anonimo', {
     p_cliente_anonimo_id: clienteAnonimoId, p_mesa_id: mesaId,
@@ -243,13 +256,12 @@ export async function solicitarCuentaPedido(pedidoId: string, clienteAnonimoId?:
 export type SolicitudCuentaMozo = { pedido_id: string; mesa_id: string; numero: number; solicitada_at: string; cliente: any };
 
 export async function getSolicitudesCuentaMozo(): Promise<SolicitudCuentaMozo[]> {
-  try {
-    const { data, error } = await supabase.rpc('obtener_solicitudes_cuenta_mozo');
-    if (error) return [];
-    if (!Array.isArray(data)) return [];
-    return data as SolicitudCuentaMozo[];
-  } catch {
-    return [];
-  }
+  const { data, error } = await supabase.rpc('obtener_solicitudes_cuenta_mozo');
+  if (error) throw new Error(error.message || 'No se pudieron cargar los pagos informados.');
+  return Array.isArray(data) ? data as SolicitudCuentaMozo[] : [];
 }
 
+export async function confirmarPagoMozo(pedidoId: string): Promise<void> {
+  const { error } = await supabase.rpc('confirmar_pago_mozo', { p_pedido_id: pedidoId });
+  if (error) throw new Error(error.message || 'No se pudo confirmar el pago.');
+}

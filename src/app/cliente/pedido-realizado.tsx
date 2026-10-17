@@ -174,7 +174,7 @@ export default function PedidoRealizado() {
           accessibilityLabel="Encuestas"
           className="rounded-2xl border-2 border-white/70 bg-chido-cabecera"
           style={tarjeta}
-          onPress={() => router.push({ pathname: '/cliente/encuestas', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } })}
+          onPress={() => router.push({ pathname: '/cliente/encuestas', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}), ...(estadoPedido ? { estadoPedido } : {}) } })}
         >
           <View className="flex-row items-center">
             <Ionicons name="star-outline" size={iconoTarjeta} color={colores.textoSobreOscuro} />

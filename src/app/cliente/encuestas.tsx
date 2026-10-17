@@ -8,13 +8,16 @@ import { Header } from '../../components/Header';
 import { useAltoDisponible } from '../../hooks/useAltoDisponible';
 import { colores } from '../../theme/colores';
 import { verificarEncuesta } from '../../services/encuestas.service';
+import { getEstadoPedido, getEstadoPedidoAnonimo } from '../../services/pedidos.service';
 
 export default function EncuestasCliente() {
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ pedidoId?: string; clienteAnonimoId?: string }>();
+  const params = useLocalSearchParams<{ pedidoId?: string; clienteAnonimoId?: string; estadoPedido?: string }>();
   const pedidoId = Array.isArray(params.pedidoId) ? params.pedidoId[0] : params.pedidoId;
   const clienteAnonimoId = Array.isArray(params.clienteAnonimoId) ? params.clienteAnonimoId[0] : params.clienteAnonimoId;
+  const rawEstado = Array.isArray(params.estadoPedido) ? params.estadoPedido[0] : params.estadoPedido;
 
+  const [estadoPedido, setEstadoPedido] = useState<string | null>(() => rawEstado || null);
   const [encuestaCompletada, setEncuestaCompletada] = useState(false);
   const { alMedir, compacto, muyCompacto } = useAltoDisponible();
 
@@ -41,6 +44,7 @@ export default function EncuestasCliente() {
   useFocusEffect(
     useCallback(() => {
       if (!pedidoId) return;
+
       void AsyncStorage.getItem(`encuesta_completada_${pedidoId}`).then((valor) => {
         if (valor === 'true') {
           setEncuestaCompletada(true);
@@ -50,8 +54,43 @@ export default function EncuestasCliente() {
             .catch(() => setEncuestaCompletada(false));
         }
       });
-    }, [pedidoId])
+
+      const consultarEstado = async () => {
+        try {
+          const estado = clienteAnonimoId
+            ? await getEstadoPedidoAnonimo(clienteAnonimoId, pedidoId)
+            : await getEstadoPedido(pedidoId);
+          setEstadoPedido(estado);
+        } catch (e) {
+          console.error('Error al consultar estado en encuestas:', e);
+        }
+      };
+
+      void consultarEstado();
+    }, [pedidoId, clienteAnonimoId])
   );
+
+  const pedidoRecibido = Boolean(
+    estadoPedido && ['recibido', 'pago_informado', 'finalizado'].includes(estadoPedido)
+  );
+  const puedeRealizarEncuesta = pedidoRecibido && !encuestaCompletada;
+
+  let tituloEncuesta = 'Realizar nueva encuesta';
+  let subtituloEncuesta = 'Calificá la comida, la atención y dejanos tu opinión';
+  let iconoEncuesta: 'create-outline' | 'checkmark-circle-outline' | 'lock-closed-outline' = 'create-outline';
+  let iconoFinal: 'chevron-forward' | 'checkmark-circle' | 'lock-closed-outline' = 'chevron-forward';
+
+  if (!pedidoRecibido) {
+    tituloEncuesta = 'Realizar nueva encuesta';
+    subtituloEncuesta = 'Disponible al confirmar la recepción del pedido';
+    iconoEncuesta = 'lock-closed-outline';
+    iconoFinal = 'lock-closed-outline';
+  } else if (encuestaCompletada) {
+    tituloEncuesta = 'Encuesta enviada';
+    subtituloEncuesta = '¡Gracias! Ya completaste la encuesta de este pedido';
+    iconoEncuesta = 'checkmark-circle-outline';
+    iconoFinal = 'checkmark-circle';
+  }
 
   return (
     <View className="flex-1 bg-chido-fondo">
@@ -97,20 +136,25 @@ export default function EncuestasCliente() {
             >
               Opiniones del restaurante
             </Text>
+            <Text className="text-sm font-medium text-chido-texto-secundario-sobre-oscuro mt-1">
+              Tu experiencia y la de los demás comensales
+            </Text>
           </View>
 
           {/* Botón 1: Realizar una nueva encuesta */}
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={
-              encuestaCompletada
+              !pedidoRecibido
+                ? 'Disponible al confirmar la recepción del pedido'
+                : encuestaCompletada
                 ? 'Encuesta ya completada para este pedido'
                 : 'Realizar una nueva encuesta'
             }
-            accessibilityState={{ disabled: encuestaCompletada }}
-            disabled={encuestaCompletada}
+            accessibilityState={{ disabled: !puedeRealizarEncuesta }}
+            disabled={!puedeRealizarEncuesta}
             className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera ${
-              encuestaCompletada ? 'opacity-60' : ''
+              !puedeRealizarEncuesta ? 'opacity-60' : ''
             }`}
             style={tarjeta}
             onPress={() =>
@@ -119,13 +163,14 @@ export default function EncuestasCliente() {
                 params: {
                   pedidoId: pedidoId ?? '',
                   ...(clienteAnonimoId ? { clienteAnonimoId } : {}),
+                  ...(estadoPedido ? { estadoPedido } : {}),
                 },
               })
             }
           >
             <View className="flex-row items-center">
               <Ionicons
-                name={encuestaCompletada ? 'checkmark-circle-outline' : 'create-outline'}
+                name={iconoEncuesta}
                 size={iconoTarjeta}
                 color={colores.textoSobreOscuro}
               />
@@ -134,19 +179,17 @@ export default function EncuestasCliente() {
                   className="font-extrabold text-chido-texto-sobre-oscuro"
                   style={tituloTarjeta}
                 >
-                  {encuestaCompletada ? 'Encuesta enviada' : 'Realizar nueva encuesta'}
+                  {tituloEncuesta}
                 </Text>
                 <Text
                   className="mt-1 font-bold text-chido-texto-secundario-sobre-oscuro"
                   style={subtituloTarjeta}
                 >
-                  {encuestaCompletada
-                    ? '¡Gracias! Ya completaste la encuesta de este pedido'
-                    : 'Calificá la comida, la atención y dejanos tu opinión'}
+                  {subtituloEncuesta}
                 </Text>
               </View>
               <Ionicons
-                name={encuestaCompletada ? 'checkmark-circle' : 'chevron-forward'}
+                name={iconoFinal}
                 size={30}
                 color={colores.textoSobreOscuro}
               />
@@ -189,4 +232,3 @@ export default function EncuestasCliente() {
     </View>
   );
 }
-

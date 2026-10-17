@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import { useAppSession } from '../../contexts/AppSessionContext';
 import { Input } from '../../components/ui/Input';
 import { PrimaryButton } from '../../components/ui/Buttons';
 import { ResultadoModal } from '../../components/ui/ResultadoModal';
+import { getEstadoPedido, getEstadoPedidoAnonimo } from '../../services/pedidos.service';
 
 type ModalConfig = {
   tipo: 'exito' | 'error';
@@ -44,6 +45,32 @@ export default function EncuestaCliente() {
   const [enviando, setEnviando] = useState(false);
   const [modalConfig, setModalConfig] = useState<ModalConfig>(null);
 
+  useEffect(() => {
+    if (!pedidoId) return;
+    const verificarRecepcion = async () => {
+      try {
+        const estado = clienteAnonimoId
+          ? await getEstadoPedidoAnonimo(clienteAnonimoId, pedidoId)
+          : await getEstadoPedido(pedidoId);
+        if (!['recibido', 'pago_informado', 'finalizado'].includes(estado)) {
+          setModalConfig({
+            tipo: 'error',
+            titulo: 'Recepción pendiente',
+            mensaje: 'Primero debés confirmar que recibiste tu pedido para poder responder la encuesta.',
+            accion: 'Volver',
+            onClose: () => {
+              setModalConfig(null);
+              router.back();
+            },
+          });
+        }
+      } catch {
+        // En caso de fallo de red inicial, se verifica en el envío
+      }
+    };
+    void verificarRecepcion();
+  }, [pedidoId, clienteAnonimoId]);
+
   const handleSubmit = async () => {
     Keyboard.dismiss();
     if (comida === 0 || atencion === 0 || experiencia === 0) {
@@ -59,6 +86,25 @@ export default function EncuestaCliente() {
 
     setEnviando(true);
     try {
+      if (pedidoId) {
+        const estadoActual = clienteAnonimoId
+          ? await getEstadoPedidoAnonimo(clienteAnonimoId, pedidoId)
+          : await getEstadoPedido(pedidoId);
+        if (!['recibido', 'pago_informado', 'finalizado'].includes(estadoActual)) {
+          setModalConfig({
+            tipo: 'error',
+            titulo: 'Recepción no confirmada',
+            mensaje: 'Debés confirmar que recibiste tu pedido antes de poder enviar la encuesta.',
+            accion: 'Entendido',
+            onClose: () => {
+              setModalConfig(null);
+              router.back();
+            },
+          });
+          return;
+        }
+      }
+
       await enviarEncuesta({
         pedido_id: pedidoId!,
         cliente_id: clienteAnonimoId ? undefined : usuario?.id,

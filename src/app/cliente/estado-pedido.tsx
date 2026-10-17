@@ -83,7 +83,31 @@ export default function EstadoPedido() {
   return (
     <View className="flex-1 bg-chido-fondo">
       <Header userName="Cliente" role="Tu Pedido" />
-      <View className="flex-1" style={{ padding: 16, paddingBottom: Math.max(insets.bottom, 16) }}>
+      {estado === 'rechazado' ? (
+        <View className="flex-1 justify-center px-5" style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
+          <View className="w-full self-center rounded-3xl border-2 border-white/60 bg-chido-cabecera p-6" style={{ maxWidth: 560 }}>
+            <View className="mb-5 h-20 w-20 self-center items-center justify-center rounded-full bg-chido-error/40">
+              <Ionicons name="close-circle-outline" size={42} color={colores.textoSobreOscuro} />
+            </View>
+            <Text className="text-center text-3xl font-extrabold text-chido-texto-sobre-oscuro">Tu pedido fue rechazado</Text>
+            <Text className="mt-3 text-center text-lg leading-7 text-chido-texto-secundario-sobre-oscuro">
+              El mozo rechazo tu pedido. Podés cambiar los productos (o cantidades) y volver a enviarlo.
+            </Text>
+            {error && <View className="mt-4 rounded-2xl bg-chido-error p-4"><Text className="text-center font-bold text-chido-texto-sobre-oscuro">{error}</Text></View>}
+            <TouchableOpacity
+              accessibilityRole="button"
+              className="mt-6 min-h-14 w-full flex-row items-center justify-center rounded-2xl border-2 border-white/70 bg-chido-acento px-4 py-3"
+              onPress={() => router.replace({ pathname: '/cliente/menu', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } })}
+            >
+              <Ionicons name="create-outline" size={22} color={colores.textoSobreOscuro} />
+              <Text className="ml-2 text-center text-lg font-extrabold text-chido-texto-sobre-oscuro">Modificar pedido</Text>
+            </TouchableOpacity>
+            {manualView === 'true' && <TouchableOpacity className="mt-3 min-h-12 items-center justify-center rounded-2xl border border-white/50 px-4 py-2" onPress={() => router.back()}>
+              <Text className="text-center font-bold text-chido-texto-sobre-oscuro">Volver</Text>
+            </TouchableOpacity>}
+          </View>
+        </View>
+      ) : <View className="flex-1" style={{ padding: 16, paddingBottom: Math.max(insets.bottom, 16) }}>
         {/* La imagen toma solo el alto que sobra; textos y botones siempre quedan visibles. */}
         <View className="flex-1 items-center justify-center" style={{ minHeight: 0 }}>
         {estado === 'pendiente_mozo' || estado === 'confirmado' ? (
@@ -106,13 +130,8 @@ export default function EstadoPedido() {
             <Text className="text-center text-lg font-bold text-chido-texto-sobre-oscuro">Volver</Text>
           </TouchableOpacity>
         )}
-        {estado === 'rechazado' && (
-          <TouchableOpacity className="mt-5 w-full rounded-xl bg-chido-cabecera p-4" onPress={() => router.replace({ pathname: '/cliente/menu', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } })}>
-            <Text className="text-center text-lg font-bold text-chido-texto-sobre-oscuro">Modificar pedido</Text>
-          </TouchableOpacity>
-        )}
         </View>
-      </View>
+      </View>}
     </View>
   );
 }

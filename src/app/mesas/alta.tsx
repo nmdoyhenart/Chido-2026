@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Image,
   ImageBackground,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -30,7 +31,6 @@ import { createMesaQr } from "../../utils/qr";
 import { useAppSession } from "../../contexts/AppSessionContext";
 import { puedeAdministrarMesas } from "../../utils/permisos";
 import { colores } from "../../theme/colores";
-import { useCampoVisibleConTeclado } from "../../hooks/useCampoVisibleConTeclado";
 
 type FotoTomada = {
   base64: string;
@@ -45,8 +45,6 @@ export default function AgregarMesa() {
   const permitido = (mode === 'authenticated' || mode === 'simulation') && puedeAdministrarMesas(role);
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
-  const scroll = useRef<ScrollView>(null);
-  const { alDesplazar, alEnfocar, rellenoInferior } = useCampoVisibleConTeclado(scroll);
   const operacionEnCurso = useRef(false);
   const activa = useRef(true);
   const tokenCamara = useRef(0);
@@ -62,6 +60,19 @@ export default function AgregarMesa() {
   const [camaraLista, setCamaraLista] = useState(false);
   const [mesaQr, setMesaQr] = useState<Mesa | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
+  // Pantalla sin scroll: el alto se mide con el teclado cerrado para dimensionar la foto.
+  // Con el teclado abierto se ocultan la foto y la disponibilidad para que los campos queden a la vista.
+  const [altoVista, setAltoVista] = useState(0);
+  const [tecladoVisible, setTecladoVisible] = useState(false);
+
+  useEffect(() => {
+    const mostrar = Keyboard.addListener("keyboardDidShow", () => setTecladoVisible(true));
+    const ocultar = Keyboard.addListener("keyboardDidHide", () => setTecladoVisible(false));
+    return () => {
+      mostrar.remove();
+      ocultar.remove();
+    };
+  }, []);
 
   useEffect(() => {
     activa.current = true;
@@ -206,6 +217,9 @@ export default function AgregarMesa() {
   const anchoUtil = Math.min(576, width - insets.left - insets.right) - 32;
   const camposEnFila = anchoUtil >= 300 && fontScale <= 1.3;
   const tiposEnFila = anchoUtil >= 280 && fontScale <= 1.3;
+  // La foto toma el alto que dejan libre el resto de los elementos (título, campos, tipo, disponibilidad y guardar).
+  const altoResto = 48 + 64 + 84 + (tiposEnFila ? 92 : 236) + 84 + 64 + 76;
+  const altoFoto = altoVista > 0 ? Math.max(96, Math.min(220, altoVista - altoResto)) : 128;
   const salida = (
     <Pressable className="min-h-12 flex-row items-center self-start rounded-2xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera/70 px-3 py-2" onPress={volver} accessibilityRole="button">
       <Ionicons name="arrow-back" size={20} color={colores.textoSobreOscuro} />
@@ -254,62 +268,76 @@ export default function AgregarMesa() {
       <Header userName={nombreVisible} role={perfilVisible} />
       <SafeAreaView edges={["left", "right", "bottom"]} className="flex-1">
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
-          <ScrollView ref={scroll} className="flex-1 p-5" contentContainerStyle={{ flexGrow: 1, paddingBottom: rellenoInferior }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets onScroll={alDesplazar} scrollEventThrottle={16} accessibilityElementsHidden={ocupada} importantForAccessibility={ocupada ? "no-hide-descendants" : "auto"}>
-            <View className="w-full max-w-xl self-center">
-              <View className="relative mb-8 flex-row items-center">
-                <Pressable className="absolute left-0 z-10 h-10 w-10 items-center justify-center rounded-xl bg-chido-acento" onPress={volver} accessibilityRole="button" accessibilityLabel="Volver al panel de Supervisor">
-                  <Ionicons name="arrow-back" size={20} color={colores.textoSobreOscuro} />
+          {/* Sin scroll: los elementos se reparten todo el alto disponible. */}
+          <View
+            className="flex-1 px-5 py-3"
+            onLayout={({ nativeEvent }) => {
+              const alto = Math.round(nativeEvent.layout.height) - 24;
+              if (!Keyboard.isVisible()) setAltoVista((actual) => (actual === alto ? actual : alto));
+            }}
+            accessibilityElementsHidden={ocupada}
+            importantForAccessibility={ocupada ? "no-hide-descendants" : "auto"}
+          >
+            <View className="w-full max-w-xl flex-1 self-center" style={{ justifyContent: tecladoVisible ? "flex-start" : "space-evenly", gap: tecladoVisible ? 12 : 0 }}>
+              <View className="relative flex-row items-center">
+                <Pressable className="absolute left-0 z-10 h-12 w-12 items-center justify-center rounded-xl bg-chido-acento" onPress={volver} accessibilityRole="button" accessibilityLabel="Volver al panel de Supervisor">
+                  <Ionicons name="arrow-back" size={26} color={colores.textoSobreOscuro} />
                 </Pressable>
-                <Text className="flex-1 text-center text-2xl font-bold text-chido-texto-sobre-oscuro" accessibilityRole="header">Alta de mesa</Text>
-              </View>
-              <Pressable className="mb-6 items-center" onPress={abrirCamara} disabled={ocupada} accessibilityRole="button" accessibilityLabel={foto ? "Volver a tomar la foto de la mesa" : "Tomar foto de la mesa"} accessibilityState={{ disabled: ocupada }}>
-                <View className="h-32 w-32 overflow-hidden rounded-3xl border-2 border-dashed border-chido-texto-secundario-alternativo bg-chido-acento">
-                  {foto ? <Image source={{ uri: foto.uri }} className="h-full w-full" resizeMode="cover" /> : <View className="flex-1 items-center justify-center"><Ionicons name="grid-outline" size={40} color={colores.textoSobreOscuro} /></View>}
-                </View>
-                <View className="mt-3 min-h-12 flex-row items-center justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo bg-chido-acento px-5 py-2">
-                  <Ionicons name="camera-outline" size={22} color={colores.textoSobreOscuro} />
-                  <Text className="ml-2 text-base font-bold text-chido-texto-sobre-oscuro">{foto ? "Volver a tomar la foto" : "Tomar foto con la cámara"}</Text>
-                </View>
-              </Pressable>
-
-              <View className={`mb-4 gap-4 ${camposEnFila ? "flex-row" : "flex-col"}`}>
-                <View className={camposEnFila ? "flex-1" : "w-full"}>
-                  <Text className="mb-1 ml-1 text-sm text-chido-texto-sobre-oscuro">Número de mesa</Text>
-                  <TextInput value={numero} onChangeText={setNumero} onFocus={alEnfocar} keyboardType="number-pad" placeholder="Ej. 12" placeholderTextColor={colores.textoSecundarioAlternativo} editable={!ocupada} accessibilityLabel="Número de mesa" className="rounded-xl border border-chido-texto-boton-outline bg-chido-cabecera p-3 text-chido-texto-sobre-oscuro" />
-                </View>
-                <View className={camposEnFila ? "flex-1" : "w-full"}>
-                  <Text className="mb-1 ml-1 text-sm text-chido-texto-sobre-oscuro">Comensales</Text>
-                  <TextInput value={cantidadComensales} onChangeText={setCantidadComensales} onFocus={alEnfocar} keyboardType="number-pad" placeholder="Ej. 4" placeholderTextColor={colores.textoSecundarioAlternativo} editable={!ocupada} accessibilityLabel="Cantidad de comensales" className="rounded-xl border border-chido-texto-boton-outline bg-chido-cabecera p-3 text-chido-texto-sobre-oscuro" />
-                </View>
+                <Text className="flex-1 text-center text-3xl font-bold text-chido-texto-sobre-oscuro" accessibilityRole="header">Alta de mesa</Text>
               </View>
 
-              <View className="mb-4">
-                <Text className="mb-2 ml-1 text-sm text-chido-texto-sobre-oscuro">Tipo de mesa</Text>
+              {!tecladoVisible && (
+                <Pressable className="items-center" onPress={abrirCamara} disabled={ocupada} accessibilityRole="button" accessibilityLabel={foto ? "Volver a tomar la foto de la mesa" : "Tomar foto de la mesa"} accessibilityState={{ disabled: ocupada }}>
+                  <View style={{ width: altoFoto, height: altoFoto }} className="overflow-hidden rounded-3xl border-2 border-dashed border-chido-texto-secundario-alternativo bg-chido-acento">
+                    {foto ? <Image source={{ uri: foto.uri }} className="h-full w-full" resizeMode="cover" /> : <View className="flex-1 items-center justify-center"><Ionicons name="grid-outline" size={Math.round(altoFoto * 0.35)} color={colores.textoSobreOscuro} /></View>}
+                  </View>
+                  <View className="mt-3 min-h-16 w-full flex-row items-center justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo bg-chido-acento px-5 py-3">
+                    <Ionicons name="camera-outline" size={30} color={colores.textoSobreOscuro} />
+                    <Text className="ml-3 text-xl font-bold text-chido-texto-sobre-oscuro">{foto ? "Volver a tomar la foto" : "Tomar foto con la cámara"}</Text>
+                  </View>
+                </Pressable>
+              )}
+
+              <View className={`gap-4 ${camposEnFila ? "flex-row" : "flex-col"}`}>
+                <View className={camposEnFila ? "flex-1" : "w-full"}>
+                  <Text className="mb-1 ml-1 text-lg font-bold text-chido-texto-sobre-oscuro">Número de mesa</Text>
+                  <TextInput value={numero} onChangeText={setNumero} keyboardType="number-pad" placeholder="Ej. 12" placeholderTextColor={colores.textoSecundarioAlternativo} editable={!ocupada} accessibilityLabel="Número de mesa" className="min-h-14 rounded-xl border-2 border-chido-texto-boton-outline bg-chido-cabecera px-4 py-3 text-xl text-chido-texto-sobre-oscuro" />
+                </View>
+                <View className={camposEnFila ? "flex-1" : "w-full"}>
+                  <Text className="mb-1 ml-1 text-lg font-bold text-chido-texto-sobre-oscuro">Comensales</Text>
+                  <TextInput value={cantidadComensales} onChangeText={setCantidadComensales} keyboardType="number-pad" placeholder="Ej. 4" placeholderTextColor={colores.textoSecundarioAlternativo} editable={!ocupada} accessibilityLabel="Cantidad de comensales" className="min-h-14 rounded-xl border-2 border-chido-texto-boton-outline bg-chido-cabecera px-4 py-3 text-xl text-chido-texto-sobre-oscuro" />
+                </View>
+              </View>
+
+              <View>
+                <Text className="mb-2 ml-1 text-lg font-bold text-chido-texto-sobre-oscuro">Tipo de mesa</Text>
                 <View className={`gap-2 ${tiposEnFila ? "flex-row" : "flex-col"}`} accessibilityRole="radiogroup">
                   {(["estándar", "VIP", "movilidad reducida"] as const).map((opcion) => (
-                    <Pressable key={opcion} className={`min-h-14 justify-center rounded-xl border px-2 py-3 ${tipo === opcion ? "border-chido-texto-secundario-alternativo bg-chido-cabecera" : "border-chido-texto-boton-outline bg-chido-acento"}`} style={tiposEnFila ? { flex: 1 } : undefined} onPress={() => setTipo(opcion)} disabled={ocupada} accessibilityRole="radio" accessibilityState={{ checked: tipo === opcion, disabled: ocupada }}>
-                      <Text className={`text-center font-bold text-chido-texto-sobre-oscuro ${anchoUtil < 350 ? "text-sm" : "text-base"}`}>{opcion === "VIP" ? "Preferencial" : opcion === "estándar" ? "Estándar" : "Movilidad reducida"}</Text>
+                    <Pressable key={opcion} className={`min-h-16 justify-center rounded-xl border-2 px-2 py-3 ${tipo === opcion ? "border-chido-texto-secundario-alternativo bg-chido-cabecera" : "border-chido-texto-boton-outline bg-chido-acento"}`} style={tiposEnFila ? { flex: 1 } : undefined} onPress={() => setTipo(opcion)} disabled={ocupada} accessibilityRole="radio" accessibilityState={{ checked: tipo === opcion, disabled: ocupada }}>
+                      <Text className={`text-center font-bold text-chido-texto-sobre-oscuro ${anchoUtil < 350 ? "text-base" : "text-lg"}`}>{opcion === "VIP" ? "Preferencial" : opcion === "estándar" ? "Estándar" : "Movilidad reducida"}</Text>
                     </Pressable>
                   ))}
                 </View>
               </View>
 
-              <View className="mb-4">
-                <Text className="mb-2 ml-1 text-sm text-chido-texto-sobre-oscuro">Disponibilidad</Text>
-                <View className={`gap-2 rounded-xl border border-chido-texto-boton-outline bg-chido-cabecera px-4 py-3 ${camposEnFila ? "flex-row flex-wrap items-center justify-between" : "flex-col"}`}>
-                  <View className="flex-row items-center">
-                    <View className="mr-3 h-3 w-3 rounded-full bg-chido-activo" />
-                    <Text className="text-lg font-bold text-chido-texto-sobre-oscuro">Vacía</Text>
+              {!tecladoVisible && (
+                <View>
+                  <Text className="mb-2 ml-1 text-lg font-bold text-chido-texto-sobre-oscuro">Disponibilidad</Text>
+                  <View className={`gap-2 rounded-xl border-2 border-chido-texto-boton-outline bg-chido-cabecera px-4 py-3 ${camposEnFila ? "flex-row flex-wrap items-center justify-between" : "flex-col"}`}>
+                    <View className="flex-row items-center">
+                      <View className="mr-3 h-4 w-4 rounded-full bg-chido-activo" />
+                      <Text className="text-xl font-bold text-chido-texto-sobre-oscuro">Vacía</Text>
+                    </View>
+                    <Text className="text-base text-chido-texto-secundario-alternativo">(predeterminada)</Text>
                   </View>
-                  <Text className="text-sm text-chido-texto-secundario-alternativo">(predeterminada)</Text>
                 </View>
-              </View>
+              )}
 
-              <Pressable className={`mb-12 items-center rounded-xl bg-chido-cabecera p-4 ${ocupada ? "opacity-60" : "opacity-100"}`} onPress={guardarMesa} disabled={ocupada} accessibilityRole="button" accessibilityState={{ disabled: ocupada, busy: ocupada }}>
-                <Text className="text-lg font-bold text-chido-texto-sobre-oscuro">Guardar mesa</Text>
+              <Pressable className={`min-h-16 items-center justify-center rounded-xl bg-chido-cabecera p-4 ${ocupada ? "opacity-60" : "opacity-100"}`} onPress={guardarMesa} disabled={ocupada} accessibilityRole="button" accessibilityState={{ disabled: ocupada, busy: ocupada }}>
+                <Text className="text-xl font-bold text-chido-texto-sobre-oscuro">Guardar mesa</Text>
               </Pressable>
             </View>
-          </ScrollView>
+          </View>
           {ocupada && !cameraVisible ? (
             <ImageBackground source={require("../../../assets/images/fondo.jpeg")} resizeMode="cover" blurRadius={2} style={StyleSheet.absoluteFill}>
               <View className="absolute inset-0 bg-chido-cabecera/35" />

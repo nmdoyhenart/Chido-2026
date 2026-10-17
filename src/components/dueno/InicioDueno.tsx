@@ -57,10 +57,6 @@ export default function InicioDueno({ usuario, simulacion = false, saliendo, err
           </View>
         </View>
         <View style={[styles.acciones, { gap: 10 * escala }]}>
-          <TouchableOpacity activeOpacity={0.8} onPress={onPendientes} disabled={saliendo} accessibilityRole="button" accessibilityLabel="Ver solicitudes pendientes" style={[styles.botonRedondo, { width: 50 * escala, height: 50 * escala }]}>
-            <Ionicons name="notifications-outline" size={26 * escala} color={colores.crema} />
-            {pendientes !== null && pendientes > 0 && <View style={styles.puntoNotificacion} />}
-          </TouchableOpacity>
           <TouchableOpacity onPress={onSalir} disabled={saliendo} activeOpacity={0.65} accessibilityRole="button" accessibilityLabel="Cerrar sesión" style={[styles.botonRedondo, { width: 50 * escala, height: 50 * escala, opacity: saliendo ? 0.65 : 1 }]}>
             <Ionicons name="log-out-outline" size={26 * escala} color={colores.crema} />
           </TouchableOpacity>
@@ -113,7 +109,6 @@ const styles = StyleSheet.create({
   rol: { color: colores.secundario, fontWeight: '700' },
   acciones: { flexDirection: 'row', alignItems: 'center' },
   botonRedondo: { alignItems: 'center', justifyContent: 'center', backgroundColor: colores.boton, borderRadius: 50 },
-  puntoNotificacion: { position: 'absolute', top: 7, right: 8, width: 11, height: 11, borderRadius: 6, backgroundColor: colores.coral, borderWidth: 1, borderColor: colores.cabecera },
   contenido: { flex: 1 },
   saludo: { color: colores.crema, fontWeight: '700' },
   listaTarjetas: { flex: 1, gap: 16 },

@@ -41,7 +41,9 @@ function Campo({ label, error, compacto = false, containerClassName = '', inputC
 }
 
 export default function AltaBebida() {
-    const { usuario } = useAppSession();
+    const { usuario, role } = useAppSession();
+    // También la usan Dueño y Supervisor desde "Gestionar carta": se muestra el rol real.
+    const rolVisible = role ? role.charAt(0).toUpperCase() + role.slice(1) : 'Cantinero';
     const { bloquear, modal } = useRestriccionSimulacion();
     const nombreUsuario = [usuario?.nombres, usuario?.apellidos].filter(Boolean).join(' ') || 'Cantinero';
     const [nombre, setNombre] = useState('');
@@ -215,7 +217,7 @@ export default function AltaBebida() {
         <View className="flex-1 bg-chido-fondo ">
             <Stack.Screen options={{ headerShown: false }} />
             {modal}
-            <Header userName={nombreUsuario} role='Cantinero'/>
+            <Header userName={nombreUsuario} role={rolVisible}/>
             <KeyboardAvoidingView
                 className="flex-1"
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

@@ -10,6 +10,7 @@ import { ResultadoModal } from '../../components/ui/ResultadoModal';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { useAltoDisponible } from '../../hooks/useAltoDisponible';
 import { verificarEncuesta } from '../../services/encuestas.service';
+import { puedeJugarPedido } from '../../services/juegos';
 import { confirmarRecepcionPedido, getEstadoPedido, getEstadoPedidoAnonimo, suscribirEstadoPedido } from '../../services/pedidos.service';
 import { colores } from '../../theme/colores';
 
@@ -24,6 +25,7 @@ export default function PedidoRealizado() {
   const [cargando, setCargando] = useState(() => Boolean(pedidoId));
   const [encuestaCompletada, setEncuestaCompletada] = useState(false);
   const [estadoPedido, setEstadoPedido] = useState<string | null>(null);
+  const [juegosHabilitados, setJuegosHabilitados] = useState(false);
   const estadoLegible: Record<string, string> = {
     pendiente_mozo: 'Esperando confirmación del mozo',
     confirmado: 'Pedido confirmado · enviado a los sectores',
@@ -56,7 +58,13 @@ export default function PedidoRealizado() {
     const consultarEstado = async () => {
       try {
         const estadoActual = await (clienteAnonimoId ? getEstadoPedidoAnonimo(clienteAnonimoId, pedidoId) : getEstadoPedido(pedidoId));
-        if (activa) setEstadoPedido(estadoActual);
+        const puedeJugar = usuario?.id && !clienteAnonimoId
+          ? await puedeJugarPedido(usuario.id, pedidoId)
+          : false;
+        if (activa) {
+          setEstadoPedido(estadoActual);
+          setJuegosHabilitados(puedeJugar);
+        }
       } catch (caught) {
         console.error(caught);
       } finally {
@@ -73,7 +81,7 @@ export default function PedidoRealizado() {
       clearInterval(intervalo);
       desuscribir();
     };
-  }, [clienteAnonimoId, pedidoId]);
+  }, [clienteAnonimoId, pedidoId, usuario?.id]);
 
   if (cargando) return <View className="flex-1 items-center justify-center bg-chido-fondo"><ChidoLoader mensaje="Consultando tu pedido…" /></View>;
 
@@ -144,16 +152,18 @@ export default function PedidoRealizado() {
 
         {!clienteAnonimoId && <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Juegos con premios"
-          className="rounded-2xl border-2 border-white/70 bg-chido-cabecera"
+          accessibilityLabel={juegosHabilitados ? 'Juegos con premios' : 'Juegos bloqueados hasta confirmar el pedido o solicitar la cuenta'}
+          accessibilityState={{ disabled: !juegosHabilitados }}
+          disabled={!juegosHabilitados}
+          className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera ${juegosHabilitados ? '' : 'opacity-60'}`}
           style={tarjeta}
-          onPress={() => router.push({ pathname: '/cliente/juegos', params: { pedidoId } })}
+          onPress={() => juegosHabilitados && router.push({ pathname: '/cliente/juegos', params: { pedidoId } })}
         >
           <View className="flex-row items-center">
-            <Ionicons name="game-controller-outline" size={iconoTarjeta}color={colores.textoSobreOscuro} />
+            <Ionicons name={juegosHabilitados ? 'game-controller-outline' : 'lock-closed-outline'} size={iconoTarjeta}color={colores.textoSobreOscuro} />
             <View className="ml-4 flex-1">
               <Text className="font-extrabold text-chido-texto-sobre-oscuro" style={tituloTarjeta}>Jugar</Text>
-              <Text className="mt-1 text-base font-bold text-chido-texto-secundario-sobre-oscuro">Ganá descuentos para tu cuenta</Text>
+              <Text className="mt-1 text-base font-bold text-chido-texto-secundario-sobre-oscuro">{juegosHabilitados ? 'Ganá descuentos para tu cuenta' : 'Disponible al confirmar; se bloquea al pedir la cuenta'}</Text>
             </View>
             <Ionicons name="chevron-forward" size={30} color={colores.textoSobreOscuro} />
           </View>

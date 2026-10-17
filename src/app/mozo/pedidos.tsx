@@ -255,11 +255,12 @@ export default function PedidosMozo() {
                 )}
                 {item.estado === 'en_preparacion' && item.pedido_detalles?.length > 0 && item.pedido_detalles.every((detalle: { estado_sector: string }) => detalle.estado_sector === 'listo') && (
                   <TouchableOpacity 
-                    className="bg-chido-botonPrincipal border-2 border-white/70 px-3 py-2 rounded-xl w-full items-center justify-center"
-                      style={{ minHeight: 48 }}
+                    className="w-full flex-row items-center justify-center rounded-xl border-2 border-chido-activo bg-chido-exito px-3 py-3"
+                    style={{ minHeight: 52 }}
                     onPress={() => cambiarEntregado(item.id)}
                   >
-                      <Text className="text-center text-lg font-bold text-chido-texto-sobre-oscuro">Cocina y bar terminaron · Entregar</Text>
+                    <Ionicons name="checkmark-circle-outline" size={24} color={colores.textoSobreOscuro} />
+                    <Text className="ml-2 text-center text-lg font-extrabold text-chido-texto-sobre-oscuro">Cocina y bar terminaron · Entregar</Text>
                   </TouchableOpacity>
                 )}
                 

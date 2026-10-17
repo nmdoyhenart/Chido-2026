@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppSession } from '../contexts/AppSessionContext';
 import { colores } from '../theme/colores';
 
@@ -12,6 +13,7 @@ interface HeaderProps {
 
 export function Header({ userName, role }: HeaderProps) {
     const { cerrarSesion, usuario } = useAppSession();
+    const insets = useSafeAreaInsets();
 
     const [saliendo, setSaliendo] = useState(false);
     const [error, setError] = useState('');
@@ -31,7 +33,8 @@ export function Header({ userName, role }: HeaderProps) {
     const nombreMostrado = userName === 'Cliente' && nombreCompleto ? nombreCompleto : userName;
 
     return (
-        <View className="bg-chido-cabecera px-5 pt-14 pb-6 flex-row items-center justify-between">
+        // En iPhone con notch o Dynamic Island el margen fijo de 56 quedaba corto.
+        <View className="bg-chido-cabecera px-5 pb-6 flex-row items-center justify-between" style={{ paddingTop: Math.max(insets.top + 8, 56) }}>
         {/* Profile Info */}
         <View className="flex-row items-center flex-1">
             <View className="w-16 h-16 rounded-full bg-chido-fondo items-center justify-center border-2 border-chido-acento mr-4 overflow-hidden">

@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Image, Pressable, ScrollView, Text, Vibration, View } from 'react-native';
+import { Image, Pressable, Text, Vibration, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '../../components/Header';
 import ChidoLoader from '../../components/ui/ChidoLoader';
 import { QRScanner } from '../../components/ui/QRScanner';
 import { useAppSession } from '../../contexts/AppSessionContext';
+import { useAltoDisponible } from '../../hooks/useAltoDisponible';
 import { confirmarMesaPorQr, obtenerEstadoSolicitudMesa, type EstadoSolicitudMesa } from '../../services/mesas';
 import { colores } from '../../theme/colores';
 
@@ -19,6 +20,12 @@ export default function EsperaMesaCliente() {
   const [actualizando, setActualizando] = useState(false);
   const [scannerVisible, setScannerVisible] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
+  const { alMedir, compacto, muyCompacto } = useAltoDisponible();
+  const estiloTitulo = muyCompacto ? { fontSize: 30, lineHeight: 36 } : compacto ? { fontSize: 36, lineHeight: 42 } : { fontSize: 48, lineHeight: 54 };
+  const estiloDescripcion = muyCompacto ? { fontSize: 18, lineHeight: 24 } : compacto ? { fontSize: 22, lineHeight: 28 } : { fontSize: 28, lineHeight: 36 };
+  const estiloBoton = { backgroundColor: colores.cabecera, minHeight: muyCompacto ? 60 : compacto ? 72 : 112 };
+  const textoBoton = `ml-3 text-center font-extrabold text-chido-texto-sobre-oscuro ${compacto ? 'text-2xl' : 'text-3xl'}`;
+  const iconoBoton = compacto ? 32 : 42;
 
   const consultarEstado = useCallback(async (manual = false) => {
     if (!clienteId) {
@@ -64,14 +71,18 @@ export default function EsperaMesaCliente() {
   return (
     <SafeAreaView className="flex-1 bg-chido-fondo" edges={['left', 'right', 'bottom']}>
       <Header userName="Cliente" role="Mesa" />
-      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-start', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 24 }}>
-        {!sinSolicitud ? <Image source={mesa ? require('../../../assets/images/mascota-mesa-asignada.png') : require('../../../assets/images/mascota-espera-mesa.png')} resizeMode="contain" style={{ width: '100%', height: 370, alignSelf: 'center' }} /> : <View className="mb-8 items-center"><View className="h-28 w-28 items-center justify-center rounded-3xl bg-chido-acento"><Ionicons name="time-outline" size={56} color={colores.textoSecundarioAlternativo} /></View></View>}
-        <Text className="text-center text-5xl font-extrabold text-chido-texto-sobre-oscuro">{titulo}</Text>
-        <Text className="mt-5 text-center font-bold text-chido-texto-secundario-sobre-oscuro" style={{ fontSize: 28, lineHeight: 36 }}>{descripcion}</Text>
-        {aviso && <View className="mt-6 rounded-2xl bg-chido-error p-4"><Text className="text-center text-base font-bold text-chido-texto-sobre-oscuro">{aviso}</Text></View>}
-        {mesa ? <Pressable accessibilityRole="button" accessibilityLabel="Escanear el código QR de mi mesa para ingresar" onPress={() => setScannerVisible(true)} className="mt-10 min-h-28 flex-row items-center justify-center rounded-3xl px-7" style={{ backgroundColor: colores.cabecera }}><Ionicons name="qr-code-outline" size={46} color={colores.textoSobreOscuro} /><Text className="ml-4 text-center text-3xl font-extrabold text-chido-texto-sobre-oscuro">Escanear código QR</Text></Pressable> : actualizando ? <ChidoLoader mensaje="Actualizando estado…" /> : !sinSolicitud && <Pressable accessibilityRole="button" onPress={() => void consultarEstado(true)} className="mt-10 min-h-28 flex-row items-center justify-center rounded-3xl px-7" style={{ backgroundColor: colores.cabecera }}><Ionicons name="refresh-outline" size={42} color={colores.textoSobreOscuro} /><Text className="ml-4 text-center text-3xl font-extrabold text-chido-texto-sobre-oscuro">Actualizar estado</Text></Pressable>}
-        <Pressable accessibilityRole="button" onPress={() => router.back()} className="mt-5 min-h-28 flex-row items-center justify-center rounded-3xl px-7" style={{ backgroundColor: colores.cabecera }}><Ionicons name="arrow-back-outline" size={38} color={colores.textoSobreOscuro} /><Text className="ml-3 text-center text-3xl font-extrabold text-chido-texto-sobre-oscuro">Volver a Inicio</Text></Pressable>
-      </ScrollView>
+      {/* SafeAreaView ya reserva el área inferior (botones de Android / barra de inicio de iPhone). */}
+      <View className="flex-1" onLayout={alMedir} style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16 }}>
+        {/* La mascota se adapta al alto que sobra para que textos y botones nunca se pisen. */}
+        <View className="flex-1 items-center justify-center" style={{ minHeight: 0 }}>
+          {!sinSolicitud ? <Image source={mesa ? require('../../../assets/images/mascota-mesa-asignada.png') : require('../../../assets/images/mascota-espera-mesa.png')} resizeMode="contain" style={{ width: '100%', height: '100%', maxHeight: 370 }} /> : <View className={`items-center justify-center rounded-3xl bg-chido-acento ${compacto ? 'h-20 w-20' : 'h-28 w-28'}`}><Ionicons name="time-outline" size={compacto ? 40 : 56} color={colores.textoSecundarioAlternativo} /></View>}
+        </View>
+        <Text className="mt-2 text-center font-extrabold text-chido-texto-sobre-oscuro" style={estiloTitulo}>{titulo}</Text>
+        <Text className={`${compacto ? 'mt-2' : 'mt-5'} text-center font-bold text-chido-texto-secundario-sobre-oscuro`} style={estiloDescripcion}>{descripcion}</Text>
+        {aviso && <View className={`${compacto ? 'mt-3 p-2' : 'mt-6 p-4'} rounded-2xl bg-chido-error`}><Text className="text-center text-base font-bold text-chido-texto-sobre-oscuro">{aviso}</Text></View>}
+        {mesa ? <Pressable accessibilityRole="button" accessibilityLabel="Escanear el código QR de mi mesa para ingresar" onPress={() => setScannerVisible(true)} className={`${compacto ? 'mt-4' : 'mt-10'} flex-row items-center justify-center rounded-3xl px-7`} style={estiloBoton}><Ionicons name="qr-code-outline" size={iconoBoton + 4} color={colores.textoSobreOscuro} /><Text className={textoBoton}>Escanear código QR</Text></Pressable> : actualizando ? <ChidoLoader mensaje="Actualizando estado…" compacto={compacto} /> : !sinSolicitud && <Pressable accessibilityRole="button" onPress={() => void consultarEstado(true)} className={`${compacto ? 'mt-4' : 'mt-10'} flex-row items-center justify-center rounded-3xl px-7`} style={estiloBoton}><Ionicons name="refresh-outline" size={iconoBoton} color={colores.textoSobreOscuro} /><Text className={textoBoton}>Actualizar estado</Text></Pressable>}
+        <Pressable accessibilityRole="button" onPress={() => router.back()} className={`${compacto ? 'mt-3' : 'mt-5'} flex-row items-center justify-center rounded-3xl px-7`} style={estiloBoton}><Ionicons name="arrow-back-outline" size={iconoBoton - 4} color={colores.textoSobreOscuro} /><Text className={textoBoton}>Volver a Inicio</Text></Pressable>
+      </View>
       <QRScanner visible={scannerVisible} proposito="mesa" onScan={confirmarMesa} onClose={() => setScannerVisible(false)} />
     </SafeAreaView>
   );

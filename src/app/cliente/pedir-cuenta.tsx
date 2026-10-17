@@ -16,6 +16,7 @@ import ChidoLoader from '../../components/ui/ChidoLoader';
 import { QRScanner } from '../../components/ui/QRScanner';
 import { ResultadoModal } from '../../components/ui/ResultadoModal';
 import { colores } from '../../theme/colores';
+import { useAltoDisponible } from '../../hooks/useAltoDisponible';
 import {
   obtenerCuentaPedido,
   registrarPropinaPorQr,
@@ -49,6 +50,9 @@ export default function PedirCuenta() {
   const [aviso, setAviso] = useState<{ titulo: string; mensaje: string } | null>(null);
   const [detalleContainerWidth, setDetalleContainerWidth] = useState(0);
   const [paginaActual, setPaginaActual] = useState(0);
+  // En pantallas bajas se achican márgenes y textos para que detalle, resumen y botón no se pisen.
+  const { alMedir, compacto } = useAltoDisponible();
+  const filaResumen = `flex-row justify-between ${compacto ? 'py-0.5' : 'py-1.5'} items-center`;
 
   // Ancho exacto del carrusel: si el contenedor ya midió usamos su ancho interior, sino fallback seguro
   const carouselWidth = detalleContainerWidth > 0 ? detalleContainerWidth : Math.max(windowWidth - 64, 280);
@@ -189,16 +193,17 @@ export default function PedirCuenta() {
         <View
           key="pantalla-resumen-pago"
           className="flex-1 px-4 justify-between"
+          onLayout={alMedir}
           style={{
-            paddingTop: 12,
-            paddingBottom: Math.max(insets.bottom, 16) + 8,
+            paddingTop: compacto ? 8 : 12,
+            paddingBottom: Math.max(insets.bottom, compacto ? 12 : 16) + 8,
           }}
         >
           {/* 1. Detalle del pedido con scroll horizontal de a 2 productos */}
           <View
-            className="rounded-2xl border-2 border-white/70 bg-chido-cabecera p-4 shadow-md"
+            className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera ${compacto ? 'p-3' : 'p-4'} shadow-md`}
             onLayout={(e) => {
-              const w = e.nativeEvent.layout.width - 32;
+              const w = e.nativeEvent.layout.width - (compacto ? 24 : 32);
               if (w > 0 && Math.abs(w - detalleContainerWidth) > 1) {
                 setDetalleContainerWidth(w);
               }
@@ -301,7 +306,7 @@ export default function PedirCuenta() {
           </View>
 
           {/* 2. Resumen del Pago (ocupa el espacio central elásticamente) */}
-          <View className="rounded-2xl border-2 border-white/70 bg-chido-cabecera p-4 my-3 flex-1 justify-between shadow-md">
+          <View className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera flex-1 justify-between shadow-md ${compacto ? 'p-3 my-2' : 'p-4 my-3'}`}>
             <View>
               <View className="flex-row items-center justify-between pb-2.5 mb-2 border-b border-white/20">
                 <Text className="text-xl font-black text-chido-texto-sobre-oscuro">
@@ -319,7 +324,7 @@ export default function PedirCuenta() {
               </View>
 
               {/* Subtotal */}
-              <View className="flex-row justify-between py-1.5 items-center">
+              <View className={filaResumen}>
                 <Text className="text-chido-texto-secundario-sobre-oscuro font-bold text-base">
                   Subtotal productos:
                 </Text>
@@ -330,7 +335,7 @@ export default function PedirCuenta() {
 
               {/* Descuento juegos (siempre visible con desglose transparente) */}
               {cuenta.descuentoPorcentaje > 0 ? (
-                <View className="flex-row justify-between py-1.5 items-center">
+                <View className={filaResumen}>
                   <View className="flex-row items-center">
                     <Ionicons name="game-controller" size={18} color="#9be27a" />
                     <Text className="text-[#9be27a] font-bold text-base ml-1.5">
@@ -342,7 +347,7 @@ export default function PedirCuenta() {
                   </Text>
                 </View>
               ) : (
-                <View className="flex-row justify-between py-1.5 items-center">
+                <View className={filaResumen}>
                   <View className="flex-row items-center">
                     <Ionicons name="game-controller-outline" size={18} color={colores.textoSecundarioSobreOscuro} />
                     <Text className="text-chido-texto-secundario-sobre-oscuro font-bold text-base ml-1.5">
@@ -356,7 +361,7 @@ export default function PedirCuenta() {
               )}
 
               {/* Propina */}
-              <View className="flex-row justify-between py-1.5 items-center">
+              <View className={filaResumen}>
                 <View className="flex-row items-center">
                   <Ionicons name="heart" size={18} color={colores.textoSobreOscuro} />
                   <Text className="text-chido-texto-secundario-sobre-oscuro font-bold text-base ml-1.5">
@@ -374,7 +379,7 @@ export default function PedirCuenta() {
             </View>
 
             {/* Total a pagar */}
-            <View className="border-t-2 border-white/20 pt-3 flex-row justify-between items-baseline">
+            <View className={`border-t-2 border-white/20 ${compacto ? 'pt-2' : 'pt-3'} flex-row justify-between items-baseline`}>
               <View>
                 <Text className="text-chido-texto-secundario-sobre-oscuro font-extrabold text-sm uppercase tracking-wider">
                   TOTAL A PAGAR
@@ -383,7 +388,7 @@ export default function PedirCuenta() {
                   Impuestos y propina incluidos
                 </Text>
               </View>
-              <Text className="text-chido-texto-sobre-oscuro font-black text-4xl">
+              <Text className={`text-chido-texto-sobre-oscuro font-black ${compacto ? 'text-3xl' : 'text-4xl'}`}>
                 ${cuenta.totalFinal.toLocaleString('es-AR')}
               </Text>
             </View>
@@ -391,18 +396,18 @@ export default function PedirCuenta() {
 
           {/* 3. Botón para pagar o Estado acreditado */}
           {pagoInformado ? (
-            <View key="banner-pago-informado" className="rounded-2xl border-2 border-white/70 bg-chido-cabecera p-4 items-center shadow-lg">
+            <View key="banner-pago-informado" className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera ${compacto ? 'p-3' : 'p-4'} items-center shadow-lg`}>
               <View className="flex-row items-center mb-1">
                 <Ionicons name="checkmark-circle" size={32} color={colores.activo} />
                 <Text className="text-chido-texto-sobre-oscuro font-black text-xl ml-2">
                   Pago informado
                 </Text>
               </View>
-              <Text className="text-chido-texto-secundario-sobre-oscuro text-sm font-bold text-center mb-3">
+              <Text className={`text-chido-texto-secundario-sobre-oscuro text-sm font-bold text-center ${compacto ? 'mb-2' : 'mb-3'}`}>
                 El mozo debe confirmar el pago para liberar la mesa.
               </Text>
               <TouchableOpacity
-                className="bg-chido-fondo border-2 border-white/70 px-6 py-3.5 rounded-xl w-full items-center active:opacity-90"
+                className={`bg-chido-fondo border-2 border-white/70 px-6 ${compacto ? 'py-2.5' : 'py-3.5'} rounded-xl w-full items-center active:opacity-90`}
                 onPress={() => router.replace(clienteAnonimoId ? '/cliente-anonimo/escanear-mesa' : '/cliente/home')}
               >
                 <Text className="text-chido-texto-sobre-oscuro font-black text-lg">Volver al inicio</Text>
@@ -414,7 +419,7 @@ export default function PedirCuenta() {
               accessibilityRole="button"
               accessibilityLabel="Pagar cuenta"
               disabled={procesandoPago}
-              className="rounded-2xl border-2 border-white/70 bg-chido-cabecera py-5 px-6 flex-row items-center justify-center shadow-lg active:opacity-90"
+              className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera ${compacto ? 'py-3.5' : 'py-5'} px-6 flex-row items-center justify-center shadow-lg active:opacity-90`}
               onPress={handleRealizarPago}
             >
               {procesandoPago ? (

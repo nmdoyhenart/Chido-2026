@@ -18,6 +18,15 @@ import { enviarEncuesta } from '../../services/encuestas.service';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { Input } from '../../components/ui/Input';
 import { PrimaryButton } from '../../components/ui/Buttons';
+import { ResultadoModal } from '../../components/ui/ResultadoModal';
+
+type ModalConfig = {
+  tipo: 'exito' | 'error';
+  titulo: string;
+  mensaje: string;
+  accion: string;
+  onClose: () => void;
+} | null;
 
 export default function EncuestaCliente() {
   const insets = useSafeAreaInsets();
@@ -33,13 +42,18 @@ export default function EncuestaCliente() {
   const [experiencia, setExperiencia] = useState<number>(0);
   const [comentario, setComentario] = useState<string>('');
   const [enviando, setEnviando] = useState(false);
-  const [errorMensaje, setErrorMensaje] = useState<string | null>(null);
+  const [modalConfig, setModalConfig] = useState<ModalConfig>(null);
 
   const handleSubmit = async () => {
     Keyboard.dismiss();
-    setErrorMensaje(null);
     if (comida === 0 || atencion === 0 || experiencia === 0) {
-      setErrorMensaje('Por favor calificá todos los aspectos (comida, atención y recomendación).');
+      setModalConfig({
+        tipo: 'error',
+        titulo: 'Encuesta incompleta',
+        mensaje: 'Por favor calificá todos los aspectos (comida, atención y recomendación) antes de enviar.',
+        accion: 'Completar',
+        onClose: () => setModalConfig(null),
+      });
       return;
     }
 
@@ -58,16 +72,42 @@ export default function EncuestaCliente() {
       if (pedidoId) {
         await AsyncStorage.setItem(`encuesta_completada_${pedidoId}`, 'true');
       }
-      router.back();
+
+      setModalConfig({
+        tipo: 'exito',
+        titulo: '¡Muchas gracias!',
+        mensaje: 'Tu opinión fue enviada con éxito y nos ayuda a seguir mejorando.',
+        accion: 'Aceptar',
+        onClose: () => {
+          setModalConfig(null);
+          router.back();
+        },
+      });
     } catch (error: any) {
       if (error?.message?.includes('Ya enviaste una encuesta')) {
         if (pedidoId) {
           await AsyncStorage.setItem(`encuesta_completada_${pedidoId}`, 'true');
         }
-        router.back();
+        setModalConfig({
+          tipo: 'exito',
+          titulo: 'Encuesta ya registrada',
+          mensaje: 'Ya habíamos registrado tu opinión para este pedido. ¡Muchas gracias!',
+          accion: 'Aceptar',
+          onClose: () => {
+            setModalConfig(null);
+            router.back();
+          },
+        });
         return;
       }
-      setErrorMensaje(error.message || 'No se pudo enviar la encuesta.');
+
+      setModalConfig({
+        tipo: 'error',
+        titulo: 'No se pudo enviar',
+        mensaje: error.message || 'Ocurrió un error al enviar la encuesta. Por favor intentá nuevamente.',
+        accion: 'Reintentar',
+        onClose: () => setModalConfig(null),
+      });
     } finally {
       setEnviando(false);
     }
@@ -85,30 +125,27 @@ export default function EncuestaCliente() {
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <KeyboardAvoidingView
-            className="flex-1 px-5 justify-between pt-2"
+            className="flex-1 px-5 justify-between pt-3"
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           >
-            <View>
-              <Text className="text-2xl font-bold text-chido-texto-sobre-oscuro text-center mb-3">
+            <View className="flex-1 justify-between pb-3">
+              <Text className="text-2xl font-bold text-chido-texto-sobre-oscuro text-center mb-1">
                 ¿Qué te pareció todo?
               </Text>
 
               {/* 1. Control: Estrellas para Comida */}
-              <View className="mb-3.5">
+              <View>
                 <Text className="text-lg text-chido-texto-sobre-oscuro mb-2 font-bold">La Comida</Text>
-                <View className="flex-row justify-between px-2">
+                <View className="flex-row justify-between px-3">
                   {[1, 2, 3, 4, 5].map((val) => (
                     <TouchableOpacity
                       key={`comida-${val}`}
-                      onPress={() => {
-                        setComida(val);
-                        setErrorMensaje(null);
-                      }}
+                      onPress={() => setComida(val)}
                       activeOpacity={0.7}
                     >
                       <Ionicons
                         name={val <= comida ? 'star' : 'star-outline'}
-                        size={38}
+                        size={42}
                         color={val <= comida ? '#FFD700' : colores.textoSobreOscuro}
                       />
                     </TouchableOpacity>
@@ -117,21 +154,19 @@ export default function EncuestaCliente() {
               </View>
 
               {/* 2. Control: Botones numéricos para Atención */}
-              <View className="mb-3.5">
+              <View>
                 <Text className="text-lg text-chido-texto-sobre-oscuro mb-2 font-bold">
                   La Atención del Mozo
                 </Text>
-                <View className="flex-row justify-between">
+                <View className="flex-row justify-between px-1">
                   {[1, 2, 3, 4, 5].map((val) => (
                     <TouchableOpacity
                       key={`atencion-${val}`}
-                      onPress={() => {
-                        setAtencion(val);
-                        setErrorMensaje(null);
-                      }}
-                      className={`w-12 h-12 rounded-full items-center justify-center border-2 ${
+                      onPress={() => setAtencion(val)}
+                      className={`rounded-full items-center justify-center border-2 ${
                         val === atencion ? 'bg-chido-acento border-chido-acento' : 'border-white/50'
                       }`}
+                      style={{ width: 50, height: 50 }}
                       activeOpacity={0.7}
                     >
                       <Text className="text-xl font-bold text-chido-texto-sobre-oscuro">{val}</Text>
@@ -141,7 +176,7 @@ export default function EncuestaCliente() {
               </View>
 
               {/* 3. Control: Botones de Recomendación */}
-              <View className="mb-3.5">
+              <View>
                 <Text className="text-lg text-chido-texto-sobre-oscuro mb-2 font-bold">
                   ¿Recomendarías este lugar a otra persona?
                 </Text>
@@ -149,11 +184,8 @@ export default function EncuestaCliente() {
                   <TouchableOpacity
                     accessibilityRole="button"
                     accessibilityLabel="Sí, lo recomiendo"
-                    onPress={() => {
-                      setExperiencia(5);
-                      setErrorMensaje(null);
-                    }}
-                    className={`flex-1 flex-row items-center justify-center py-3 px-3 rounded-2xl border-2 ${
+                    onPress={() => setExperiencia(5)}
+                    className={`flex-1 flex-row items-center justify-center py-3.5 px-3 rounded-2xl border-2 ${
                       experiencia === 5
                         ? 'bg-chido-acento border-white'
                         : 'bg-chido-cabecera border-white/50'
@@ -162,10 +194,10 @@ export default function EncuestaCliente() {
                   >
                     <Ionicons
                       name={experiencia === 5 ? 'thumbs-up' : 'thumbs-up-outline'}
-                      size={22}
+                      size={24}
                       color={colores.textoSobreOscuro}
                     />
-                    <Text className="ml-2 text-sm font-extrabold text-chido-texto-sobre-oscuro text-center">
+                    <Text className="ml-2 text-base font-extrabold text-chido-texto-sobre-oscuro text-center">
                       Sí, lo recomiendo
                     </Text>
                   </TouchableOpacity>
@@ -173,11 +205,8 @@ export default function EncuestaCliente() {
                   <TouchableOpacity
                     accessibilityRole="button"
                     accessibilityLabel="No lo recomiendo"
-                    onPress={() => {
-                      setExperiencia(1);
-                      setErrorMensaje(null);
-                    }}
-                    className={`flex-1 flex-row items-center justify-center py-3 px-3 rounded-2xl border-2 ${
+                    onPress={() => setExperiencia(1)}
+                    className={`flex-1 flex-row items-center justify-center py-3.5 px-3 rounded-2xl border-2 ${
                       experiencia === 1
                         ? 'bg-chido-error border-white'
                         : 'bg-chido-cabecera border-white/50'
@@ -186,10 +215,10 @@ export default function EncuestaCliente() {
                   >
                     <Ionicons
                       name={experiencia === 1 ? 'thumbs-down' : 'thumbs-down-outline'}
-                      size={22}
+                      size={24}
                       color={colores.textoSobreOscuro}
                     />
-                    <Text className="ml-2 text-sm font-extrabold text-chido-texto-sobre-oscuro text-center">
+                    <Text className="ml-2 text-base font-extrabold text-chido-texto-sobre-oscuro text-center">
                       No lo recomiendo
                     </Text>
                   </TouchableOpacity>
@@ -197,42 +226,40 @@ export default function EncuestaCliente() {
               </View>
 
               {/* 4. Control: TextInput para comentarios */}
-              <View className="mb-2">
+              <View>
                 <Input
                   label="Comentarios (Opcional)"
                   placeholder="¿Algo más que nos quieras decir?"
                   value={comentario}
                   onChangeText={setComentario}
                   multiline={true}
-                  numberOfLines={2}
+                  numberOfLines={3}
                   textAlignVertical="top"
-                  style={{ height: 62 }}
+                  style={{ height: 75 }}
                 />
               </View>
-            </View>
 
-            {/* Parte inferior: error si existe + botón Enviar */}
-            <View>
-              {errorMensaje && (
-                <View className="mb-2 bg-chido-cabecera border-2 border-white/70 py-2 px-3 rounded-xl flex-row items-center">
-                  <Ionicons name="alert-circle-outline" size={20} color={colores.textoSobreOscuro} />
-                  <Text className="text-chido-texto-sobre-oscuro font-bold text-xs ml-2 flex-1">
-                    {errorMensaje}
-                  </Text>
-                </View>
-              )}
-
-              <PrimaryButton
-                title="Enviar Encuesta"
-                onPress={handleSubmit}
-                isLoading={enviando}
-                className="mb-1"
-              />
+              {/* Botón Enviar */}
+              <View className="pt-2">
+                <PrimaryButton
+                  title="Enviar Encuesta"
+                  onPress={handleSubmit}
+                  isLoading={enviando}
+                />
+              </View>
             </View>
           </KeyboardAvoidingView>
         </TouchableWithoutFeedback>
       </SafeAreaView>
+
+      <ResultadoModal
+        visible={Boolean(modalConfig)}
+        tipo={modalConfig?.tipo ?? 'error'}
+        titulo={modalConfig?.titulo ?? ''}
+        mensaje={modalConfig?.mensaje ?? ''}
+        accion={modalConfig?.accion ?? 'Entendido'}
+        onClose={modalConfig?.onClose ?? (() => setModalConfig(null))}
+      />
     </View>
   );
 }
-

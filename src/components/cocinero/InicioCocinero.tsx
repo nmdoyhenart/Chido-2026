@@ -54,8 +54,8 @@ export default function InicioCocinero({ usuario, role }: Props) {
   const tamanoTitulo = { fontSize: 20 * escala, lineHeight: 25 * escala };
   const opciones = [
     { titulo: 'Alta de plato', icono: 'restaurant-outline' as const, destino: '/productos/alta' as const },
-    { titulo: 'Pedidos entrantes', icono: 'file-tray-full-outline' as const, destino: '/cocina/pedidos' as const, cantidad: pedidos },
-    { titulo: 'Ver la carta', icono: 'book-outline' as const, destino: '/cocina/carta' as const },
+    { titulo: 'Platos en preparación', icono: 'file-tray-full-outline' as const, destino: '/cocina/pedidos' as const, cantidad: pedidos },
+    { titulo: 'Carta de platos', icono: 'book-outline' as const, destino: '/cocina/carta' as const },
   ];
 
   return (

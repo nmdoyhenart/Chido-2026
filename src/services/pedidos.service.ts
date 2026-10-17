@@ -125,17 +125,17 @@ export const getEstadoPedidoAnonimo = async (clienteAnonimoId: string, pedidoId:
   return data as string;
 };
 
-export async function obtenerPedidoActivoCliente(clienteId: string): Promise<{ id: string } | null> {
+export async function obtenerPedidoActivoCliente(clienteId: string): Promise<{ id: string; estado: string } | null> {
   const { data, error } = await supabase
     .from('pedidos')
-    .select('id')
+    .select('id, estado')
     .eq('cliente_id', clienteId)
-    .in('estado', ['pendiente_mozo', 'confirmado', 'en_preparacion', 'entregado', 'recibido', 'pago_informado'])
+    .in('estado', ['pendiente_mozo', 'confirmado', 'en_preparacion', 'entregado', 'recibido', 'pago_informado', 'rechazado'])
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
   if (error) throw new Error('No se pudo consultar tu pedido activo.');
-  return data as { id: string } | null;
+  return data as { id: string; estado: string } | null;
 }
 
 export const confirmarMesaAnonima = async (clienteAnonimoId: string, mesaId: string) => {

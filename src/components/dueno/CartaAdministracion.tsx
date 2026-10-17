@@ -20,11 +20,11 @@ const tipos = ['Todos', 'Platos', 'Bebidas'] as const;
 const PRODUCTOS_POR_PAGINA = 3;
 const normalizar = (texto: string) => texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
-export default function CartaAdministracion({ soloLectura = false }: { soloLectura?: boolean }) {
+export default function CartaAdministracion({ soloLectura = false, soloTipoProducto }: { soloLectura?: boolean; soloTipoProducto?: TipoProducto }) {
   const router = useRouter();
   const { role, mode, cargando } = useAppSession();
   const simulacion = mode === 'simulation';
-  const autorizado = role === 'dueño' || role === 'supervisor' || (soloLectura && (role === 'cocinero' || role === 'cocina'));
+  const autorizado = role === 'dueño' || role === 'supervisor' || (soloLectura && (role === 'cocinero' || role === 'cocina' || role === 'cantinero'));
   const [productosReales, setProductosReales] = useState<Producto[]>([]);
   const [cargandoProductos, setCargandoProductos] = useState(true);
   const [errorProductos, setErrorProductos] = useState<string | null>(null);
@@ -55,7 +55,7 @@ export default function CartaAdministracion({ soloLectura = false }: { soloLectu
   }, [autorizado, cargando, mode, revision]));
   const productos = productosReales;
   const [busqueda, setBusqueda] = useState('');
-  const [tipo, setTipo] = useState<typeof tipos[number]>('Todos');
+  const [tipo, setTipo] = useState<typeof tipos[number]>(soloTipoProducto === 'bebida' ? 'Bebidas' : 'Todos');
   const [accion, setAccion] = useState<Accion | null>(null);
   const [pagina, setPagina] = useState(0);
   const [altoLista, setAltoLista] = useState(0);
@@ -65,6 +65,7 @@ export default function CartaAdministracion({ soloLectura = false }: { soloLectu
   const tecladoLista = useCampoVisibleConTeclado(lista);
   const tecladoFormulario = useCampoVisibleConTeclado(formulario);
   const visibles = productos.filter(p => normalizar(p.nombre + ' ' + p.descripcion).includes(normalizar(busqueda.trim()))
+    && (!soloTipoProducto || p.tipoProducto === soloTipoProducto)
     && (tipo === 'Todos' || p.tipoProducto === (tipo === 'Platos' ? 'plato' : 'bebida')));
   const bebida = (accion?.tipo === 'agregar' ? accion.tipoProducto : accion?.plato.tipoProducto) === 'bebida';
   const nombreTipo = bebida ? 'bebida' : 'plato';
@@ -94,7 +95,7 @@ export default function CartaAdministracion({ soloLectura = false }: { soloLectu
       <TouchableOpacity accessibilityRole="button" accessibilityLabel="Volver al inicio" onPress={() => router.replace('/(app)/home')} style={s.volver}>
         <Ionicons name="arrow-back" size={24} color={c.textoSobreOscuro} />
       </TouchableOpacity>
-      <View style={s.flex}><Text style={s.encabezado}>{soloLectura ? 'Ver la carta' : 'Gestionar carta'}</Text><Text style={s.subtitulo}>{soloLectura ? 'Cocinero · Solo lectura' : `${role === 'dueño' ? 'Dueño' : 'Supervisor'} · ${simulacion ? 'Solo lectura' : 'Productos'}`}</Text></View>
+      <View style={s.flex}><Text style={s.encabezado}>{soloLectura ? 'Ver la carta' : 'Gestionar carta'}</Text><Text style={s.subtitulo}>{soloLectura ? 'Solo lectura' : `${role === 'dueño' ? 'Dueño' : 'Supervisor'} · ${simulacion ? 'Solo lectura' : 'Productos'}`}</Text></View>
       <Ionicons name="book-outline" size={28} color={c.textoSecundarioAlternativo} />
     </View>
     <SafeAreaView edges={['bottom']} style={s.cuerpo}>
@@ -103,9 +104,9 @@ export default function CartaAdministracion({ soloLectura = false }: { soloLectu
           <View><Text style={s.titulo}>Carta de Chido</Text><Text style={s.intro}>{soloLectura ? 'Consultá los productos disponibles.' : 'Agregá, editá y organizá platos y bebidas.'}</Text></View>
         <View style={s.resumen}>
           {([
-            { titulo: 'Platos', icono: 'restaurant-outline', cantidad: productos.filter(p => p.tipoProducto === 'plato').length },
-            { titulo: 'Bebidas', icono: 'wine-outline', cantidad: productos.filter(p => p.tipoProducto === 'bebida').length },
-          ] as const).map(item => <View key={item.titulo} style={s.contador} accessible accessibilityLabel={`${item.cantidad} ${item.titulo.toLowerCase()}`}>
+            { titulo: 'Platos', icono: 'restaurant-outline', tipoProducto: 'plato', cantidad: productos.filter(p => p.tipoProducto === 'plato').length },
+            { titulo: 'Bebidas', icono: 'wine-outline', tipoProducto: 'bebida', cantidad: productos.filter(p => p.tipoProducto === 'bebida').length },
+          ] as const).filter(item => !soloTipoProducto || item.tipoProducto === soloTipoProducto).map(item => <View key={item.titulo} style={s.contador} accessible accessibilityLabel={`${item.cantidad} ${item.titulo.toLowerCase()}`}>
             <View style={s.contadorNumero}><Ionicons name={item.icono} size={18} color={c.textoSobreOscuro} /><Text style={s.numero}>{item.cantidad}</Text></View>
             <Text style={s.resumenTexto}>{item.titulo}</Text>
           </View>)}
@@ -123,7 +124,7 @@ export default function CartaAdministracion({ soloLectura = false }: { soloLectu
           <TextInput accessibilityLabel="Buscar platos o bebidas" placeholder="Buscar platos o bebidas…" placeholderTextColor={c.textoSecundarioSobreOscuro} value={busqueda} onChangeText={texto => { setBusqueda(texto); setPagina(0); }} onFocus={tecladoLista.alEnfocar} style={s.busqueda} returnKeyType="search" />
           {!!busqueda && <TouchableOpacity accessibilityRole="button" accessibilityLabel="Limpiar búsqueda" onPress={() => { setBusqueda(''); setPagina(0); }} style={s.limpiar}><Ionicons name="close-circle" size={22} color={c.textoSecundarioSobreOscuro} /></TouchableOpacity>}
         </View>
-        <View style={s.tipos}>{tipos.map(item => <TouchableOpacity key={item} accessibilityRole="button" accessibilityLabel={`Mostrar ${item.toLowerCase()}`} accessibilityState={{ selected: tipo === item }} onPress={() => { setTipo(item); setPagina(0); }} style={[s.tipo, tipo === item && s.tipoActivo]}><Text style={[s.filtroTexto, tipo === item && s.filtroTextoActivo]}>{item}</Text></TouchableOpacity>)}</View>
+        {!soloTipoProducto && <View style={s.tipos}>{tipos.map(item => <TouchableOpacity key={item} accessibilityRole="button" accessibilityLabel={`Mostrar ${item.toLowerCase()}`} accessibilityState={{ selected: tipo === item }} onPress={() => { setTipo(item); setPagina(0); }} style={[s.tipo, tipo === item && s.tipoActivo]}><Text style={[s.filtroTexto, tipo === item && s.filtroTextoActivo]}>{item}</Text></TouchableOpacity>)}</View>}
 
         </View>}
         {cargandoProductos && <ChidoLoader mensaje="Cargando productos…" />}

@@ -8,7 +8,7 @@ import ChidoLoader from '../../components/ui/ChidoLoader';
 import { QRScanner } from '../../components/ui/QRScanner';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { useAltoDisponible } from '../../hooks/useAltoDisponible';
-import { obtenerPedidoConfirmadoParaJuegos } from '../../services/juegos';
+import { obtenerPedidoParaJuegos } from '../../services/juegos';
 import { obtenerPedidoActivoCliente } from '../../services/pedidos.service';
 import { confirmarMesaPorQr, consultarDisponibilidadMesaPorQr, solicitarMesa } from '../../services/mesas';
 import { colores } from '../../theme/colores';
@@ -21,7 +21,7 @@ export default function HomeCliente() {
   const [scannerVisible, setScannerVisible] = useState(false);
   const [solicitandoMesa, setSolicitandoMesa] = useState(false);
   const [avisoMesa, setAvisoMesa] = useState<string | null>(null);
-  const [pedidoConfirmado, setPedidoConfirmado] = useState<{ id: string; descuento_porcentaje: number } | null>(null);
+  const [pedidoConJuegos, setPedidoConJuegos] = useState<{ id: string; descuento_porcentaje: number } | null>(null);
   const [pedidoActivo, setPedidoActivo] = useState<{ id: string } | null>(null);
   const [cargandoPedido, setCargandoPedido] = useState(true);
   const [errorPedido, setErrorPedido] = useState<string | null>(null);
@@ -36,7 +36,7 @@ export default function HomeCliente() {
   useFocusEffect(useCallback(() => {
     let activa = true;
     if (!clienteId) {
-      setPedidoConfirmado(null);
+      setPedidoConJuegos(null);
       setPedidoActivo(null);
       setCargandoPedido(false);
       return () => { activa = false; };
@@ -44,10 +44,10 @@ export default function HomeCliente() {
 
     setCargandoPedido(true);
     setErrorPedido(null);
-    void Promise.all([obtenerPedidoActivoCliente(clienteId), obtenerPedidoConfirmadoParaJuegos(clienteId)]).then(([activo, confirmado]) => {
+    void Promise.all([obtenerPedidoActivoCliente(clienteId), obtenerPedidoParaJuegos(clienteId)]).then(([activo, confirmado]) => {
       if (!activa) return;
       setPedidoActivo(activo);
-      setPedidoConfirmado(confirmado);
+      setPedidoConJuegos(confirmado);
     }).catch((error: unknown) => {
       if (activa) {
         setErrorPedido(error instanceof Error ? error.message : 'No se pudo consultar tu pedido activo.');
@@ -140,19 +140,19 @@ export default function HomeCliente() {
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={pedidoConfirmado ? 'Abrir juegos y descuentos' : 'Juegos bloqueados hasta confirmar el pedido'}
-              accessibilityState={{ disabled: !pedidoConfirmado }}
-              disabled={!pedidoConfirmado}
-              className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera ${pedidoConfirmado ? '' : 'opacity-60'}`}
+              accessibilityLabel={pedidoConJuegos ? 'Abrir juegos y descuentos' : 'Juegos bloqueados hasta confirmar el pedido'}
+              accessibilityState={{ disabled: !pedidoConJuegos }}
+              disabled={!pedidoConJuegos}
+              className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera ${pedidoConJuegos ? '' : 'opacity-60'}`}
               style={tarjeta}
-              onPress={() => pedidoConfirmado && router.push({ pathname: '/cliente/juegos', params: { pedidoId: pedidoConfirmado.id } })}
+              onPress={() => pedidoConJuegos && router.push({ pathname: '/cliente/juegos', params: { pedidoId: pedidoConJuegos.id } })}
             >
               <View className="flex-row items-center">
                 <Ionicons name="game-controller-outline" size={iconoTarjeta}color={colores.textoSobreOscuro} />
                 <View className="ml-4 flex-1">
                   <Text className="font-extrabold text-chido-texto-sobre-oscuro" style={tituloTarjeta}>Juegos</Text>
                 </View>
-                <Ionicons name={pedidoConfirmado ? 'chevron-forward' : 'lock-closed-outline'} size={30} color={colores.textoSobreOscuro} />
+                <Ionicons name={pedidoConJuegos ? 'chevron-forward' : 'lock-closed-outline'} size={30} color={colores.textoSobreOscuro} />
               </View>
             </Pressable>
             {errorPedido && <View className={`rounded-2xl bg-chido-error ${compacto ? 'p-2' : 'p-4'}`}><Text className="text-center text-base font-bold text-chido-texto-sobre-oscuro">{errorPedido}</Text></View>}

@@ -1,17 +1,33 @@
 import { supabase } from '../lib/supabase';
 import type { EstadoAhorcado, EstadoMemotest, IntentoJuego, PartidaTateti } from '../types/juegos';
 
-export async function obtenerPedidoConfirmadoParaJuegos(clienteId: string) {
+const ESTADOS_CON_JUEGOS = ['confirmado', 'en_preparacion', 'entregado', 'recibido'] as const;
+
+export async function obtenerPedidoParaJuegos(clienteId: string) {
   const { data, error } = await supabase
     .from('pedidos')
     .select('id, descuento_porcentaje')
     .eq('cliente_id', clienteId)
-    .eq('estado', 'confirmado')
+    .in('estado', ESTADOS_CON_JUEGOS)
+    .is('cuenta_solicitada_at', null)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
   if (error) throw new Error('No se pudo verificar si tenés juegos disponibles.');
   return data as { id: string; descuento_porcentaje: number } | null;
+}
+
+export async function puedeJugarPedido(clienteId: string, pedidoId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('pedidos')
+    .select('id')
+    .eq('id', pedidoId)
+    .eq('cliente_id', clienteId)
+    .in('estado', ESTADOS_CON_JUEGOS)
+    .is('cuenta_solicitada_at', null)
+    .maybeSingle();
+  if (error) throw new Error('No se pudo verificar si podés jugar.');
+  return Boolean(data);
 }
 
 export async function iniciarTateti(pedidoId: string) {

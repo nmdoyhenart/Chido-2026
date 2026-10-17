@@ -265,6 +265,19 @@ export async function confirmarMesaPorQr(
   return { ...mesa, qr_confirmado_at: new Date().toISOString() };
 }
 
+export async function consultarDisponibilidadMesaPorQr(rawQr: string): Promise<{ id: string; numero: number; disponibilidad: 'vacía' | 'ocupada' }> {
+  const payload = parseQrPayload(rawQr);
+  if (!payload || payload.tipo !== 'mesa') {
+    throw new Error('El código escaneado no corresponde a una mesa.');
+  }
+  const { data, error } = await supabase.rpc('consultar_disponibilidad_mesa_qr', { p_mesa_id: payload.mesaId });
+  if (error || !data || typeof data !== 'object') {
+    throw new Error(error?.message || 'No se pudo consultar la disponibilidad de la mesa.');
+  }
+  const mesa = data as { id: string; numero: number; disponibilidad: 'vacía' | 'ocupada' };
+  return mesa;
+}
+
 export async function obtenerMesaDesdeQr(
   perfil: string,
   rawQr: string,

@@ -4,23 +4,22 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-  Modal,
-  StyleSheet,
   Image,
   useWindowDimensions,
+  Vibration,
 } from 'react-native';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '../../components/Header';
+import ChidoLoader from '../../components/ui/ChidoLoader';
 import { QRScanner } from '../../components/ui/QRScanner';
+import { ResultadoModal } from '../../components/ui/ResultadoModal';
 import { colores } from '../../theme/colores';
 import {
   obtenerCuentaPedido,
   registrarPropinaPorQr,
-  registrarPagoSimulado,
+  informarPago,
   CuentaCompleta,
   DetalleProductoCuenta,
 } from '../../services/cuenta.service';
@@ -39,12 +38,15 @@ export default function PedirCuenta() {
 
   const params = useLocalSearchParams();
   const pedidoId = Array.isArray(params.pedidoId) ? params.pedidoId[0] : params.pedidoId;
+  const rawClienteAnonimoId = Array.isArray(params.clienteAnonimoId) ? params.clienteAnonimoId[0] : params.clienteAnonimoId;
+  const clienteAnonimoId = rawClienteAnonimoId || undefined;
 
   const [cuenta, setCuenta] = useState<CuentaCompleta | null>(null);
   const [cargando, setCargando] = useState(true);
   const [scannerVisible, setScannerVisible] = useState(false);
   const [procesandoPago, setProcesandoPago] = useState(false);
-  const [pagoAcreditado, setPagoAcreditado] = useState(false);
+  const [pagoInformado, setPagoInformado] = useState(false);
+  const [aviso, setAviso] = useState<{ titulo: string; mensaje: string } | null>(null);
   const [detalleContainerWidth, setDetalleContainerWidth] = useState(0);
   const [paginaActual, setPaginaActual] = useState(0);
 
@@ -64,17 +66,18 @@ export default function PedirCuenta() {
   const cargarDatos = useCallback(async () => {
     if (!pedidoId) return;
     try {
-      const data = await obtenerCuentaPedido(pedidoId);
+      const data = await obtenerCuentaPedido(pedidoId, clienteAnonimoId);
       setCuenta(data);
-      if (data.estado === 'pagado') {
-        setPagoAcreditado(true);
+      if (data.estado === 'pago_informado' || data.estado === 'pagado') {
+        setPagoInformado(true);
       }
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'No se pudo cargar la cuenta.');
+      Vibration.vibrate(180);
+      setAviso({ titulo: 'No pudimos cargar la cuenta', mensaje: error.message || 'Intentá nuevamente.' });
     } finally {
       setCargando(false);
     }
-  }, [pedidoId]);
+  }, [clienteAnonimoId, pedidoId]);
 
   useEffect(() => {
     const inicio = setTimeout(() => { void cargarDatos(); }, 0);
@@ -85,7 +88,7 @@ export default function PedirCuenta() {
     if (!pedidoId) {
       throw new Error('No se encontró el identificador del pedido.');
     }
-    await registrarPropinaPorQr(pedidoId, data);
+    await registrarPropinaPorQr(pedidoId, data, clienteAnonimoId);
     await cargarDatos();
   };
 
@@ -94,11 +97,12 @@ export default function PedirCuenta() {
     setProcesandoPago(true);
 
     try {
-      await new Promise((res) => setTimeout(res, 1800));
-      await registrarPagoSimulado(pedidoId, cuenta.totalFinal, cuenta.mesaNumero);
-      setPagoAcreditado(true);
+      await new Promise((res) => setTimeout(res, 700));
+      await informarPago(pedidoId, clienteAnonimoId);
+      setPagoInformado(true);
     } catch (error: any) {
-      Alert.alert('Error al procesar el pago', error.message || 'No se pudo registrar el pago.');
+      Vibration.vibrate(180);
+      setAviso({ titulo: 'No pudimos informar el pago', mensaje: error.message || 'Intentá nuevamente.' });
     } finally {
       setProcesandoPago(false);
     }
@@ -107,10 +111,7 @@ export default function PedirCuenta() {
   if (cargando) {
     return (
       <View key="pantalla-cargando" className="flex-1 bg-chido-fondo justify-center items-center">
-        <ActivityIndicator size="large" color={colores.textoSobreOscuro} />
-        <Text className="text-chido-texto-sobre-oscuro mt-4 font-bold text-lg">
-          Generando cuenta...
-        </Text>
+        <ChidoLoader mensaje="Generando cuenta…" />
       </View>
     );
   }
@@ -389,20 +390,20 @@ export default function PedirCuenta() {
           </View>
 
           {/* 3. Botón para pagar o Estado acreditado */}
-          {pagoAcreditado ? (
-            <View key="banner-pago-acreditado" className="rounded-2xl border-2 border-white/70 bg-chido-cabecera p-4 items-center shadow-lg">
+          {pagoInformado ? (
+            <View key="banner-pago-informado" className="rounded-2xl border-2 border-white/70 bg-chido-cabecera p-4 items-center shadow-lg">
               <View className="flex-row items-center mb-1">
                 <Ionicons name="checkmark-circle" size={32} color={colores.activo} />
                 <Text className="text-chido-texto-sobre-oscuro font-black text-xl ml-2">
-                  ¡Pago acreditado!
+                  Pago informado
                 </Text>
               </View>
               <Text className="text-chido-texto-secundario-sobre-oscuro text-sm font-bold text-center mb-3">
-                Avisamos al mozo para liberar la mesa.
+                El mozo debe confirmar el pago para liberar la mesa.
               </Text>
               <TouchableOpacity
                 className="bg-chido-fondo border-2 border-white/70 px-6 py-3.5 rounded-xl w-full items-center active:opacity-90"
-                onPress={() => router.replace('/cliente/home')}
+                onPress={() => router.replace(clienteAnonimoId ? '/cliente-anonimo/escanear-mesa' : '/cliente/home')}
               >
                 <Text className="text-chido-texto-sobre-oscuro font-black text-lg">Volver al inicio</Text>
               </TouchableOpacity>
@@ -417,12 +418,7 @@ export default function PedirCuenta() {
               onPress={handleRealizarPago}
             >
               {procesandoPago ? (
-                <View className="flex-row items-center">
-                  <ActivityIndicator size="small" color={colores.textoSobreOscuro} />
-                  <Text className="text-chido-texto-sobre-oscuro font-black text-2xl ml-3">
-                    Procesando...
-                  </Text>
-                </View>
+                <ChidoLoader compacto mensaje="Informando pago…" />
               ) : (
                 <View className="flex-row items-center">
                   <Ionicons name="card-outline" size={32} color={colores.textoSobreOscuro} />
@@ -444,48 +440,14 @@ export default function PedirCuenta() {
         onClose={() => setScannerVisible(false)}
       />
 
-      {/* MODAL DE PROCESAMIENTO DE PAGO */}
-      <Modal visible={procesandoPago} transparent animationType="fade">
-        <View style={styles.modalFondo}>
-          <View style={styles.modalCaja}>
-            <ActivityIndicator size="large" color={colores.textoSobreOscuro} />
-            <Text className="text-chido-texto-sobre-oscuro font-black text-2xl mt-4 text-center">
-              Procesando pago...
-            </Text>
-            <Text className="text-chido-texto-secundario-sobre-oscuro text-base mt-2 text-center font-bold">
-              Confirmando transacción
-            </Text>
-            <Text className="text-chido-texto-secundario-sobre-oscuro/80 text-xs mt-2 text-center">
-              Por favor esperá un momento
-            </Text>
-          </View>
-        </View>
-      </Modal>
+      <ResultadoModal
+        visible={Boolean(aviso)}
+        tipo="error"
+        titulo={aviso?.titulo ?? ''}
+        mensaje={aviso?.mensaje ?? ''}
+        accion="Entendido"
+        onClose={() => setAviso(null)}
+      />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  modalFondo: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  modalCaja: {
-    backgroundColor: colores.cabecera,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.7)',
-    padding: 28,
-    alignItems: 'center',
-    width: '85%',
-    maxWidth: 320,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 10,
-  },
-});

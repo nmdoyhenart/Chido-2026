@@ -8,7 +8,8 @@ import ChidoLoader from '../../components/ui/ChidoLoader';
 import { QRScanner } from '../../components/ui/QRScanner';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { obtenerPedidoConfirmadoParaJuegos } from '../../services/juegos';
-import { confirmarMesaPorQr, solicitarMesa } from '../../services/mesas';
+import { obtenerPedidoActivoCliente } from '../../services/pedidos.service';
+import { confirmarMesaPorQr, consultarDisponibilidadMesaPorQr, solicitarMesa } from '../../services/mesas';
 import { colores } from '../../theme/colores';
 
 export default function HomeCliente() {
@@ -20,6 +21,7 @@ export default function HomeCliente() {
   const [solicitandoMesa, setSolicitandoMesa] = useState(false);
   const [avisoMesa, setAvisoMesa] = useState<string | null>(null);
   const [pedidoConfirmado, setPedidoConfirmado] = useState<{ id: string; descuento_porcentaje: number } | null>(null);
+  const [pedidoActivo, setPedidoActivo] = useState<{ id: string } | null>(null);
   const [cargandoPedido, setCargandoPedido] = useState(true);
   const [errorPedido, setErrorPedido] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
@@ -32,14 +34,17 @@ export default function HomeCliente() {
     let activa = true;
     if (!clienteId) {
       setPedidoConfirmado(null);
+      setPedidoActivo(null);
       setCargandoPedido(false);
       return () => { activa = false; };
     }
 
     setCargandoPedido(true);
     setErrorPedido(null);
-    void obtenerPedidoConfirmadoParaJuegos(clienteId).then((pedido) => {
-      if (activa) setPedidoConfirmado(pedido);
+    void Promise.all([obtenerPedidoActivoCliente(clienteId), obtenerPedidoConfirmadoParaJuegos(clienteId)]).then(([activo, confirmado]) => {
+      if (!activa) return;
+      setPedidoActivo(activo);
+      setPedidoConfirmado(confirmado);
     }).catch((error: unknown) => {
       if (activa) {
         setErrorPedido(error instanceof Error ? error.message : 'No se pudo consultar tu pedido activo.');
@@ -54,8 +59,15 @@ export default function HomeCliente() {
 
   async function confirmarMesa(rawQr: string) {
     if (!usuario?.id) throw new Error('Iniciá sesión con tu cuenta de cliente para confirmar la mesa.');
-    const mesa = await confirmarMesaPorQr(usuario.id, rawQr);
-    router.push({ pathname: '/cliente/menu', params: { mesaId: mesa.id } });
+    try {
+      const mesa = await confirmarMesaPorQr(usuario.id, rawQr);
+      router.push({ pathname: '/cliente/menu', params: { mesaId: mesa.id } });
+    } catch (error) {
+      if (!(error instanceof Error) || error.message !== 'Todavía no tenés una mesa asignada.') throw error;
+      const mesa = await consultarDisponibilidadMesaPorQr(rawQr);
+      if (mesa.disponibilidad !== 'vacía') throw error;
+      setAvisoMesa(`La mesa ${mesa.numero} está libre nuevamente.`);
+    }
   }
 
   async function solicitarUnaMesa() {
@@ -96,7 +108,7 @@ export default function HomeCliente() {
             <Ionicons name="chevron-forward" size={30} color={colores.textoSobreOscuro} />
           </View>
         </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="Encuestas próximamente disponibles" className="rounded-2xl border-2 border-white/70 bg-chido-cabecera" style={tarjeta} onPress={() => router.push('/encuestas/previas')}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Escanear código QR para ver encuestas" className="rounded-2xl border-2 border-white/70 bg-chido-cabecera" style={tarjeta} onPress={() => router.push('/encuestas/acceso')}>
           <View className="flex-row items-center">
             <Ionicons name="bar-chart-outline" size={52} color={colores.textoSobreOscuro} />
             <View className="ml-4 flex-1"><Text className="font-extrabold text-chido-texto-sobre-oscuro" style={{ fontSize: 34, lineHeight: 40 }}>Ver encuestas</Text></View>
@@ -108,19 +120,19 @@ export default function HomeCliente() {
           <>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={pedidoConfirmado ? 'Ver mi pedido' : 'No hay un pedido confirmado'}
-              accessibilityState={{ disabled: !pedidoConfirmado }}
-              disabled={!pedidoConfirmado}
-              className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera ${pedidoConfirmado ? '' : 'opacity-60'}`}
-              style={tarjeta}
-              onPress={() => pedidoConfirmado && router.push({ pathname: '/cliente/pedido-realizado', params: { pedidoId: pedidoConfirmado.id } })}
+               accessibilityLabel={pedidoActivo ? 'Ver mi pedido' : 'No hay un pedido activo'}
+               accessibilityState={{ disabled: !pedidoActivo }}
+               disabled={!pedidoActivo}
+               className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera ${pedidoActivo ? '' : 'opacity-60'}`}
+               style={tarjeta}
+               onPress={() => pedidoActivo && router.push({ pathname: '/cliente/pedido-realizado', params: { pedidoId: pedidoActivo.id } })}
             >
               <View className="flex-row items-center">
                 <Ionicons name="receipt-outline" size={52} color={colores.textoSobreOscuro} />
                 <View className="ml-4 flex-1">
                   <Text className="font-extrabold text-chido-texto-sobre-oscuro" style={{ fontSize: 34, lineHeight: 40 }}>Mi pedido</Text>
                 </View>
-                <Ionicons name={pedidoConfirmado ? 'chevron-forward' : 'lock-closed-outline'} size={30} color={colores.textoSobreOscuro} />
+                 <Ionicons name={pedidoActivo ? 'chevron-forward' : 'lock-closed-outline'} size={30} color={colores.textoSobreOscuro} />
               </View>
             </Pressable>
             <Pressable

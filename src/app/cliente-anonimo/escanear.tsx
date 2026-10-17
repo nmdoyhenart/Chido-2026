@@ -9,7 +9,7 @@ import { colores } from '../../theme/colores';
 import { CerrarSesionButton } from '../../components/auth/CerrarSesionButton';
 import { obtenerClienteEnListaPorId } from '../../../lib/clientesAnonimos';
 
-const QR_ENTRADA = 'ENTRADA_LOCAL';
+const QR_ENTRADA = 'chido:ingreso:v1';
 const CLIENTE_ANONIMO_ID_KEY = 'cliente_anonimo_id';
 
 export default function EscanearEntrada() {

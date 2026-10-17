@@ -31,47 +31,19 @@ export type CuentaCompleta = {
   detalles: DetalleProductoCuenta[];
 };
 
-export async function obtenerCuentaPedido(pedidoId: string): Promise<CuentaCompleta> {
-  const { data: pedido, error: errorPedido } = await supabase
-    .from('pedidos')
-    .select(`
-      id,
-      mesa_id,
-      estado,
-      total,
-      descuento_porcentaje,
-      propina_porcentaje,
-      mesas (
-        numero
-      )
-    `)
-    .eq('id', pedidoId)
-    .single();
+export async function obtenerCuentaPedido(pedidoId: string, clienteAnonimoId?: string): Promise<CuentaCompleta> {
+  const { data, error } = clienteAnonimoId
+    ? await supabase.rpc('obtener_cuenta_pedido_anonimo', {
+      p_cliente_anonimo_id: clienteAnonimoId,
+      p_pedido_id: pedidoId,
+    })
+    : await supabase.rpc('obtener_cuenta_pedido_cliente', { p_pedido_id: pedidoId });
 
-  if (errorPedido || !pedido) {
-    console.error('Error al obtener pedido para cuenta:', errorPedido);
-    throw new Error(errorPedido?.message || 'No se pudo encontrar el pedido para generar la cuenta.');
+  if (error || !data || typeof data !== 'object') {
+    throw new Error(error?.message || 'No se pudo encontrar el pedido para generar la cuenta.');
   }
-
-  const { data: detalles, error: errorDetalles } = await supabase
-    .from('pedido_detalles')
-    .select(`
-      id,
-      cantidad,
-      precio_unitario,
-      productos (
-        id,
-        nombre,
-        tipo,
-        fotos
-      )
-    `)
-    .eq('pedido_id', pedidoId);
-
-  if (errorDetalles || !detalles) {
-    console.error('Error al obtener detalles del pedido:', errorDetalles);
-    throw new Error(errorDetalles?.message || 'No se pudieron obtener los productos del pedido.');
-  }
+  const pedido = data as Record<string, any>;
+  const detalles = Array.isArray(pedido.detalles) ? pedido.detalles : [];
 
   const items: DetalleProductoCuenta[] = detalles.map((d: any) => {
     const pUnit = Number(d.precio_unitario) || 0;
@@ -82,10 +54,10 @@ export async function obtenerCuentaPedido(pedidoId: string): Promise<CuentaCompl
       precio_unitario: pUnit,
       subtotal: pUnit * cant,
       producto: {
-        id: d.productos?.id || '',
-        nombre: d.productos?.nombre || 'Producto',
-        tipo: d.productos?.tipo || '',
-        fotos: d.productos?.fotos || [],
+        id: d.producto?.id || '',
+        nombre: d.producto?.nombre || 'Producto',
+        tipo: d.producto?.tipo || '',
+        fotos: d.producto?.fotos || [],
       },
     };
   });
@@ -113,12 +85,10 @@ export async function obtenerCuentaPedido(pedidoId: string): Promise<CuentaCompl
 
   const totalFinal = baseConDescuento + propinaMonto;
 
-  const mesaNumero = (pedido.mesas as any)?.numero ?? null;
-
   return {
-    pedidoId: pedido.id,
+    pedidoId: pedido.pedido_id,
     mesaId: pedido.mesa_id,
-    mesaNumero,
+    mesaNumero: pedido.mesa_numero ?? null,
     estado: pedido.estado,
     subtotal,
     descuentoPorcentaje,
@@ -126,26 +96,33 @@ export async function obtenerCuentaPedido(pedidoId: string): Promise<CuentaCompl
     propinaPorcentaje,
     propinaMonto,
     totalFinal,
-    cuentaSolicitadaAt: (pedido as any).cuenta_solicitada_at ?? null,
+    cuentaSolicitadaAt: pedido.cuenta_solicitada_at ?? null,
     detalles: items,
   };
 }
 
 export async function registrarPropinaPorQr(
   pedidoId: string,
-  rawQr: string
+  rawQr: string,
+  clienteAnonimoId?: string,
 ): Promise<PorcentajePropina> {
   const payload = parseQrPayload(rawQr);
   if (!payload || payload.tipo !== 'propina') {
     throw new Error('El código escaneado no corresponde a una propina válida.');
   }
 
-  const { error } = await supabase
-    .from('pedidos')
-    .update({ propina_porcentaje: payload.porcentaje })
-    .eq('id', pedidoId);
+  const { data, error } = clienteAnonimoId
+    ? await supabase.rpc('registrar_propina_pedido_anonimo', {
+      p_cliente_anonimo_id: clienteAnonimoId,
+      p_pedido_id: pedidoId,
+      p_porcentaje: payload.porcentaje,
+    })
+    : await supabase.rpc('registrar_propina_pedido_cliente', {
+      p_pedido_id: pedidoId,
+      p_porcentaje: payload.porcentaje,
+    });
 
-  if (error) {
+  if (error || data === null) {
     throw new Error('No se pudo guardar la propina seleccionada.');
   }
 
@@ -154,35 +131,39 @@ export async function registrarPropinaPorQr(
 
 export async function registrarPropinaDirecta(
   pedidoId: string,
-  porcentaje: PorcentajePropina
+  porcentaje: PorcentajePropina,
+  clienteAnonimoId?: string,
 ): Promise<PorcentajePropina> {
-  const { error } = await supabase
-    .from('pedidos')
-    .update({ propina_porcentaje: porcentaje })
-    .eq('id', pedidoId);
+  const { data, error } = clienteAnonimoId
+    ? await supabase.rpc('registrar_propina_pedido_anonimo', {
+      p_cliente_anonimo_id: clienteAnonimoId,
+      p_pedido_id: pedidoId,
+      p_porcentaje: porcentaje,
+    })
+    : await supabase.rpc('registrar_propina_pedido_cliente', {
+      p_pedido_id: pedidoId,
+      p_porcentaje: porcentaje,
+    });
 
-  if (error) {
+  if (error || data === null) {
     throw new Error('No se pudo guardar la propina seleccionada.');
   }
 
   return porcentaje;
 }
 
-export async function registrarPagoSimulado(
+export async function informarPago(
   pedidoId: string,
-  montoTotal: number,
-  _mesaNumero?: number | null
+  clienteAnonimoId?: string,
 ): Promise<void> {
-  const { error } = await supabase
-    .from('pedidos')
-    .update({
-      estado: 'pagado',
-      total: montoTotal,
+  const { error } = clienteAnonimoId
+    ? await supabase.rpc('informar_pago_pedido_anonimo', {
+      p_cliente_anonimo_id: clienteAnonimoId,
+      p_pedido_id: pedidoId,
     })
-    .eq('id', pedidoId);
+    : await supabase.rpc('informar_pago_pedido_cliente', { p_pedido_id: pedidoId });
 
   if (error) {
     throw new Error(error.message || 'No se pudo registrar el pago.');
   }
 }
-

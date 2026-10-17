@@ -33,8 +33,7 @@ export function createPropinaQr(porcentaje: PorcentajePropina): string {
 export function parseQrPayload(raw: string): QrPayload | null {
   const value = raw.trim();
 
-  // QR de ingreso definido actualmente y valor legado que ya usa el flujo anónimo.
-  if (/^(?:chido:ingreso:v1|ENTRADA_LOCAL)$/i.test(value)) {
+  if (/^chido:ingreso:v1$/i.test(value)) {
     return { tipo: "ingreso", version: 1 };
   }
 

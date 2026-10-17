@@ -2,13 +2,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, Vibration, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '../../components/Header';
 import ChidoLoader from '../../components/ui/ChidoLoader';
+import { ResultadoModal } from '../../components/ui/ResultadoModal';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { verificarEncuesta } from '../../services/encuestas.service';
-import { getEstadoPedido, getEstadoPedidoAnonimo, suscribirEstadoPedido } from '../../services/pedidos.service';
+import { confirmarRecepcionPedido, getEstadoPedido, getEstadoPedidoAnonimo, suscribirEstadoPedido } from '../../services/pedidos.service';
 import { colores } from '../../theme/colores';
 
 export default function PedidoRealizado() {
@@ -21,7 +22,7 @@ export default function PedidoRealizado() {
   const clienteAnonimoId = !usuario?.id && rawAnonimoId ? rawAnonimoId : undefined;
   const [cargando, setCargando] = useState(() => Boolean(pedidoId));
   const [encuestaCompletada, setEncuestaCompletada] = useState(false);
-  const [estado, setEstado] = useState<string | null>(null);
+  const [estadoPedido, setEstadoPedido] = useState<string | null>(null);
   const estadoLegible: Record<string, string> = {
     pendiente_mozo: 'Esperando confirmación del mozo',
     confirmado: 'Pedido confirmado · enviado a los sectores',
@@ -31,6 +32,8 @@ export default function PedidoRealizado() {
     rechazado: 'Pedido rechazado · podés modificarlo',
   };
 
+  const [confirmandoRecepcion, setConfirmandoRecepcion] = useState(false);
+  const [aviso, setAviso] = useState<string | null>(null);
   const [altoDisponible, setAltoDisponible] = useState(0);
   const compacto = altoDisponible > 0 && altoDisponible < 620;
   const espacio = compacto ? 10 : 14;
@@ -50,7 +53,7 @@ export default function PedidoRealizado() {
     const consultarEstado = async () => {
       try {
         const estadoActual = await (clienteAnonimoId ? getEstadoPedidoAnonimo(clienteAnonimoId, pedidoId) : getEstadoPedido(pedidoId));
-        if (activa) setEstado(estadoActual);
+        if (activa) setEstadoPedido(estadoActual);
       } catch (caught) {
         console.error(caught);
       } finally {
@@ -60,7 +63,7 @@ export default function PedidoRealizado() {
     void consultarEstado();
     const intervalo = setInterval(() => { void consultarEstado(); }, 5000);
     const desuscribir = clienteAnonimoId ? () => {} : suscribirEstadoPedido(pedidoId, (nuevoEstado) => {
-      if (activa) setEstado(nuevoEstado);
+      if (activa) setEstadoPedido(nuevoEstado);
     });
     return () => {
       activa = false;
@@ -75,6 +78,22 @@ export default function PedidoRealizado() {
     if (!pedidoId) return;
     router.push({ pathname: '/cliente/pedir-cuenta', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } });
   }
+
+  async function confirmarRecepcion() {
+    if (!pedidoId || confirmandoRecepcion) return;
+    setConfirmandoRecepcion(true);
+    try {
+      await confirmarRecepcionPedido(pedidoId, clienteAnonimoId);
+      setEstadoPedido('recibido');
+    } catch (error) {
+      Vibration.vibrate(180);
+      setAviso(error instanceof Error ? error.message : 'No se pudo confirmar la recepción del pedido.');
+    } finally {
+      setConfirmandoRecepcion(false);
+    }
+  }
+
+  const puedePedirCuenta = estadoPedido === 'recibido';
 
   return (
     <View className="flex-1 bg-chido-fondo">
@@ -103,9 +122,33 @@ export default function PedidoRealizado() {
         <View accessibilityLiveRegion="polite" className="rounded-xl border border-white/60 bg-chido-superficieTerracota px-4 py-3">
           <Text className="text-sm font-semibold text-chido-texto-secundario-sobre-oscuro">Estado de tu pedido</Text>
           <Text className="mt-1 text-lg font-extrabold text-chido-texto-sobre-oscuro">
-            {estado ? estadoLegible[estado] ?? 'Actualizando estado…' : 'Actualizando estado…'}
+            {estadoPedido ? estadoLegible[estadoPedido] ?? 'Actualizando estado…' : 'Actualizando estado…'}
           </Text>
         </View>
+
+        {estadoPedido === 'entregado' && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Confirmar recepción del pedido"
+            disabled={confirmandoRecepcion}
+            className="rounded-2xl border-2 border-white/70 bg-chido-exito"
+            style={tarjeta}
+            onPress={() => void confirmarRecepcion()}
+          >
+            {confirmandoRecepcion ? (
+              <ChidoLoader mensaje="Confirmando recepción…" compacto />
+            ) : (
+              <View className="flex-row items-center">
+                <Ionicons name="checkmark-circle-outline" size={52} color={colores.textoSobreOscuro} />
+                <View className="ml-4 flex-1">
+                  <Text className="font-extrabold text-chido-texto-sobre-oscuro" style={{ fontSize: 28, lineHeight: 34 }}>Confirmar recepción</Text>
+                  <Text className="mt-1 text-base font-bold text-chido-texto-secundario-sobre-oscuro">Confirmá que recibiste tu pedido</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={30} color={colores.textoSobreOscuro} />
+              </View>
+            )}
+          </Pressable>
+        )}
 
         {!clienteAnonimoId && <Pressable
           accessibilityRole="button"
@@ -147,7 +190,9 @@ export default function PedidoRealizado() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Pedir la cuenta"
-          className="rounded-2xl border-2 border-white/70 bg-chido-cabecera mt-2"
+          accessibilityState={{ disabled: !puedePedirCuenta }}
+          disabled={!puedePedirCuenta}
+          className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera mt-2 ${puedePedirCuenta ? '' : 'opacity-60'}`}
           style={tarjeta}
           onPress={abrirCuenta}
         >
@@ -158,14 +203,14 @@ export default function PedidoRealizado() {
                 Pedir cuenta
               </Text>
               <Text className="mt-1 text-base font-bold text-chido-texto-sobre-oscuro">
-                Escaneá la propina y pagá tu cuenta
+                {puedePedirCuenta ? 'Escaneá la propina y pagá tu cuenta' : 'Confirmá primero la recepción del pedido'}
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={30} color={colores.textoSobreOscuro} />
+            <Ionicons name={puedePedirCuenta ? 'chevron-forward' : 'lock-closed-outline'} size={30} color={colores.textoSobreOscuro} />
           </View>
         </Pressable>
-
       </ScrollView>
+      <ResultadoModal visible={Boolean(aviso)} tipo="error" titulo="No pudimos confirmar la recepción" mensaje={aviso ?? ''} accion="Entendido" onClose={() => setAviso(null)} />
     </View>
   );
 }

@@ -63,7 +63,7 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 
 | QR entrada (Cliente anonimo) |
 | :---: |
-| <img width="240" alt="QR entrada cliente anon" src="https://github.com/user-attachments/assets/5856b4fc-5415-4f24-a755-da17cb92ef42" /> |
+| <img width="240" alt="QR entrada cliente anon" src="https://github.com/user-attachments/assets/d381899a-657a-45f4-9bcc-4bc7e10ae48c" /> |
 
 ### Mesas
 

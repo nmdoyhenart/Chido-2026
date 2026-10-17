@@ -171,18 +171,17 @@ export default function PedidoRealizado() {
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Completar encuesta de satisfacción"
-          disabled={encuestaCompletada}
-          className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera ${encuestaCompletada ? 'opacity-50' : ''}`}
+          accessibilityLabel="Encuestas"
+          className="rounded-2xl border-2 border-white/70 bg-chido-cabecera"
           style={tarjeta}
-          onPress={() => router.push({ pathname: '/cliente/encuesta', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } })}
+          onPress={() => router.push({ pathname: '/cliente/encuestas', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } })}
         >
           <View className="flex-row items-center">
-            <Ionicons name="star-outline" size={iconoTarjeta}color={colores.textoSobreOscuro} />
+            <Ionicons name="star-outline" size={iconoTarjeta} color={colores.textoSobreOscuro} />
             <View className="ml-4 flex-1">
-              <Text className="font-extrabold text-chido-texto-sobre-oscuro" style={tituloTarjeta}>Encuesta</Text>
+              <Text className="font-extrabold text-chido-texto-sobre-oscuro" style={tituloTarjeta}>Encuestas</Text>
               <Text className="mt-1 text-base font-bold text-chido-texto-secundario-sobre-oscuro">
-                {encuestaCompletada ? '¡Gracias por tu opinión!' : 'Dejanos tu opinión'}
+                {encuestaCompletada ? 'Mirá opiniones y estadísticas' : 'Dejanos tu opinión o mirá resultados'}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={30} color={colores.textoSobreOscuro} />

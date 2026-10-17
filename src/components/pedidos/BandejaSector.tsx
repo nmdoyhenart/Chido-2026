@@ -14,6 +14,7 @@ type Item = { id: string; producto_id: string; nombre: string; cantidad: number;
 type PedidoSector = { id: string; mesa_numero: number; created_at: string; detalles: Item[] };
 
 const PEDIDOS_POR_PAGINA = 2;
+const ALTO_TARJETA_DETALLE = 220;
 
 function fechaPedido(fecha: string) {
   const instante = new Date(fecha);
@@ -28,6 +29,66 @@ const PRESENTACION_ESTADO: Record<EstadoItem, { texto: string; icono: keyof type
   en_preparacion: { texto: 'En preparación', icono: 'flame-outline', color: '#F0B44D' },
   listo: { texto: 'Listo', icono: 'checkmark-circle', color: '#8DDB78' },
 };
+
+function CarruselDetalles({ detalles, actualizando, avanzar }: {
+  detalles: Item[];
+  actualizando: string | null;
+  avanzar: (item: Item) => void;
+}) {
+  const [ancho, setAncho] = useState(0);
+  const [alto, setAlto] = useState(0);
+  const [pagina, setPagina] = useState(0);
+  const columnas = detalles.length > 2 ? 2 : 1;
+  const paginas = useMemo(() => Array.from(
+    { length: Math.ceil(detalles.length / columnas) },
+    (_, indice) => detalles.slice(indice * columnas, indice * columnas + columnas),
+  ), [columnas, detalles]);
+  const altoTarjeta = Math.min(ALTO_TARJETA_DETALLE, Math.max(120, alto - 12));
+
+  useEffect(() => setPagina((actual) => Math.min(actual, Math.max(0, paginas.length - 1))), [paginas.length]);
+
+  return <View className="mt-2 flex-1" onLayout={(event) => {
+    setAncho(event.nativeEvent.layout.width);
+    setAlto(event.nativeEvent.layout.height);
+  }}>
+    {ancho > 0 && <ScrollView horizontal pagingEnabled snapToInterval={ancho} decelerationRate="fast" disableIntervalMomentum nestedScrollEnabled directionalLockEnabled showsHorizontalScrollIndicator={false}
+      onMomentumScrollEnd={(event) => setPagina(Math.max(0, Math.min(paginas.length - 1, Math.round(event.nativeEvent.contentOffset.x / ancho))))}>
+      {paginas.map((items, indice) => <View key={indice} style={{ width: ancho }} className="h-full flex-row items-center justify-center gap-2 px-1">
+        {items.map((detalle) => {
+          const presentacion = PRESENTACION_ESTADO[detalle.estado];
+          const ocupado = actualizando !== null;
+          return <View key={detalle.id} style={{ flex: 0, width: columnas === 1 ? '92%' : undefined, height: altoTarjeta, backgroundColor: colores.cabecera, borderColor: 'rgba(255, 248, 236, 0.38)' }} className={`min-w-0 justify-between rounded-2xl border ${columnas === 1 ? 'p-3' : 'p-2'}`}>
+            <View>
+              <View className={columnas === 1 ? 'flex-row items-center gap-3' : ''}>
+                {detalle.foto ? <Image source={{ uri: detalle.foto }} accessibilityLabel={detalle.nombre} style={{ width: columnas === 1 ? 64 : 44, height: columnas === 1 ? 64 : 44, borderRadius: columnas === 1 ? 12 : 10 }} resizeMode="cover" /> : <View className={`${columnas === 1 ? 'h-16 w-16 rounded-xl' : 'h-11 w-11 rounded-xl'} items-center justify-center bg-chido-cabecera`}><Ionicons name="restaurant-outline" size={columnas === 1 ? 34 : 24} color={colores.textoSobreOscuro} /></View>}
+                <View className={columnas === 1 ? 'flex-1' : ''}>
+                  <Text numberOfLines={2} className={`${columnas === 1 ? 'text-lg' : 'mt-2 text-sm'} font-extrabold leading-5 text-chido-texto-sobre-oscuro`}>{detalle.cantidad} × {detalle.nombre}</Text>
+                  <View className={`mt-2 flex-row items-center self-start rounded-full ${columnas === 1 ? 'px-3 py-1' : 'px-2 py-1'}`} style={{ backgroundColor: `${presentacion.color}30` }}>
+                    <Ionicons name={presentacion.icono} size={columnas === 1 ? 18 : 13} color={presentacion.color} />
+                    <Text numberOfLines={1} className={`ml-1 font-extrabold text-chido-texto-sobre-oscuro ${columnas === 1 ? 'text-sm' : 'text-[10px]'}`}>{presentacion.texto}</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+            {detalle.estado !== 'listo' ? <Pressable disabled={ocupado} accessibilityRole="button"
+              accessibilityLabel={detalle.estado === 'pendiente' ? `Comenzar preparación de ${detalle.nombre}` : `Marcar ${detalle.nombre} como listo`}
+              onPress={() => void avanzar(detalle)}
+              className={`mt-3 ${columnas === 1 ? 'min-h-14 border-2 px-4' : 'min-h-9 border px-1'} flex-row items-center justify-center rounded-xl border-white/75 ${detalle.estado === 'pendiente' ? 'bg-chido-acento' : 'bg-chido-exito'} ${ocupado ? 'opacity-60' : ''}`}>
+              <Ionicons name={detalle.estado === 'pendiente' ? 'play-circle-outline' : 'checkmark-done-circle-outline'} size={columnas === 1 ? 24 : 16} color={colores.textoSobreOscuro} />
+              <Text numberOfLines={1} className={`ml-1 text-center font-extrabold text-chido-texto-sobre-oscuro ${columnas === 1 ? 'text-lg' : 'text-[11px]'}`}>{actualizando === detalle.id ? 'Actualizando…' : detalle.estado === 'pendiente' ? (columnas === 1 ? 'Comenzar preparación' : 'Preparar') : (columnas === 1 ? 'Marcar como listo' : 'Marcar listo')}</Text>
+            </Pressable> : <View className={`mt-3 ${columnas === 1 ? 'min-h-14 border-2 px-4' : 'min-h-9 border px-1'} flex-row items-center justify-center rounded-xl border-white/45 bg-chido-exito`}>
+              <Ionicons name="checkmark-done-circle" size={columnas === 1 ? 24 : 16} color={colores.textoSobreOscuro} />
+              <Text className={`ml-1 text-center font-extrabold text-chido-texto-sobre-oscuro ${columnas === 1 ? 'text-lg' : 'text-[11px]'}`}>{columnas === 1 ? 'Producto listo' : 'Listo'}</Text>
+            </View>}
+          </View>;
+        })}
+      </View>)}
+    </ScrollView>}
+    {paginas.length > 1 && <View className="flex-row items-center justify-center gap-2 pt-1">{paginas.map((_, indice) =>
+      <View key={indice} className={`h-2 rounded-full ${indice === pagina ? 'w-5 bg-chido-texto-sobre-oscuro' : 'w-2 bg-white/50'}`} />,
+    )}</View>}
+  </View>;
+}
 
 export default function BandejaSector({ tipo }: { tipo: TipoSector }) {
   const router = useRouter();
@@ -132,9 +193,10 @@ export default function BandejaSector({ tipo }: { tipo: TipoSector }) {
         disableIntervalMomentum
         bounces={false}
         nestedScrollEnabled
+        directionalLockEnabled
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={100}
-        onScroll={(event) => actualizarPaginaDesdeScroll(event.nativeEvent.contentOffset.y)}
+        onScrollEndDrag={(event) => actualizarPaginaDesdeScroll(event.nativeEvent.contentOffset.y)}
         onMomentumScrollEnd={(event) => actualizarPaginaDesdeScroll(event.nativeEvent.contentOffset.y)}
       >
         {altoPagina > 0 && (pedidosOrdenados.length === 0 ? <View style={{ height: altoPagina, paddingHorizontal: 20, paddingVertical: 12 }}>
@@ -144,48 +206,23 @@ export default function BandejaSector({ tipo }: { tipo: TipoSector }) {
           </View>
         </View> : paginas.map((pedidosPagina, indicePagina) => <View key={`${indicePagina}-${pedidosPagina.map((pedido) => pedido.id).join('-')}`} style={{ height: altoPagina, paddingHorizontal: 16, paddingVertical: 8 }}>
           <View style={{ flex: 1, gap: 12 }}>
-          {pedidosPagina.map((pedido) => <View key={pedido.id} className={`${tipo === 'bebida' ? 'flex-1' : ''} rounded-3xl border-2 border-white/75 bg-chido-cabecera p-4`} style={tipo === 'plato' ? { flex: 0, height: altoTarjetaCocina, maxHeight: 300 } : undefined}>
-            <View className="flex-row items-center justify-between border-b border-white/30 pb-4">
-              <View>
-                <Text className="text-sm font-semibold text-chido-texto-secundario-sobre-oscuro">PEDIDO</Text>
-                <Text className="text-3xl font-extrabold text-chido-texto-sobre-oscuro">Mesa {pedido.mesa_numero}</Text>
-              </View>
-              <View className="items-end">
-                <Ionicons name="calendar-outline" size={20} color={colores.textoSecundarioSobreOscuro} />
-                <Text className="mt-1 text-right text-xs font-bold text-chido-texto-secundario-sobre-oscuro">{fechaPedido(pedido.created_at)}</Text>
-              </View>
+          {pedidosPagina.map((pedido) => <View key={pedido.id} className={`${tipo === 'bebida' ? 'flex-1' : ''} rounded-3xl border-2 border-white/75 bg-chido-cabecera ${tipo === 'plato' ? 'p-3' : 'p-4'}`} style={tipo === 'plato' ? { flex: 0, height: altoTarjetaCocina, maxHeight: 300 } : undefined}>
+            <View className={`flex-row items-center justify-between border-b border-white/30 ${tipo === 'plato' ? 'pb-2' : 'pb-4'}`}>
+              <View>{tipo === 'bebida' && <Text className="text-sm font-semibold text-chido-texto-secundario-sobre-oscuro">PEDIDO</Text>}<Text className={`${tipo === 'plato' ? 'text-xl' : 'text-3xl'} font-extrabold text-chido-texto-sobre-oscuro`}>Mesa {pedido.mesa_numero}</Text></View>
+              <View className="items-end"><Ionicons name="calendar-outline" size={tipo === 'plato' ? 16 : 20} color={colores.textoSecundarioSobreOscuro} /><Text className="mt-1 text-right text-[10px] font-bold text-chido-texto-secundario-sobre-oscuro">{fechaPedido(pedido.created_at)}</Text></View>
             </View>
-
-            <View className="mt-3 flex-1 justify-center gap-3">
+            {tipo === 'plato' ? <CarruselDetalles detalles={pedido.detalles} actualizando={actualizando} avanzar={avanzar} /> : <View className="mt-3 flex-1 justify-center gap-3">
               {pedido.detalles.map((detalle) => {
                 const presentacion = PRESENTACION_ESTADO[detalle.estado];
                 return <View key={detalle.id} style={{ width: '92%', alignSelf: 'center', backgroundColor: colores.cabecera, borderColor: 'rgba(255, 248, 236, 0.38)' }} className="rounded-2xl border p-3">
                   <View className="flex-row items-center gap-3">
-                    {detalle.foto ? <Image source={{ uri: detalle.foto }} accessibilityLabel={detalle.nombre} style={{ width: 72, height: 72, borderRadius: 14 }} resizeMode="cover" /> : <View className="h-[72px] w-[72px] items-center justify-center rounded-2xl bg-chido-cabecera"><Ionicons name={tipo === 'plato' ? 'restaurant-outline' : 'wine-outline'} size={38} color={colores.textoSobreOscuro} /></View>}
-                    <View className="flex-1">
-                      <Text className="text-xl font-extrabold text-chido-texto-sobre-oscuro">{detalle.cantidad} × {detalle.nombre}</Text>
-                      <View className="mt-2 flex-row items-center self-start rounded-full px-3 py-1" style={{ backgroundColor: `${presentacion.color}30` }}>
-                        <Ionicons name={presentacion.icono} size={18} color={presentacion.color} />
-                        <Text className="ml-2 font-extrabold text-chido-texto-sobre-oscuro">{presentacion.texto}</Text>
-                      </View>
-                    </View>
+                    {detalle.foto ? <Image source={{ uri: detalle.foto }} accessibilityLabel={detalle.nombre} style={{ width: 72, height: 72, borderRadius: 14 }} resizeMode="cover" /> : <View className="h-[72px] w-[72px] items-center justify-center rounded-2xl bg-chido-cabecera"><Ionicons name="wine-outline" size={38} color={colores.textoSobreOscuro} /></View>}
+                    <View className="flex-1"><Text className="text-xl font-extrabold text-chido-texto-sobre-oscuro">{detalle.cantidad} × {detalle.nombre}</Text><View className="mt-2 flex-row items-center self-start rounded-full px-3 py-1" style={{ backgroundColor: `${presentacion.color}30` }}><Ionicons name={presentacion.icono} size={18} color={presentacion.color} /><Text className="ml-2 font-extrabold text-chido-texto-sobre-oscuro">{presentacion.texto}</Text></View></View>
                   </View>
-                  {detalle.estado !== 'listo' ? <Pressable
-                    disabled={actualizando !== null}
-                    accessibilityRole="button"
-                    accessibilityLabel={detalle.estado === 'pendiente' ? `Comenzar preparación de ${detalle.nombre}` : `Marcar ${detalle.nombre} como listo`}
-                    onPress={() => void avanzar(detalle)}
-                    className={`mt-4 min-h-14 flex-row items-center justify-center rounded-xl border-2 border-white/75 px-4 ${detalle.estado === 'pendiente' ? 'bg-chido-acento' : 'bg-chido-exito'}`}
-                  >
-                    <Ionicons name={detalle.estado === 'pendiente' ? 'play-circle-outline' : 'checkmark-done-circle-outline'} size={24} color={colores.textoSobreOscuro} />
-                    <Text className="ml-2 text-center text-lg font-extrabold text-chido-texto-sobre-oscuro">{actualizando === detalle.id ? 'Actualizando…' : detalle.estado === 'pendiente' ? 'Comenzar preparación' : 'Marcar como listo'}</Text>
-                  </Pressable> : <View className="mt-4 min-h-14 flex-row items-center justify-center rounded-xl border-2 border-white/45 bg-chido-exito px-4">
-                    <Ionicons name="checkmark-done-circle" size={24} color={colores.textoSobreOscuro} />
-                    <Text className="ml-2 text-lg font-extrabold text-chido-texto-sobre-oscuro">Producto listo</Text>
-                  </View>}
+                  {detalle.estado !== 'listo' ? <Pressable disabled={actualizando !== null} accessibilityRole="button" onPress={() => void avanzar(detalle)} className={`mt-4 min-h-14 flex-row items-center justify-center rounded-xl border-2 border-white/75 px-4 ${detalle.estado === 'pendiente' ? 'bg-chido-acento' : 'bg-chido-exito'}`}><Ionicons name={detalle.estado === 'pendiente' ? 'play-circle-outline' : 'checkmark-done-circle-outline'} size={24} color={colores.textoSobreOscuro} /><Text className="ml-2 text-center text-lg font-extrabold text-chido-texto-sobre-oscuro">{actualizando === detalle.id ? 'Actualizando…' : detalle.estado === 'pendiente' ? 'Comenzar preparación' : 'Marcar como listo'}</Text></Pressable> : <View className="mt-4 min-h-14 flex-row items-center justify-center rounded-xl border-2 border-white/45 bg-chido-exito px-4"><Ionicons name="checkmark-done-circle" size={24} color={colores.textoSobreOscuro} /><Text className="ml-2 text-lg font-extrabold text-chido-texto-sobre-oscuro">Producto listo</Text></View>}
                 </View>;
               })}
-            </View>
+            </View>}
           </View>)}
           </View>
         </View>))}

@@ -27,7 +27,10 @@
         "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
-      ]
+      ],
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "web": {
       "output": "static",
@@ -75,6 +78,9 @@
       "eas": {
         "projectId": "e812e9d4-fd85-4a2e-aa0c-f3f9c3486cf6"
       }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/e812e9d4-fd85-4a2e-aa0c-f3f9c3486cf6"
     }
   }
 }

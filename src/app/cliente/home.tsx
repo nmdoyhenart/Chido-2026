@@ -108,12 +108,7 @@ export default function HomeCliente() {
             <Ionicons name="chevron-forward" size={30} color={colores.textoSobreOscuro} />
           </View>
         </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="Ver encuestas" className="rounded-2xl border-2 border-white/70 bg-chido-cabecera" style={tarjeta} onPress={() => router.push('/encuestas/previas')}>
-          <View className="flex-row items-center">
-            <Ionicons name="bar-chart-outline" size={iconoTarjeta}color={colores.textoSobreOscuro} />
-            <View className="ml-4 flex-1"><Text className="font-extrabold text-chido-texto-sobre-oscuro" style={tituloTarjeta}>Ver encuestas</Text></View>
-          </View>
-        </Pressable>
+
         {cargandoPedido ? (
           // Ocupa el lugar de las dos tarjetas que reemplaza para que el resto no salte.
           <View style={{ flexGrow: 2, flexBasis: 0, justifyContent: 'center' }}>

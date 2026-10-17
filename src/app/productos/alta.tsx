@@ -42,7 +42,9 @@ function Campo({ label, error, compacto = false, containerClassName = '', inputC
 
 
 export default function AltaPlato() {
-    const { usuario } = useAppSession();
+    const { usuario, role } = useAppSession();
+    // También la usan Dueño y Supervisor desde "Gestionar carta": se muestra el rol real.
+    const rolVisible = role ? role.charAt(0).toUpperCase() + role.slice(1) : 'Cocinero';
     const { bloquear, modal } = useRestriccionSimulacion();
     const nombreUsuario = [usuario?.nombres, usuario?.apellidos].filter(Boolean).join(' ') || 'Cocinero';
 
@@ -217,7 +219,7 @@ export default function AltaPlato() {
         <View className="flex-1 bg-chido-fondo ">
             <Stack.Screen options={{ headerShown: false }} />
             {modal}
-            <Header userName={nombreUsuario} role='Cocinero'/>
+            <Header userName={nombreUsuario} role={rolVisible}/>
             <KeyboardAvoidingView
                 className="flex-1"
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

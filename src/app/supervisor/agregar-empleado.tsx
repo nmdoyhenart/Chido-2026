@@ -17,6 +17,8 @@ import CamaraRegistro from '../../components/auth/CamaraRegistro';
 import { ResultadoModal } from '../../components/ui/ResultadoModal';
 import { useCampoVisibleConTeclado } from '../../hooks/useCampoVisibleConTeclado';
 
+const GRUPOS_PERFILES = [['supervisor', 'metre', 'mozo'], ['cocinero', 'cantinero']];
+
 export default function AgregarEmpleado() {
   const { role, usuario, mode } = useAppSession();
   const { bloquear, modal: modalSimulacion } = useRestriccionSimulacion();
@@ -27,6 +29,21 @@ export default function AgregarEmpleado() {
   const empleadoGuardado = useRef(false);
   const scroll = useRef<ScrollView>(null);
   const { alDesplazar, alEnfocar, rellenoInferior } = useCampoVisibleConTeclado(scroll);
+
+  // Dos pantallas del alto visible: 1) título → lectura del DNI; 2) datos, perfil y Guardar, todo sin scroll.
+  // El scroll sólo pasa de una a otra y frena justo al inicio de la segunda.
+  // El alto se toma con el teclado cerrado para que nada salte mientras se escribe.
+  const [altoVista, setAltoVista] = useState(0);
+  const [inicioPantalla2, setInicioPantalla2] = useState(0);
+  const altoFoto = altoVista > 0 ? Math.max(128, Math.min(220, Math.floor(altoVista * 0.3))) : 128;
+  // Para que todo entre se achica la altura de los inputs (40–60 px), nunca la letra.
+  // 322 ≈ etiquetas de los 6 campos + Perfil + Guardar + separaciones mínimas.
+  const altoInput = altoVista > 0 ? Math.max(40, Math.min(60, Math.floor((altoVista - 322) / 6))) : undefined;
+  const estiloInput = altoInput ? { height: altoInput, paddingVertical: 4 } : undefined;
+
+  // Selector de perfil en dos grupos fijos (sin scroll, nada cortado):
+  // 1) Supervisor, Metre, Mozo + flecha adelante; 2) flecha atrás + Cocinero, Cantinero.
+  const [grupoPerfiles, setGrupoPerfiles] = useState(0);
 
   const mostrarErrorRegistro = (mensaje: string) => {
     Keyboard.dismiss();
@@ -148,149 +165,193 @@ export default function AgregarEmpleado() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           className="flex-1"
         >
-          <ScrollView ref={scroll} className="flex-1 p-5" contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 + rellenoInferior }} keyboardShouldPersistTaps="handled" onScroll={alDesplazar} scrollEventThrottle={16}>
-            {/* Top bar with back button and title */}
-            <View className="flex-row items-center mb-8 relative">
+          <ScrollView
+            ref={scroll}
+            className="flex-1"
+            contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingBottom: rellenoInferior }}
+            keyboardShouldPersistTaps="handled"
+            onScroll={alDesplazar}
+            scrollEventThrottle={16}
+            onLayout={({ nativeEvent }) => {
+              const alto = Math.round(nativeEvent.layout.height);
+              setAltoVista((actual) => (Keyboard.isVisible() || actual === alto ? actual : alto));
+            }}
+            snapToOffsets={rellenoInferior === 0 && inicioPantalla2 > 0 ? [0, inicioPantalla2] : undefined}
+            decelerationRate="fast"
+          >
+          {/* Pantalla 1: título, foto y lectura del DNI, repartidos en todo el alto visible. */}
+          <View style={altoVista > 0 ? { minHeight: altoVista, justifyContent: 'space-evenly', paddingVertical: 12 } : undefined}>
+            <View className="flex-row items-center relative">
               <TouchableOpacity
-              onPress={() => router.back()}
-              className="w-10 h-10 rounded-xl bg-chido-acento items-center justify-center absolute left-0 z-10"
-            >
-              <Ionicons name="arrow-back" size={20} color={colores.textoSobreOscuro} />
-            </TouchableOpacity>
-            <Text className="text-2xl font-bold text-chido-texto-sobre-oscuro text-center flex-1">Alta de empleado</Text>
-          </View>
-
-          <Pressable className="mb-6 items-center" onPress={() => {
-            if (!permission?.granted) requestPermission();
-            else setTakingPhoto(true);
-          }}>
-            <View className="h-32 w-32 overflow-hidden rounded-full border-2 border-dashed border-chido-texto-secundario-alternativo bg-chido-acento items-center justify-center">
-              {formData.fotoUri ? (
-                <Image source={{uri: formData.fotoUri}} className="w-full h-full" resizeMode="cover" />
-              ) : (
-                <Ionicons name="person-outline" size={40} color={colores.textoSobreOscuro} />
-              )}
+                onPress={() => router.back()}
+                accessibilityRole="button"
+                accessibilityLabel="Volver"
+                className="w-12 h-12 rounded-xl bg-chido-acento items-center justify-center absolute left-0 z-10"
+              >
+                <Ionicons name="arrow-back" size={26} color={colores.textoSobreOscuro} />
+              </TouchableOpacity>
+              <Text className="text-3xl font-bold text-chido-texto-sobre-oscuro text-center flex-1">Alta de empleado</Text>
             </View>
-            <View className="mt-3 min-h-12 flex-row items-center justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo bg-chido-acento px-5 py-2">
-              <Ionicons name="camera-outline" size={22} color={colores.textoSobreOscuro} />
-              <Text className="ml-2 text-base font-bold text-chido-texto-sobre-oscuro">
-                {formData.fotoUri ? "Volver a tomar la foto" : "Tomar foto de empleado"}
+
+            <Pressable className="items-center" onPress={() => {
+              if (!permission?.granted) requestPermission();
+              else setTakingPhoto(true);
+            }}>
+              <View style={{ width: altoFoto, height: altoFoto, borderRadius: altoFoto / 2 }} className="overflow-hidden border-2 border-dashed border-chido-texto-secundario-alternativo bg-chido-acento items-center justify-center">
+                {formData.fotoUri ? (
+                  <Image source={{uri: formData.fotoUri}} className="w-full h-full" resizeMode="cover" />
+                ) : (
+                  <Ionicons name="person-outline" size={Math.round(altoFoto * 0.38)} color={colores.textoSobreOscuro} />
+                )}
+              </View>
+              <View className="mt-4 min-h-16 w-full flex-row items-center justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo bg-chido-acento px-5 py-3">
+                <Ionicons name="camera-outline" size={30} color={colores.textoSobreOscuro} />
+                <Text className="ml-3 text-xl font-bold text-chido-texto-sobre-oscuro">
+                  {formData.fotoUri ? "Volver a tomar la foto" : "Tomar foto de empleado"}
+                </Text>
+              </View>
+              {errors.fotoBase64 && <Text className="text-chido-error text-base mt-2">{errors.fotoBase64}</Text>}
+            </Pressable>
+
+            <View>
+              <TouchableOpacity
+                className="min-h-16 flex-row justify-center items-center px-4 py-3 rounded-2xl mb-3 border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera"
+                disabled={guardando}
+                accessibilityRole="button"
+                onPress={() => { Keyboard.dismiss(); setScanningDni(true); }}
+              >
+                <Ionicons name="scan-outline" size={32} color={colores.textoSobreOscuro} />
+                <Text className="text-chido-texto-sobre-oscuro font-bold text-xl ml-3">Leer DNI con la cámara</Text>
+              </TouchableOpacity>
+
+              <Text className="text-chido-texto-secundario-sobre-oscuro text-lg text-center" accessibilityLiveRegion="polite">
+                {avisoDni ? 'Datos del DNI cargados. Revisalos antes de continuar.' : 'La lectura del DNI es opcional. También podés escribir los datos.'}
               </Text>
             </View>
-            {errors.fotoBase64 && <Text className="text-chido-error text-sm mt-2">{errors.fotoBase64}</Text>}
-          </Pressable>
+          </View>
 
-          {/* Scan DNI Button */}
-          <TouchableOpacity
-            className="flex-row justify-center items-center p-4 rounded-xl mb-3 border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera"
-            disabled={guardando}
-            accessibilityRole="button"
-            onPress={() => { Keyboard.dismiss(); setScanningDni(true); }}
+          {/* Pantalla 2: datos uno debajo del otro, perfil y guardar; todo entra en el alto visible. */}
+          <View
+            style={altoVista > 0 ? { minHeight: altoVista, justifyContent: 'space-between', paddingVertical: 8 } : undefined}
+            onLayout={({ nativeEvent }) => setInicioPantalla2(Math.round(nativeEvent.layout.y))}
           >
-            <Ionicons name="scan-outline" size={28} color={colores.textoSobreOscuro} className="mr-2" />
-            <Text className="text-chido-texto-sobre-oscuro font-bold text-lg ml-2">Leer DNI con la cámara</Text>
-          </TouchableOpacity>
-
-          <Text className="text-chido-texto-secundario-sobre-oscuro text-base mb-5" accessibilityLiveRegion="polite">
-            {avisoDni ? 'Datos del DNI cargados. Revisalos antes de continuar.' : 'La lectura del DNI es opcional. También podés escribir los datos.'}
-          </Text>
-
-          {/* Form Fields */}
-          <View className="flex-row gap-4">
-            <Input 
+            <Input
+              grande
+              style={estiloInput}
               label="Nombres"
               placeholder="Ej. María José"
               value={formData.nombres}
               onChangeText={(t) => setFormData(prev => ({...prev, nombres: formatName(t)}))}
               onFocus={alEnfocar}
               error={errors.nombres}
-              containerClassName="flex-1"
             />
-            <Input 
+            <Input
+              grande
+              style={estiloInput}
               label="Apellidos"
               placeholder="Ej. González"
               value={formData.apellidos}
               onChangeText={(t) => setFormData(prev => ({...prev, apellidos: formatName(t)}))}
               onFocus={alEnfocar}
               error={errors.apellidos}
-              containerClassName="flex-1"
+            />
+            <Input
+              grande
+              style={estiloInput}
+              label="DNI"
+              placeholder="Ej. 34567890"
+              value={formData.dni}
+              keyboardType="numeric"
+              maxLength={8}
+              onChangeText={(t) => setFormData(prev => ({...prev, dni: t}))}
+              onFocus={alEnfocar}
+              error={errors.dni}
+            />
+            <Input
+              grande
+              style={estiloInput}
+              label="CUIL"
+              placeholder="Ej. 20-34567890-3"
+              value={formData.cuil}
+              keyboardType="numeric"
+              onChangeText={(t) => setFormData(prev => ({...prev, cuil: formatCuil(t)}))}
+              onFocus={alEnfocar}
+              error={errors.cuil}
+            />
+            <Input
+              grande
+              style={estiloInput}
+              label="Correo electrónico"
+              placeholder="empleado@correo.com"
+              value={formData.correo}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              onChangeText={(t) => setFormData(prev => ({...prev, correo: t}))}
+              onFocus={alEnfocar}
+              error={errors.correo}
+            />
+            <Input
+              grande
+              style={estiloInput}
+              label="Contraseña"
+              placeholder="Mínimo 8 caracteres"
+              value={formData.password}
+              secureTextEntry
+              onChangeText={(t) => setFormData(prev => ({...prev, password: t}))}
+              onFocus={alEnfocar}
+              error={errors.password}
+            />
+
+            {/* Perfil Selector */}
+            <View>
+              <Text className="text-chido-texto-sobre-oscuro font-bold text-lg mb-1 ml-1" style={{ lineHeight: 22 }}>Perfil</Text>
+              {/* Dos grupos fijos: Supervisor, Metre, Mozo + "›"  /  "‹" + Cocinero, Cantinero. */}
+              <View className="flex-row items-center gap-2">
+                {grupoPerfiles === 1 && (
+                  <TouchableOpacity onPress={() => setGrupoPerfiles(0)} accessibilityRole="button" accessibilityLabel="Ver Supervisor, Metre y Mozo" className="h-12 w-11 items-center justify-center rounded-xl bg-chido-acento">
+                    <Ionicons name="chevron-back" size={28} color={colores.textoSobreOscuro} />
+                  </TouchableOpacity>
+                )}
+                {GRUPOS_PERFILES[grupoPerfiles].map((rol) => (
+                  <TouchableOpacity
+                    key={rol}
+                    onPress={() => setFormData(prev => ({...prev, perfil: rol}))}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: formData.perfil === rol }}
+                    className={`flex-1 min-h-12 justify-center px-2 py-2 rounded-xl border-2 ${
+                      formData.perfil === rol
+                        ? 'border-chido-texto-secundario-alternativo bg-chido-cabecera'
+                        : 'border-chido-texto-boton-outline bg-chido-acento'
+                    }`}
+                  >
+                    {/* Si "Supervisor" no entra en el ancho, la letra se ajusta apenas en vez de cortarse. */}
+                    <Text
+                      className={`font-bold text-chido-texto-sobre-oscuro text-center text-lg`}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.8}
+                    >
+                      {rol.charAt(0).toUpperCase() + rol.slice(1)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+                {grupoPerfiles === 0 && (
+                  <TouchableOpacity onPress={() => setGrupoPerfiles(1)} accessibilityRole="button" accessibilityLabel="Ver Cocinero y Cantinero" className="h-12 w-11 items-center justify-center rounded-xl bg-chido-acento">
+                    <Ionicons name="chevron-forward" size={28} color={colores.textoSobreOscuro} />
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+
+            {/* Guardar */}
+            {!!errorRegistro && <View className="bg-chido-cabecera rounded-xl p-3" accessibilityLiveRegion="assertive"><Text className="text-chido-texto-sobre-oscuro text-lg">{errorRegistro}</Text></View>}
+            <PrimaryButton
+              title="Guardar Empleado"
+              onPress={handleSubmit}
+              className="min-h-14"
+              isLoading={guardando}
             />
           </View>
-
-          <Input 
-            label="DNI"
-            placeholder="Ej. 34567890"
-            value={formData.dni}
-            keyboardType="numeric"
-            maxLength={8}
-            onChangeText={(t) => setFormData(prev => ({...prev, dni: t}))}
-            onFocus={alEnfocar}
-            error={errors.dni}
-          />
-
-          <Input 
-            label="CUIL"
-            placeholder="Ej. 20-34567890-3"
-            value={formData.cuil}
-            keyboardType="numeric"
-            onChangeText={(t) => setFormData(prev => ({...prev, cuil: formatCuil(t)}))}
-            onFocus={alEnfocar}
-            error={errors.cuil}
-          />
-
-          <Input 
-            label="Correo electrónico"
-            placeholder="empleado@correo.com"
-            value={formData.correo}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            onChangeText={(t) => setFormData(prev => ({...prev, correo: t}))}
-            onFocus={alEnfocar}
-            error={errors.correo}
-          />
-
-          <Input 
-            label="Contraseña"
-            placeholder="Mínimo 8 caracteres"
-            value={formData.password}
-            secureTextEntry
-            onChangeText={(t) => setFormData(prev => ({...prev, password: t}))}
-            onFocus={alEnfocar}
-            error={errors.password}
-          />
-
-          {/* Perfil Selector */}
-          <View className="mb-6">
-            <Text className="text-chido-texto-sobre-oscuro font-bold text-base mb-2">Perfil</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
-              {['supervisor', 'metre', 'mozo', 'cocinero', 'cantinero'].map((rol) => (
-                <TouchableOpacity
-                  key={rol}
-                  onPress={() => setFormData(prev => ({...prev, perfil: rol}))}
-                  className={`px-4 py-3 rounded-xl mr-2 border ${
-                    formData.perfil === rol
-                      ? 'border-chido-texto-secundario-alternativo bg-chido-cabecera'
-                      : 'border-chido-texto-boton-outline bg-chido-acento'
-                  }`}
-                >
-                  <Text
-                    className={`font-bold text-chido-texto-sobre-oscuro text-center text-base`}
-                  >
-                    {rol.charAt(0).toUpperCase() + rol.slice(1)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-
-          {/* Guardar */}
-          {!!errorRegistro && <View className="bg-chido-cabecera rounded-xl p-4 mb-3" accessibilityLiveRegion="assertive"><Text className="text-chido-texto-sobre-oscuro text-base">{errorRegistro}</Text></View>}
-          <PrimaryButton 
-            title="Guardar Empleado"
-            onPress={handleSubmit}
-            className="mt-4 mb-12"
-            isLoading={guardando}
-          />
         </ScrollView>
       </KeyboardAvoidingView>
       </SafeAreaView>

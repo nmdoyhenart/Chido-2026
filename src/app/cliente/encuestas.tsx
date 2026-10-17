@@ -127,7 +127,7 @@ export default function EncuestasCliente() {
 
           {/* Tarjeta de título */}
           <View
-            className="rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera px-5"
+            className="rounded-3xl border-2 border-text-chido-texto-sobre-oscuro bg-chido-cabecera px-5"
             style={{ paddingVertical: muyCompacto ? 8 : compacto ? 12 : 16 }}
           >
             <Text

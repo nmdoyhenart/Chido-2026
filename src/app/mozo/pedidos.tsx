@@ -12,7 +12,7 @@ import { confirmarPagoMozo, getPedidosMozo, getSolicitudesCuentaMozo, actualizar
 
 const ESTADOS = ['todos', 'pendiente_mozo', 'confirmado', 'en_preparacion', 'entregado', 'recibido', 'pago_informado', 'pagado', 'rechazado'];
 
-const ITEM_HEIGHT = 120;
+const ITEM_HEIGHT = 180;
 const ITEM_MARGIN = 12;
 const LIST_PADDING = 16;
 const PEDIDOS_POR_PAGINA = 3;
@@ -22,7 +22,7 @@ export default function PedidosMozo() {
   const { usuario, role } = useAppSession();
   const [pedidos, setPedidos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filtro, setFiltro] = useState<string>('todos');
+  const [filtro, setFiltro] = useState<string>('pendiente_mozo');
   const [pagina, setPagina] = useState(0);
   const [altoLista, setAltoLista] = useState(0);
   const [solicitudesCuenta, setSolicitudesCuenta] = useState<SolicitudCuentaMozo[]>([]);
@@ -109,7 +109,13 @@ export default function PedidosMozo() {
     }
   };
 
-  const pedidosFiltrados = pedidos.filter(p => filtro === 'todos' || p.estado === filtro);
+  const inicioDelDia = new Date();
+  inicioDelDia.setHours(0, 0, 0, 0);
+  const pedidosFiltrados = pedidos.filter((pedido) => {
+    if (filtro === 'todos') return true;
+    if (pedido.estado !== filtro) return false;
+    return filtro !== 'pendiente_mozo' || new Date(pedido.created_at) >= inicioDelDia;
+  });
   const totalPaginas = Math.max(1, Math.ceil(pedidosFiltrados.length / PEDIDOS_POR_PAGINA));
   const paginaActual = Math.min(pagina, totalPaginas - 1);
   const inicio = paginaActual * PEDIDOS_POR_PAGINA;
@@ -136,7 +142,7 @@ export default function PedidosMozo() {
               onPress={() => { setFiltro(est); setPagina(0); }}
               className={`px-4 py-2 rounded-full border-2 border-white/70 ${filtro === est ? 'bg-chido-acento' : 'bg-chido-cabecera'}`}
             >
-              <Text className="text-chido-texto-sobre-oscuro font-bold capitalize">
+                <Text className="text-lg font-bold capitalize text-chido-texto-sobre-oscuro">
                 {est.replace('_', ' ')}
               </Text>
             </TouchableOpacity>
@@ -144,19 +150,19 @@ export default function PedidosMozo() {
         </ScrollView>
       </View>
 
-      {solicitudesCuenta.length > 0 && <View className="mx-5 mb-2 rounded-2xl border-2 border-white/70 bg-chido-botonPrincipal p-4">
+      {solicitudesCuenta.length > 0 && <View className="mx-5 mb-2 rounded-2xl border-2 border-white/70 bg-chido-botonPrincipal p-5">
         <View className="mb-2 flex-row items-center">
-          <Ionicons name="receipt-outline" size={24} color={colores.textoSobreOscuro} />
-          <Text className="ml-2 text-lg font-extrabold text-chido-texto-sobre-oscuro">Pidieron la cuenta</Text>
+          <Ionicons name="receipt-outline" size={30} color={colores.textoSobreOscuro} />
+          <Text className="ml-3 text-2xl font-extrabold text-chido-texto-sobre-oscuro">Pidieron la cuenta</Text>
         </View>
-        {solicitudesCuenta.map(solicitud => <View key={solicitud.pedido_id} className="py-2 border-t border-white/20">
-          <Text className="text-base font-semibold text-chido-texto-sobre-oscuro">Mesa {solicitud.numero} · {solicitud.cliente}</Text>
+        {solicitudesCuenta.map(solicitud => <View key={solicitud.pedido_id} className="py-3 border-t border-white/20">
+          <Text className="text-lg font-semibold text-chido-texto-sobre-oscuro">Mesa {solicitud.numero} · {solicitud.cliente}</Text>
           <TouchableOpacity
             disabled={confirmandoPagoId !== null}
-            className="mt-2 min-h-11 items-center justify-center rounded-xl border-2 border-white/70 bg-chido-exito px-3"
+            className="mt-3 min-h-14 items-center justify-center rounded-xl border-2 border-white/70 bg-chido-exito px-3"
             onPress={() => void confirmarPago(solicitud)}
           >
-            {confirmandoPagoId === solicitud.pedido_id ? <ChidoLoader compacto mensaje="Confirmando pago…" /> : <Text className="font-bold text-chido-texto-sobre-oscuro">Confirmar pago y liberar mesa</Text>}
+            {confirmandoPagoId === solicitud.pedido_id ? <ChidoLoader compacto mensaje="Confirmando pago…" /> : <Text className="text-lg font-bold text-chido-texto-sobre-oscuro">Confirmar pago y liberar mesa</Text>}
           </TouchableOpacity>
         </View>)}
       </View>}
@@ -182,37 +188,38 @@ export default function PedidosMozo() {
             return (
             <View 
               className="bg-chido-cabecera border-2 border-white/70 rounded-2xl flex-col"
-              style={{ minHeight: altoTarjeta, padding: 12 }}
+              style={{ height: altoTarjeta, padding: 16 }}
             >
               <View className="flex-row justify-between items-start">
                 <View className="flex-1 mr-2">
-                  <Text className="text-chido-texto-sobre-oscuro text-xl font-bold">
+                  <Text className="text-3xl font-bold text-chido-texto-sobre-oscuro" numberOfLines={1}>
                     Mesa {item.mesas?.numero}
                   </Text>
-                  <Text className="text-chido-texto-secundario-sobre-oscuro text-sm font-semibold" numberOfLines={1}>
-                    {item.cliente_nombre || [item.usuarios?.nombres, item.usuarios?.apellidos].filter(Boolean).join(' ') || 'Cliente'}
-                  </Text>
-                  <Text className="text-white text-base capitalize mt-1 font-semibold">
-                    {item.mesas?.tipo} • {item.mesas?.cantidad_comensales} personas
-                  </Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 8 }}>
+                    <Text className="text-xl font-semibold text-chido-texto-secundario-sobre-oscuro">
+                      {item.cliente_nombre || [item.usuarios?.nombres, item.usuarios?.apellidos].filter(Boolean).join(' ') || 'Cliente'} · {item.mesas?.tipo} • {item.mesas?.cantidad_comensales} personas
+                    </Text>
+                  </ScrollView>
                 </View>
                 <View className="items-end" style={{ maxWidth: '48%', flexShrink: 1 }}>
-                  <Text className="text-chido-texto-sobre-oscuro font-extrabold text-xl mb-1">${item.total}</Text>
-                  <View className={`px-2 py-1 rounded-full border border-white/40 ${bgClass}`}>
-                    <Text className={`font-bold text-xs text-center ${textClass}`}>
+                  <Text className="mb-2 text-3xl font-extrabold text-chido-texto-sobre-oscuro" numberOfLines={1}>${item.total}</Text>
+                  <View className={`rounded-full border border-white/40 px-3 py-1.5 ${bgClass}`}>
+                    <Text className={`text-center text-base font-bold ${textClass}`} numberOfLines={1}>
                       {item.estado.replaceAll('_', ' ').toUpperCase()}
                     </Text>
                   </View>
                 </View>
               </View>
-              {!!item.pedido_detalles?.length && <View className="mt-3 border-t border-white/30 pt-2">
-                {item.pedido_detalles.map((detalle: { id: string; cantidad: number; estado_sector: string; productos?: { nombre?: string; tipo?: string } | null }) => <Text key={detalle.id} className="text-chido-texto-secundario-sobre-oscuro text-sm">
-                  {detalle.cantidad} × {detalle.productos?.nombre ?? 'Producto'} · {detalle.estado_sector === 'listo' ? 'Listo' : (detalle.estado_sector === 'en_preparacion' ? 'En preparación' : 'Pendiente')}
-                </Text>)}
+              {!!item.pedido_detalles?.length && <View className="mt-4 border-t border-white/30 pt-3">
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 8 }}>
+                  {item.pedido_detalles.map((detalle: { id: string; cantidad: number; estado_sector: string; productos?: { nombre?: string; tipo?: string } | null }) => <Text key={detalle.id} className="mr-6 text-lg text-chido-texto-secundario-sobre-oscuro">
+                    {detalle.cantidad} × {detalle.productos?.nombre ?? 'Producto'} · {detalle.estado_sector === 'listo' ? 'Listo' : (detalle.estado_sector === 'en_preparacion' ? 'En preparación' : 'Pendiente')}
+                  </Text>)}
+                </ScrollView>
               </View>}
               {!!item.cuenta_solicitada_at && (
                 <View className="mt-2 rounded-lg bg-chido-aviso px-3 py-2">
-                  <Text className="text-chido-texto-sobre-oscuro text-center font-bold">El cliente pidió la cuenta</Text>
+                  <Text className="text-center text-lg font-bold text-chido-texto-sobre-oscuro" numberOfLines={1}>El cliente pidió la cuenta</Text>
                 </View>
               )}
               
@@ -221,34 +228,34 @@ export default function PedidosMozo() {
                   <>
                     <TouchableOpacity 
                       className="bg-chido-exito border-2 border-white/70 px-2 py-2 rounded-xl flex-1 items-center justify-center"
-                      style={{ minHeight: 44 }}
+                      style={{ minHeight: 48 }}
                       onPress={() => cambiarEstado(item.id, 'confirmado')}
                     >
-                      <Text className="text-chido-texto-sobre-oscuro font-bold text-base">Aceptar</Text>
+                      <Text className="text-lg font-bold text-chido-texto-sobre-oscuro">Aceptar</Text>
                     </TouchableOpacity>
                     <TouchableOpacity 
                       className="bg-chido-error border-2 border-white/70 px-2 py-2 rounded-xl flex-1 items-center justify-center"
-                      style={{ minHeight: 44 }}
+                      style={{ minHeight: 48 }}
                       onPress={() => cambiarEstado(item.id, 'rechazado')}
                     >
-                      <Text className="text-chido-texto-sobre-oscuro font-bold text-base">Rechazar</Text>
+                      <Text className="text-lg font-bold text-chido-texto-sobre-oscuro">Rechazar</Text>
                     </TouchableOpacity>
                   </>
                 )}
                 {item.estado === 'en_preparacion' && item.pedido_detalles?.length > 0 && item.pedido_detalles.every((detalle: { estado_sector: string }) => detalle.estado_sector === 'listo') && (
                   <TouchableOpacity 
                     className="bg-chido-botonPrincipal border-2 border-white/70 px-3 py-2 rounded-xl w-full items-center justify-center"
-                    style={{ minHeight: 44 }}
+                      style={{ minHeight: 48 }}
                     onPress={() => cambiarEntregado(item.id)}
                   >
-                    <Text className="text-chido-texto-sobre-oscuro font-bold text-base text-center">Cocina y bar terminaron · Entregar</Text>
+                      <Text className="text-center text-lg font-bold text-chido-texto-sobre-oscuro">Cocina y bar terminaron · Entregar</Text>
                   </TouchableOpacity>
                 )}
                 
                 {/* Textos de tiempo para los estados sin botones */}
                 {(item.estado === 'en_preparacion' && !item.pedido_detalles?.every((detalle: { estado_sector: string }) => detalle.estado_sector === 'listo') || item.estado === 'entregado' || item.estado === 'recibido' || item.estado === 'rechazado') && (
                   <View className="flex-1 items-center justify-center">
-                    <Text className="text-chido-texto-secundario-sobre-oscuro font-semibold text-sm text-center">
+                    <Text className="text-center text-lg font-semibold text-chido-texto-secundario-sobre-oscuro" numberOfLines={1}>
                       {item.estado === 'en_preparacion' && 'Esperando que cocina y bar terminen.'}
                       {item.estado === 'entregado' && `Finalizado - Pedido de las ${new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                       {item.estado === 'recibido' && 'El cliente confirmó la recepción.'}
@@ -303,9 +310,9 @@ const styles = StyleSheet.create({
   contenido: { flex: 1 },
   lista: { flex: 1 },
   paginacion: { paddingHorizontal: 20, paddingTop: 12, backgroundColor: colores.fondo, borderTopWidth: 1, borderTopColor: colores.textoSecundarioAlternativo },
-  resumen: { color: colores.textoSobreOscuro, fontSize: 14, textAlign: 'center', marginBottom: 12 },
+  resumen: { color: colores.textoSobreOscuro, fontSize: 16, fontWeight: '600', textAlign: 'center', marginBottom: 12 },
   botones: { flexDirection: 'row', gap: 12 },
-  boton: { flex: 1, minHeight: 48, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: colores.textoSecundarioAlternativo, backgroundColor: colores.cabecera, alignItems: 'center', justifyContent: 'center' },
-  textoBoton: { color: colores.textoSobreOscuro, fontSize: 16, fontWeight: '700', textAlign: 'center' },
+  boton: { flex: 1, minHeight: 56, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: colores.textoSecundarioAlternativo, backgroundColor: colores.cabecera, alignItems: 'center', justifyContent: 'center' },
+  textoBoton: { color: colores.textoSobreOscuro, fontSize: 18, fontWeight: '700', textAlign: 'center' },
   deshabilitado: { opacity: 0.4 },
 });

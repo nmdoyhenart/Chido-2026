@@ -84,14 +84,13 @@ export default function PantallaMozo({ vista = 'inicio', mesa = '5' }: { vista?:
     <SafeAreaView edges={['top', 'left', 'right']} style={s.cabecera}>
       {vista === 'chat' ? <View style={s.perfil}>
         <TouchableOpacity style={s.botonIcono} accessibilityRole="button" accessibilityLabel="Volver a consultas" onPress={volver}><Feather name="arrow-left" size={25} color={c.textoSobreOscuro} /></TouchableOpacity>
-        <View style={s.avatar}><Feather name="user" size={29} color={c.textoSobreOscuro} /></View>
+        <View style={s.avatar}><Feather name="user" size={32} color={c.textoSobreOscuro} /></View>
         <View style={s.textos}><Text style={s.nombre}>{consulta ? `Mesa ${consulta.mesa}` : 'Consulta no disponible'}</Text><Text style={s.secundario}>{simulacion ? 'Chat de prueba' : 'Consultas'}</Text></View>
       </View> : <View style={[s.perfil, compacto && s.perfilCompacto]}>
-        <View style={s.avatar}><Feather name="user" size={29} color={c.textoSobreOscuro} /></View>
+        <View style={s.avatar}><Feather name="user" size={32} color={c.textoSobreOscuro} /></View>
         <View style={s.textos}><Text style={s.nombre}>{nombre}</Text><View style={s.insignia}><View style={s.puntoVerde} /><Text style={s.textoRol}>Mozo</Text></View></View>
         <View style={[s.acciones, compacto && s.accionesCompactas]}>
-          <TouchableOpacity style={s.botonIcono} accessibilityRole="button" accessibilityLabel="Ver consultas" onPress={() => router.push('/mozo/chats')}><Feather name="bell" size={23} color={c.textoSobreOscuro} />{noLeidas > 0 && <View style={s.puntoAviso} />}</TouchableOpacity>
-          <TouchableOpacity style={s.botonIcono} accessibilityRole="button" accessibilityLabel="Cerrar sesión" disabled={saliendo} onPress={() => void salir()}><Feather name="log-out" size={23} color={c.textoSobreOscuro} /></TouchableOpacity>
+          <TouchableOpacity style={s.botonIcono} accessibilityRole="button" accessibilityLabel="Cerrar sesión" disabled={saliendo} onPress={() => void salir()}><Feather name="log-out" size={26} color={c.textoSobreOscuro} /></TouchableOpacity>
         </View>
       </View>}
     </SafeAreaView>
@@ -110,9 +109,9 @@ export default function PantallaMozo({ vista = 'inicio', mesa = '5' }: { vista?:
               { texto: 'Consultas al mozo', icono: 'message-circle', cantidad: simulacion ? noLeidas : null, ruta: '/mozo/chats' },
               { texto: 'Pedidos entrantes', icono: 'shopping-bag', cantidad: simulacion ? pedidos.length : null, ruta: '/mozo/pedidos' },
             ] as const).map(item => <TouchableOpacity key={item.ruta} style={[s.card, s.acceso]} activeOpacity={0.8} accessibilityRole="button" onPress={() => router.push(item.ruta as any)}>
-              <View style={[s.iconoAcceso, compacto && s.iconoCompacto]}><Feather name={item.icono} size={32} color={c.textoSobreOscuro} /></View>
-              <Text style={[s.tituloCard, s.textos]}>{item.texto}</Text>
-              {item.cantidad !== null ? <View style={s.contador}><Text style={s.textoContador}>{item.cantidad}</Text></View> : <Feather name="chevron-right" size={22} color={c.textoSecundarioSobreOscuro} />}
+              <View style={[s.iconoAcceso, compacto && s.iconoCompacto]}><Feather name={item.icono} size={compacto ? 36 : 44} color={c.textoSobreOscuro} /></View>
+              <Text style={[s.tituloCard, s.tituloAcceso, s.textos]}>{item.texto}</Text>
+              {item.cantidad !== null ? <View style={s.contador}><Text style={s.textoContador}>{item.cantidad}</Text></View> : <Feather name="chevron-right" size={30} color={c.textoSecundarioSobreOscuro} />}
             </TouchableOpacity>)}
           </>}
 
@@ -178,21 +177,22 @@ const s = StyleSheet.create({
   pantalla: { flex: 1, backgroundColor: c.fondo }, cuerpo: { flex: 1 }, cabecera: { backgroundColor: c.cabecera },
   perfil: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 20, paddingVertical: 24, width: '100%', maxWidth: 760, alignSelf: 'center' },
   perfilCompacto: { flexWrap: 'wrap', paddingVertical: 14 }, textos: { flex: 1, minWidth: 0 },
-  avatar: { width: 58, height: 58, borderRadius: 29, borderWidth: 1, borderColor: '#d49462', backgroundColor: '#a35b40', alignItems: 'center', justifyContent: 'center' },
-  nombre: { fontSize: 18, lineHeight: 25, color: c.textoSobreOscuro, fontWeight: '800' },
+  avatar: { width: 64, height: 64, borderRadius: 32, borderWidth: 2, borderColor: '#d49462', backgroundColor: '#a35b40', alignItems: 'center', justifyContent: 'center' },
+  nombre: { fontSize: 24, lineHeight: 30, color: c.textoSobreOscuro, fontWeight: '800' },
   insignia: { flexDirection: 'row', alignItems: 'center', gap: 7, alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 5, marginTop: 8, borderRadius: 20, backgroundColor: '#a35b40' },
-  puntoVerde: { width: 8, height: 8, borderRadius: 4, backgroundColor: c.activo }, textoRol: { color: c.textoSecundarioSobreOscuro, fontSize: 14, fontWeight: '700' },
+  puntoVerde: { width: 9, height: 9, borderRadius: 5, backgroundColor: c.activo }, textoRol: { color: c.textoSecundarioSobreOscuro, fontSize: 15, fontWeight: '700' },
   acciones: { flexDirection: 'row', gap: 8 }, accionesCompactas: { width: '100%', justifyContent: 'flex-end' },
-  botonIcono: { width: 46, height: 46, borderRadius: 23, backgroundColor: '#a35b40', alignItems: 'center', justifyContent: 'center' },
-  puntoAviso: { position: 'absolute', top: 6, right: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: c.notificacion, borderWidth: 1, borderColor: c.cabecera },
+  botonIcono: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#a35b40', alignItems: 'center', justifyContent: 'center' },
+  puntoAviso: { position: 'absolute', top: 7, right: 9, width: 10, height: 10, borderRadius: 5, backgroundColor: c.notificacion, borderWidth: 1, borderColor: c.cabecera },
   contenido: { padding: 20, gap: 16, width: '100%', maxWidth: 760, alignSelf: 'center', paddingBottom: 24 }, contenidoExpandido: { flexGrow: 1 },
   saludo: { color: c.textoSobreOscuro, fontFamily: serif, fontSize: 32, fontWeight: '700', marginTop: 6 },
   nota: { fontSize: 12, color: c.textoSobreOscuro, textAlign: 'center' },
   card: { borderWidth: 1, borderColor: '#d49462', borderRadius: 21, backgroundColor: '#a85b2c' },
-  acceso: { flex: 1, minHeight: 155, padding: 24, flexDirection: 'row', alignItems: 'center', gap: 17 },
-  iconoAcceso: { width: 62, height: 62, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: c.cabecera }, iconoCompacto: { width: 45, height: 52 },
+  acceso: { flex: 1, minHeight: 172, padding: 24, flexDirection: 'row', alignItems: 'center', gap: 20 },
+  iconoAcceso: { width: 78, height: 78, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: c.cabecera }, iconoCompacto: { width: 56, height: 56 },
   tituloCard: { color: c.textoSobreOscuro, fontSize: 21, lineHeight: 28, fontWeight: '800' },
-  contador: { minWidth: 36, height: 36, borderRadius: 18, backgroundColor: c.notificacion, alignItems: 'center', justifyContent: 'center' }, textoContador: { color: c.textoSobreOscuro, fontSize: 20, fontWeight: '800' },
+  tituloAcceso: { fontSize: 28, lineHeight: 34 },
+  contador: { minWidth: 46, height: 46, borderRadius: 23, backgroundColor: c.notificacion, alignItems: 'center', justifyContent: 'center' }, textoContador: { color: c.textoSobreOscuro, fontSize: 24, fontWeight: '800' },
   tituloFila: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 3, marginBottom: 4 }, volver: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#a85b2c', alignItems: 'center', justifyContent: 'center' },
   titulo: { flex: 1, color: c.textoSobreOscuro, fontFamily: serif, fontSize: 27, fontWeight: '700', textAlign: 'center' },
   consulta: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 20, minHeight: 115 }, iconoConsulta: { width: 52, height: 52, borderRadius: 26, backgroundColor: c.cabecera, alignItems: 'center', justifyContent: 'center' },

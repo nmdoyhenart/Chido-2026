@@ -59,9 +59,31 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 
 ## QR's de la aplicación
 
-| QR entrada (Cliente anonimo) | QR Mesa 1 | QR Mesa 2 | QR Mesa 3 | QR Mesa 4 | QR Mesa 5 | QR Mesa 6 |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| <img width="240" alt="QR entrada cliente anon" src="https://github.com/user-attachments/assets/5856b4fc-5415-4f24-a755-da17cb92ef42" /> | <img width="240" alt="Código QR de la mesa 1" src="https://github.com/user-attachments/assets/85c70490-6799-4809-98c6-6bbdf3a054a1" /> | <img width="240" alt="Código QR de la mesa 2" src="https://github.com/user-attachments/assets/5c0217cf-5fda-44a7-b92b-49529bead1ac" /> | <img width="240" alt="Código QR de la mesa 3" src="https://github.com/user-attachments/assets/da55862f-72c2-48fe-8d00-e88c9b63ac3e" /> | <img width="240" alt="QR de la mesa 4" src="https://github.com/user-attachments/assets/61e48eb8-5b67-447a-b4e6-2b64d4bde87c" /> | <img width="240" alt="QR de la mesa 5" src="https://github.com/user-attachments/assets/44501b60-282c-43f2-b9e4-0fded0dc7959" /> | <img width="240" alt="QR de la mesa 6" src="https://github.com/user-attachments/assets/d3c98f13-a1fe-45a9-baf7-04ae5a76ba10" /> |
+### Acceso
+
+| QR entrada (Cliente anonimo) |
+| :---: |
+| <img width="240" alt="QR entrada cliente anon" src="https://github.com/user-attachments/assets/5856b4fc-5415-4f24-a755-da17cb92ef42" /> |
+
+### Mesas
+
+| QR Mesa 1 | QR Mesa 2 | QR Mesa 3 |
+| :---: | :---: | :---: |
+| <img width="240" alt="Código QR de la mesa 1" src="https://github.com/user-attachments/assets/85c70490-6799-4809-98c6-6bbdf3a054a1" /> | <img width="240" alt="Código QR de la mesa 2" src="https://github.com/user-attachments/assets/5c0217cf-5fda-44a7-b92b-49529bead1ac" /> | <img width="240" alt="Código QR de la mesa 3" src="https://github.com/user-attachments/assets/da55862f-72c2-48fe-8d00-e88c9b63ac3e" /> |
+
+| QR Mesa 4 | QR Mesa 5 | QR Mesa 6 |
+| :---: | :---: | :---: |
+| <img width="240" alt="QR de la mesa 4" src="https://github.com/user-attachments/assets/61e48eb8-5b67-447a-b4e6-2b64d4bde87c" /> | <img width="240" alt="QR de la mesa 5" src="https://github.com/user-attachments/assets/44501b60-282c-43f2-b9e4-0fded0dc7959" /> | <img width="240" alt="QR de la mesa 6" src="https://github.com/user-attachments/assets/d3c98f13-a1fe-45a9-baf7-04ae5a76ba10" /> |
+
+### Propinas
+
+| Propina 0% | Propina 5% | Propina 10% |
+| :---: | :---: | :---: |
+| <img width="240" alt="QR Propina 0%" src="https://github.com/user-attachments/assets/f985ba32-a431-466c-8896-84e52d8b7313" /> | <img width="240" alt="QR Propina 5%" src="https://github.com/user-attachments/assets/d39301f8-94de-47c8-978b-3ccc3320ec02" /> | <img width="240" alt="QR Propina 10%" src="https://github.com/user-attachments/assets/e61c4bb1-9f99-4d15-b76d-0d34a8dc4b3e" /> |
+
+| Propina 15% | Propina 20% |
+| :---: | :---: |
+| <img width="240" alt="QR Propina 15%" src="https://github.com/user-attachments/assets/73359c32-06af-423d-b94d-7499c3ec7be7" /> | <img width="240" alt="QR Propina 20%" src="https://github.com/user-attachments/assets/03a4037f-85f2-4313-8326-d6736a8eec00" /> |
 
 ## Pantallas de la aplicación
 
@@ -105,17 +127,17 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 
 ### Cocinero
 
-| Alta de plato |
-| :---: |
-| <img width="240" alt="Alta de Plato" src="https://github.com/user-attachments/assets/2da0f6e9-fb80-469c-83c4-05f2247a62fa" /> |
+| Home | Alta de plato | Pedidos entrantes | Ver carta |
+| :---: | :---: | :---: | :---: |
+| <img width="240" alt="Home Cocinero" src="https://github.com/user-attachments/assets/3491b890-1d6c-4076-b723-46b8b807924d" /> | <img width="240" alt="Alta de Plato" src="https://github.com/user-attachments/assets/2da0f6e9-fb80-469c-83c4-05f2247a62fa" /> | <img width="240" alt="Pedidos Entrantes" src="https://github.com/user-attachments/assets/73836955-0559-4214-873a-0820790684b7" /> | <img width="240" alt="Ver Carta" src="https://github.com/user-attachments/assets/7ef673b0-11a6-4980-a7e9-fd12ec1b4892" /> |
 
 ---
 
 ### Metre
 
-| Home | Lista de espera |
-| :---: | :---: |
-| <img width="240" alt="Home Metre" src="https://github.com/user-attachments/assets/9d636513-52a6-4206-80e0-ceb125a92d3d" /> | <img width="240" alt="Lista de Espera" src="https://github.com/user-attachments/assets/4f80f445-e08f-4d4a-8d92-588bfb96edcb" /> |
+| Home | Lista de espera | Registrar cliente |
+| :---: | :---: | :---: |
+| <img width="240" alt="Home Metre" src="https://github.com/user-attachments/assets/9d636513-52a6-4206-80e0-ceb125a92d3d" /> | <img width="240" alt="Lista de Espera" src="https://github.com/user-attachments/assets/4f80f445-e08f-4d4a-8d92-588bfb96edcb" /> | <img width="240" alt="Registrar Cliente" src="https://github.com/user-attachments/assets/82b8661d-07d9-4156-8e01-32713ba7d4cd" /> |
 ---
 
 ### Cantinero

@@ -10,7 +10,7 @@ import { colores } from '../../theme/colores';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { confirmarPagoMozo, getPedidosMozo, getSolicitudesCuentaMozo, actualizarEstadoPedido, entregarPedido, type SolicitudCuentaMozo } from '../../services/pedidos.service';
 
-const ESTADOS = ['todos', 'pendiente_mozo', 'confirmado', 'en_preparacion', 'entregado', 'recibido', 'pago_informado', 'pagado', 'rechazado'];
+const ESTADOS = ['todos', 'pendiente_mozo', 'confirmado', 'en_preparacion', 'listo_para_entregar', 'entregado', 'recibido', 'pago_informado', 'pagado', 'rechazado'];
 
 const ITEM_HEIGHT = 180;
 const ITEM_MARGIN = 12;
@@ -22,7 +22,7 @@ export default function PedidosMozo() {
   const { usuario, role } = useAppSession();
   const [pedidos, setPedidos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filtro, setFiltro] = useState<string>('pendiente_mozo');
+  const [filtro, setFiltro] = useState<string>('todos');
   const [pagina, setPagina] = useState(0);
   const [altoLista, setAltoLista] = useState(0);
   const [solicitudesCuenta, setSolicitudesCuenta] = useState<SolicitudCuentaMozo[]>([]);
@@ -113,6 +113,11 @@ export default function PedidosMozo() {
   inicioDelDia.setHours(0, 0, 0, 0);
   const pedidosFiltrados = pedidos.filter((pedido) => {
     if (filtro === 'todos') return true;
+    if (filtro === 'listo_para_entregar') {
+      return pedido.estado === 'en_preparacion'
+        && pedido.pedido_detalles?.length > 0
+        && pedido.pedido_detalles.every((detalle: { estado_sector: string }) => detalle.estado_sector === 'listo');
+    }
     if (pedido.estado !== filtro) return false;
     return filtro !== 'pendiente_mozo' || new Date(pedido.created_at) >= inicioDelDia;
   });
@@ -143,7 +148,7 @@ export default function PedidosMozo() {
               className={`px-4 py-2 rounded-full border-2 border-white/70 ${filtro === est ? 'bg-chido-acento' : 'bg-chido-cabecera'}`}
             >
                 <Text className="text-lg font-bold capitalize text-chido-texto-sobre-oscuro">
-                {est.replace('_', ' ')}
+                {est === 'listo_para_entregar' ? 'Listos para entregar' : est.replace('_', ' ')}
               </Text>
             </TouchableOpacity>
           ))}

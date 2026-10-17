@@ -103,7 +103,6 @@ export default function ListaChatsMozo() {
               accessibilityState={{ disabled: paginaActual === 0 }}
               disabled={paginaActual === 0}
               onPress={() => setPagina(Math.max(0, paginaActual - 1))}
-              activeOpacity={0.8}
               style={[styles.boton, paginaActual === 0 && styles.deshabilitado]}
             ><Text style={styles.textoBoton}>‹ Anterior</Text></TouchableOpacity>
             <TouchableOpacity
@@ -112,7 +111,6 @@ export default function ListaChatsMozo() {
               accessibilityState={{ disabled: paginaActual === totalPaginas - 1 }}
               disabled={paginaActual === totalPaginas - 1}
               onPress={() => setPagina(Math.min(totalPaginas - 1, paginaActual + 1))}
-              activeOpacity={0.8}
               style={[styles.boton, paginaActual === totalPaginas - 1 && styles.deshabilitado]}
             ><Text style={styles.textoBoton}>Siguiente ›</Text></TouchableOpacity>
           </View>

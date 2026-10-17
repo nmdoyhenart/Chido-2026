@@ -57,6 +57,11 @@ export default function ChatMesaMozo() {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const formatearFecha = (isoDate: string) => {
+    const date = new Date(isoDate);
+    return date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
   const userName = usuario ? `${usuario.nombres} ${usuario.apellidos}` : "Mozo";
   const displayRole = role ? role.charAt(0).toUpperCase() + role.slice(1) : "Mozo";
 
@@ -108,7 +113,7 @@ export default function ChatMesaMozo() {
                     {msg.texto}
                   </Text>
                   <Text className={`text-xs mt-2 self-end ${isMe ? 'text-chido-texto-secundario-sobre-claro' : 'text-chido-texto-secundario-sobre-oscuro'}`}>
-                    {formatearHora(msg.created_at)}
+                    {formatearFecha(msg.created_at)} · {formatearHora(msg.created_at)}
                   </Text>
                 </View>
               );

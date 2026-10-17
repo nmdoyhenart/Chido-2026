@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Image, ScrollView, Text, TouchableOpacity, Vibration, View } from 'react-native';
+import { Image, Text, TouchableOpacity, Vibration, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/Header';
@@ -83,37 +83,36 @@ export default function EstadoPedido() {
   return (
     <View className="flex-1 bg-chido-fondo">
       <Header userName="Cliente" role="Tu Pedido" />
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 16, paddingBottom: Math.max(insets.bottom, 16) }}
-        showsVerticalScrollIndicator={false}
-      >
-        <View className="items-center">
+      <View className="flex-1" style={{ padding: 16, paddingBottom: Math.max(insets.bottom, 16) }}>
+        {/* La imagen toma solo el alto que sobra; textos y botones siempre quedan visibles. */}
+        <View className="flex-1 items-center justify-center" style={{ minHeight: 0 }}>
         {estado === 'pendiente_mozo' || estado === 'confirmado' ? (
-          <Image source={require('../../../assets/images/mascota-espera.png')} style={{ width: '100%', height: 350 }} resizeMode="contain" />
+          <Image source={require('../../../assets/images/mascota-espera.png')} style={{ width: '100%', height: '100%', maxHeight: 350 }} resizeMode="contain" />
         ) : (
           <Ionicons name="restaurant-outline" size={80} color={colores.textoSobreOscuro} />
         )}
-        <Text className="mb-2 mt-6 text-center text-3xl font-bold text-chido-texto-sobre-oscuro">Estado del Pedido</Text>
-        <Text className="mt-4 text-center text-xl font-bold text-chido-texto-secundario-sobre-oscuro">{textosEstado[estado] ?? 'Actualizando el estado del pedido.'}</Text>
-        {error && <View className="mt-5 rounded-2xl bg-chido-error p-4"><Text className="text-center font-bold text-chido-texto-sobre-oscuro">{error}</Text></View>}
+        </View>
+        <View className="items-center">
+        <Text className="mb-2 mt-4 text-center text-3xl font-bold text-chido-texto-sobre-oscuro">Estado del Pedido</Text>
+        <Text className="mt-2 text-center text-xl font-bold text-chido-texto-secundario-sobre-oscuro">{textosEstado[estado] ?? 'Actualizando el estado del pedido.'}</Text>
+        {error && <View className="mt-4 rounded-2xl bg-chido-error p-4"><Text className="text-center font-bold text-chido-texto-sobre-oscuro">{error}</Text></View>}
         {estado === 'entregado' && (
-          <TouchableOpacity className="mt-6 w-full rounded-xl border-2 border-white/70 bg-chido-exito p-4" onPress={() => void confirmarRecepcion()} disabled={cargandoAccion}>
+          <TouchableOpacity className="mt-5 w-full rounded-xl border-2 border-white/70 bg-chido-exito p-4" onPress={() => void confirmarRecepcion()} disabled={cargandoAccion}>
             <Text className="text-center text-lg font-bold text-chido-texto-sobre-oscuro">{cargandoAccion ? 'Confirmando recepción…' : 'Confirmar recepción del pedido'}</Text>
           </TouchableOpacity>
         )}
         {manualView === 'true' && (
-          <TouchableOpacity className="mt-10 w-full rounded-xl bg-chido-cabecera p-4" onPress={() => router.back()}>
+          <TouchableOpacity className="mt-5 w-full rounded-xl bg-chido-cabecera p-4" onPress={() => router.back()}>
             <Text className="text-center text-lg font-bold text-chido-texto-sobre-oscuro">Volver</Text>
           </TouchableOpacity>
         )}
         {estado === 'rechazado' && (
-          <TouchableOpacity className="mt-10 w-full rounded-xl bg-chido-cabecera p-4" onPress={() => router.replace({ pathname: '/cliente/menu', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } })}>
+          <TouchableOpacity className="mt-5 w-full rounded-xl bg-chido-cabecera p-4" onPress={() => router.replace({ pathname: '/cliente/menu', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } })}>
             <Text className="text-center text-lg font-bold text-chido-texto-sobre-oscuro">Modificar pedido</Text>
           </TouchableOpacity>
         )}
         </View>
-      </ScrollView>
+      </View>
     </View>
   );
 }

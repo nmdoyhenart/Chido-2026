@@ -20,11 +20,9 @@ import { Input } from '../../components/ui/Input';
 import { PrimaryButton } from '../../components/ui/Buttons';
 
 export default function EncuestaCliente() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { pedidoId, clienteAnonimoId: rawAnonimoId } = useLocalSearchParams<{
-    pedidoId: string;
-    clienteAnonimoId?: string;
-  }>();
+  const { pedidoId, clienteAnonimoId: rawAnonimoId } = useLocalSearchParams<{ pedidoId: string; clienteAnonimoId?: string }>();
   const { usuario } = useAppSession();
   const clienteAnonimoId = !usuario?.id && rawAnonimoId ? rawAnonimoId : undefined;
 
@@ -196,19 +194,19 @@ export default function EncuestaCliente() {
                 </View>
               </View>
 
-              {/* 4. Control: TextInput para comentarios */}
-              <View className="mb-2">
-                <Input
-                  label="Comentarios (Opcional)"
-                  placeholder="¿Algo más que nos quieras decir?"
-                  value={comentario}
-                  onChangeText={setComentario}
-                  multiline={true}
-                  numberOfLines={2}
-                  textAlignVertical="top"
-                  style={{ height: 62 }}
-                />
-              </View>
+            {/* 4. Control: TextInput para comentarios */}
+            <View className="mb-8">
+              <Input 
+                label="Comentarios (Opcional)"
+                placeholder="¿Algo más que nos quieras decir?"
+                value={comentario}
+                onChangeText={setComentario}
+                onFocus={alEnfocar}
+                multiline={true}
+                numberOfLines={4}
+                textAlignVertical="top"
+                style={{ height: 100 }}
+              />
             </View>
 
             {/* Parte inferior: error si existe + botón Enviar */}
@@ -222,15 +220,25 @@ export default function EncuestaCliente() {
                 </View>
               )}
 
-              <PrimaryButton
-                title="Enviar Encuesta"
-                onPress={handleSubmit}
-                isLoading={enviando}
-                className="mb-1"
-              />
-            </View>
-          </KeyboardAvoidingView>
-        </TouchableWithoutFeedback>
+            {/* Parte inferior: error si existe + botón Enviar */}
+            <View>
+              {errorMensaje && (
+                <View className="mb-2 bg-chido-cabecera border-2 border-white/70 py-2 px-3 rounded-xl flex-row items-center">
+                  <Ionicons name="alert-circle-outline" size={20} color={colores.textoSobreOscuro} />
+                  <Text className="text-chido-texto-sobre-oscuro font-bold text-xs ml-2 flex-1">
+                    {errorMensaje}
+                  </Text>
+                </View>
+              )}
+
+            <PrimaryButton 
+              title="Enviar Encuesta"
+              onPress={handleSubmit}
+              isLoading={enviando}
+              className="mb-8 mt-2"
+            />
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
   );

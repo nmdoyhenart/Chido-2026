@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,10 +35,9 @@ export default function EsperaClienteRegistrado() {
   return <View className="flex-1 bg-chido-fondo">
     <Stack.Screen options={{ headerShown: false }} />
     <Header userName={[usuario?.nombres, usuario?.apellidos].filter(Boolean).join(' ') || 'Cliente'} role="Lista de espera" />
-    <ScrollView
+    <View
       className="flex-1"
-      contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 16, paddingBottom: Math.max(insets.bottom, 16) }}
-      showsVerticalScrollIndicator={false}
+      style={{ justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 16, paddingBottom: Math.max(insets.bottom, 16) }}
     >
       <View className="items-center">
       <View className="mb-6 h-20 w-20 items-center justify-center rounded-3xl bg-chido-cabecera">
@@ -65,6 +64,6 @@ export default function EsperaClienteRegistrado() {
         <Text className="text-center font-bold text-chido-texto-sobre-oscuro">Volver al inicio</Text>
       </Pressable>
       </View>
-    </ScrollView>
+    </View>
   </View>;
 }

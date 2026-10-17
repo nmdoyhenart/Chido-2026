@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, Pressable, ScrollView, Text, useWindowDimensions, Vibration, View } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Image, Pressable, Text, useWindowDimensions, Vibration, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '../../../components/Header';
 import ChidoLoader from '../../../components/ui/ChidoLoader';
 import ChidoLoaderOverlay from '../../../components/ui/ChidoLoaderOverlay';
+import { useAltoDisponible } from '../../../hooks/useAltoDisponible';
 import { guardarTateti, iniciarTateti, resolverTateti } from '../../../services/juegos';
 import { colores } from '../../../theme/colores';
 import type { EstadoJuego, EstadoRondaTateti, IntentoJuego, PartidaTateti } from '../../../types/juegos';
@@ -39,8 +40,8 @@ function mensajeDeRonda(estadoRonda: EstadoRondaTateti) {
 
 export default function Tateti() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { height, width } = useWindowDimensions();
+  const { alMedir, compacto } = useAltoDisponible();
   const { pedidoId } = useLocalSearchParams<{ pedidoId: string }>();
   const [intento, setIntento] = useState<IntentoJuego | null>(null);
   const [partida, setPartida] = useState<PartidaTateti>(nuevaPartida);
@@ -186,7 +187,6 @@ export default function Tateti() {
   const mascotaFinal = estadoSerie === 'ganado'
     ? require('../../../../assets/images/mascota-contenta-descuento.png')
     : require('../../../../assets/images/mascota-trsite-descuento.png');
-  const tamanioMascotaFinal = height < 720 ? 120 : height < 820 ? 165 : 205;
 
   if (rondaTerminada && estadoSerie) {
     const resultado = mensajeFinal ?? mensajeFinalRecreativo ?? mensajeRonda ?? 'La ronda terminó.';
@@ -195,24 +195,25 @@ export default function Tateti() {
     return (
       <SafeAreaView className="flex-1 bg-chido-fondo" edges={['left', 'right', 'bottom']}>
         <Header userName="Cliente" role="Ta-te-ti" />
-        <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingTop: 16, paddingBottom: Math.max(insets.bottom, 16) }} showsVerticalScrollIndicator={false}>
-          <View className="flex-1">
+        <View className="flex-1" onLayout={alMedir} style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16 }}>
           <Pressable onPress={() => router.back()} accessibilityRole="button" className="min-h-12 self-start flex-row items-center rounded-xl bg-chido-acento px-4"><Ionicons name="arrow-back" size={22} color={colores.textoSobreOscuro} /><Text className="ml-2 text-base font-bold text-chido-texto-sobre-oscuro">Volver a juegos</Text></Pressable>
-          <View className="relative flex-1 justify-center">
-            <Image source={mascotaFinal} resizeMode="contain" style={{ width: tamanioMascotaFinal, height: tamanioMascotaFinal }} className="mb-3 self-center" />
-            <View className="items-center rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera p-6">
-              <Ionicons name={iconoResultado} size={64} color={colores.textoSobreOscuro} />
-              <Text className="mt-4 text-center text-4xl font-extrabold text-chido-texto-sobre-oscuro">Resultado del mejor de cinco</Text>
-              <Text className="mt-3 text-center text-2xl font-bold text-chido-texto-secundario-sobre-oscuro">{resultado}</Text>
-              <View className="mt-5 flex-row rounded-2xl bg-chido-acento px-5 py-3"><Text className="text-xl font-extrabold text-chido-texto-sobre-oscuro">Vos {partida.puntosCliente} - {partida.puntosAplicacion} Aplicación</Text></View>
+          <View className="relative flex-1 mb-3">
+            {/* La mascota usa solo el espacio libre; la tarjeta de resultado siempre queda visible. */}
+            <View className="flex-1 items-center justify-center py-2" style={{ minHeight: 0 }}>
+              <Image source={mascotaFinal} resizeMode="contain" style={{ width: '100%', height: '100%', maxWidth: 205, maxHeight: 205 }} />
             </View>
-            {mensajeError && <View className="mt-4 rounded-2xl bg-chido-error p-4"><Text className="text-center text-base font-bold text-chido-texto-sobre-oscuro">{mensajeError}</Text></View>}
+            <View className={`items-center rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera ${compacto ? 'p-4' : 'p-6'}`}>
+              <Ionicons name={iconoResultado} size={compacto ? 44 : 64} color={colores.textoSobreOscuro} />
+              <Text className={`${compacto ? 'mt-2 text-3xl' : 'mt-4 text-4xl'} text-center font-extrabold text-chido-texto-sobre-oscuro`}>Resultado del mejor de cinco</Text>
+              <Text className={`${compacto ? 'mt-2 text-xl' : 'mt-3 text-2xl'} text-center font-bold text-chido-texto-secundario-sobre-oscuro`}>{resultado}</Text>
+              <View className={`${compacto ? 'mt-3 py-2' : 'mt-5 py-3'} flex-row rounded-2xl bg-chido-acento px-5`}><Text className="text-xl font-extrabold text-chido-texto-sobre-oscuro">Vos {partida.puntosCliente} - {partida.puntosAplicacion} Aplicación</Text></View>
+            </View>
+            {mensajeError && <View className={`${compacto ? 'mt-2 p-2' : 'mt-4 p-4'} rounded-2xl bg-chido-error`}><Text className="text-center text-base font-bold text-chido-texto-sobre-oscuro">{mensajeError}</Text></View>}
             {guardando && <ChidoLoaderOverlay mensaje="Guardando el resultado…" />}
           </View>
           {puedeAvanzar && <Pressable disabled={guardando} onPress={() => void siguienteRonda()} accessibilityRole="button" className={`min-h-16 flex-row items-center justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo px-5 py-4 ${guardando ? 'bg-chido-cabecera opacity-60' : 'bg-chido-botonPrincipal'}`}><Ionicons name="arrow-forward-circle-outline" size={28} color={colores.textoSobreOscuro} /><Text className="ml-3 text-center text-xl font-extrabold text-chido-texto-sobre-oscuro">Siguiente ronda</Text></Pressable>}
           {mostrarNuevaPartida && <Pressable onPress={jugarDeNuevo} accessibilityRole="button" className="min-h-16 flex-row items-center justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo bg-chido-botonPrincipal px-5 py-4"><Ionicons name="refresh-outline" size={28} color={colores.textoSobreOscuro} /><Text className="ml-3 text-center text-xl font-extrabold text-chido-texto-sobre-oscuro">Nueva partida recreativa</Text></Pressable>}
-          </View>
-        </ScrollView>
+        </View>
       </SafeAreaView>
     );
   }
@@ -220,19 +221,18 @@ export default function Tateti() {
   return (
     <SafeAreaView className="flex-1 bg-chido-fondo" edges={['left', 'right', 'bottom']}>
       <Header userName="Cliente" role="Ta-te-ti" />
-      <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingTop: 16, paddingBottom: Math.max(insets.bottom, 16) }} showsVerticalScrollIndicator={false}>
-        <View className="flex-1">
+      <View className="flex-1" onLayout={alMedir} style={{ paddingHorizontal: 20, paddingTop: compacto ? 12 : 16, paddingBottom: 16 }}>
         <Pressable onPress={() => router.back()} accessibilityRole="button" className="min-h-12 self-start flex-row items-center rounded-xl bg-chido-acento px-4"><Ionicons name="arrow-back" size={22} color={colores.textoSobreOscuro} /><Text className="ml-2 text-base font-bold text-chido-texto-sobre-oscuro">Volver a juegos</Text></Pressable>
-        <View className="mt-4 rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera p-4">
-          <Text className="text-5xl font-extrabold text-chido-texto-sobre-oscuro">Ta-te-ti</Text>
-          <Text className="mt-2 text-2xl text-chido-texto-secundario-sobre-oscuro">{mensajePromocion}</Text>
+        <View className={`rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera ${compacto ? 'mt-3 px-4 py-2' : 'mt-4 p-4'}`}>
+          <Text className={`${compacto ? 'text-3xl' : 'text-5xl'} font-extrabold text-chido-texto-sobre-oscuro`}>Ta-te-ti</Text>
+          <Text className={`${compacto ? 'mt-1 text-lg' : 'mt-2 text-2xl'} text-chido-texto-secundario-sobre-oscuro`}>{mensajePromocion}</Text>
         </View>
         {mensajeError && <View className="mt-3 rounded-2xl bg-chido-error p-3"><Text className="text-center text-base font-bold text-chido-texto-sobre-oscuro">{mensajeError}</Text></View>}
-        <View className="mt-4 items-center rounded-2xl bg-chido-acento px-4 py-3">
-          <Text className="text-4xl font-extrabold text-chido-texto-sobre-oscuro">Ronda {partida.ronda} de 5</Text>
-          <Text className="mt-1 text-2xl font-extrabold text-chido-texto-sobre-oscuro">Vos {partida.puntosCliente} - {partida.puntosAplicacion} Aplicación</Text>
+        <View className={`items-center rounded-2xl bg-chido-acento px-4 ${compacto ? 'mt-3 py-2' : 'mt-4 py-3'}`}>
+          <Text className={`${compacto ? 'text-2xl' : 'text-4xl'} font-extrabold text-chido-texto-sobre-oscuro`}>Ronda {partida.ronda} de 5</Text>
+          <Text className={`mt-1 ${compacto ? 'text-lg' : 'text-2xl'} font-extrabold text-chido-texto-sobre-oscuro`}>Vos {partida.puntosCliente} - {partida.puntosAplicacion} Aplicación</Text>
         </View>
-        <View onLayout={({ nativeEvent }) => setAltoTableroDisponible(Math.floor(nativeEvent.layout.height))} className="relative flex-1 items-center justify-center">
+        <View onLayout={({ nativeEvent }) => setAltoTableroDisponible(Math.floor(nativeEvent.layout.height))} className="relative my-2 flex-1 items-center justify-center">
           <View style={{ width: tableroSize, height: tableroSize }} className="flex-row flex-wrap overflow-hidden rounded-3xl border-4 border-chido-texto-secundario-alternativo bg-chido-cabecera">
             {partida.tablero.map((marca, indice) => <Pressable key={indice} accessibilityRole="button" accessibilityLabel={`Casilla ${indice + 1}${marca ? `, ${marca}` : ''}`} disabled={!intento || finalizado || guardando || partida.estadoRonda !== 'en_curso' || marca !== null} onPress={() => void elegirCasilla(indice)} className="h-1/3 w-1/3 items-center justify-center border border-chido-borde-naranja">
               <Text className={`text-7xl font-extrabold ${marca === 'X' ? 'text-chido-aviso' : 'text-chido-texto-secundario-alternativo'}`}>{marca ?? ''}</Text>
@@ -241,8 +241,7 @@ export default function Tateti() {
           {guardando && <ChidoLoaderOverlay mensaje="La aplicación está pensando…" />}
         </View>
         {rondaTerminada && puedeAvanzar ? <Pressable disabled={guardando} onPress={() => void siguienteRonda()} accessibilityRole="button" className={`min-h-16 flex-row items-center justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo px-5 py-4 ${guardando ? 'bg-chido-cabecera opacity-60' : 'bg-chido-botonPrincipal'}`}><Ionicons name="arrow-forward-circle-outline" size={28} color={colores.textoSobreOscuro} /><Text className="ml-3 text-center text-xl font-extrabold text-chido-texto-sobre-oscuro">Siguiente ronda</Text></Pressable> : <View className="min-h-16" />}
-        </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }

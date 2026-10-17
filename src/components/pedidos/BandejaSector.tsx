@@ -59,13 +59,15 @@ function CarruselDetalles({ detalles, tipo, actualizando, avanzar }: {
           const presentacion = PRESENTACION_ESTADO[detalle.estado];
           const ocupado = actualizando !== null;
           const compactoBebida = tipo === 'bebida' && columnas === 1;
-          const compactoDetalle = compactoBebida || (tipo === 'plato' && columnas === 1 && altoTarjeta < 180);
+          const compactoCocina = tipo === 'plato' && altoTarjeta < 180;
+          const compactoDetalle = compactoBebida || compactoCocina;
+          const tamImagen = columnas === 1 ? (compactoDetalle ? 52 : 64) : compactoCocina ? 40 : 44;
           return <View key={detalle.id} style={{ flex: 0, width: columnas === 1 ? '92%' : '48%', height: altoTarjeta, backgroundColor: colores.cabecera, borderColor: 'rgba(255, 248, 236, 0.38)' }} className={`min-w-0 justify-between rounded-2xl border ${columnas === 1 && !compactoDetalle ? 'p-3' : 'p-2'}`}>
             <View>
-              <View className={columnas === 1 ? 'flex-row items-center gap-3' : ''}>
-                {detalle.foto ? <Image source={{ uri: detalle.foto }} accessibilityLabel={detalle.nombre} style={{ width: columnas === 1 ? (compactoDetalle ? 52 : 64) : 44, height: columnas === 1 ? (compactoDetalle ? 52 : 64) : 44, borderRadius: columnas === 1 ? 12 : 10 }} resizeMode="cover" /> : <View className={`${columnas === 1 ? (compactoDetalle ? 'h-[52px] w-[52px]' : 'h-16 w-16') + ' rounded-xl' : 'h-11 w-11 rounded-xl'} items-center justify-center bg-chido-cabecera`}><Ionicons name={tipo === 'plato' ? 'restaurant-outline' : 'wine-outline'} size={columnas === 1 ? (compactoDetalle ? 28 : 34) : 24} color={colores.textoSobreOscuro} /></View>}
-                <View className={columnas === 1 ? 'flex-1' : ''}>
-                  <Text numberOfLines={2} className={`${columnas === 1 ? (compactoDetalle ? 'text-base' : 'text-lg') : 'mt-2 text-sm'} font-extrabold leading-5 text-chido-texto-sobre-oscuro`}>{detalle.cantidad} × {detalle.nombre}</Text>
+              <View className={columnas === 1 || compactoCocina ? 'flex-row items-center gap-2' : ''}>
+                {detalle.foto ? <Image source={{ uri: detalle.foto }} accessibilityLabel={detalle.nombre} style={{ width: tamImagen, height: tamImagen, borderRadius: columnas === 1 ? 12 : 10 }} resizeMode="cover" /> : <View style={{ width: tamImagen, height: tamImagen }} className="rounded-xl items-center justify-center bg-chido-cabecera"><Ionicons name={tipo === 'plato' ? 'restaurant-outline' : 'wine-outline'} size={tamImagen * 0.62} color={colores.textoSobreOscuro} /></View>}
+                <View className={columnas === 1 || compactoCocina ? 'min-w-0 flex-1' : ''}>
+                  <Text numberOfLines={2} className={`${columnas === 1 ? (compactoDetalle ? 'text-base' : 'text-lg') : compactoCocina ? 'text-xs leading-4' : 'mt-2 text-sm leading-5'} font-extrabold text-chido-texto-sobre-oscuro`}>{detalle.cantidad} × {detalle.nombre}</Text>
                   <View className={`${compactoDetalle ? 'mt-1 px-2 py-1' : 'mt-2'} flex-row items-center self-start rounded-full ${columnas === 1 && !compactoDetalle ? 'px-3 py-1' : columnas === 2 ? 'px-2 py-1' : ''}`} style={{ backgroundColor: `${presentacion.color}30` }}>
                     <Ionicons name={presentacion.icono} size={columnas === 1 && !compactoDetalle ? 18 : 13} color={presentacion.color} />
                     <Text numberOfLines={1} className={`ml-1 font-extrabold text-chido-texto-sobre-oscuro ${columnas === 1 && !compactoDetalle ? 'text-sm' : 'text-[10px]'}`}>{presentacion.texto}</Text>
@@ -76,10 +78,10 @@ function CarruselDetalles({ detalles, tipo, actualizando, avanzar }: {
             {detalle.estado !== 'listo' ? <Pressable disabled={ocupado} accessibilityRole="button"
               accessibilityLabel={detalle.estado === 'pendiente' ? `Comenzar preparación de ${detalle.nombre}` : `Marcar ${detalle.nombre} como listo`}
               onPress={() => void avanzar(detalle)}
-              className={`${compactoDetalle ? 'mt-1 min-h-10 border-2 px-2' : columnas === 1 ? 'mt-3 min-h-14 border-2 px-4' : 'mt-3 min-h-9 border px-1'} flex-row items-center justify-center rounded-xl border-white/75 ${detalle.estado === 'pendiente' ? 'bg-chido-acento' : 'bg-chido-exito'} ${ocupado ? 'opacity-60' : ''}`}>
+              className={`${compactoBebida ? 'mt-1 min-h-10 border-2 px-2' : compactoCocina ? 'mt-1 min-h-9 border px-1' : columnas === 1 ? 'mt-3 min-h-14 border-2 px-4' : 'mt-3 min-h-9 border px-1'} flex-row items-center justify-center rounded-xl border-white/75 ${detalle.estado === 'pendiente' ? 'bg-chido-acento' : 'bg-chido-exito'} ${ocupado ? 'opacity-60' : ''}`}>
               <Ionicons name={detalle.estado === 'pendiente' ? 'play-circle-outline' : 'checkmark-done-circle-outline'} size={compactoDetalle ? 20 : columnas === 1 ? 24 : 16} color={colores.textoSobreOscuro} />
               <Text numberOfLines={1} className={`ml-1 text-center font-extrabold text-chido-texto-sobre-oscuro ${compactoDetalle ? 'text-base' : columnas === 1 ? 'text-lg' : 'text-[11px]'}`}>{actualizando === detalle.id ? 'Actualizando…' : detalle.estado === 'pendiente' ? (columnas === 1 ? 'Comenzar preparación' : 'Preparar') : (columnas === 1 ? 'Marcar como listo' : 'Marcar listo')}</Text>
-            </Pressable> : <View className={`${compactoDetalle ? 'mt-1 min-h-10 border-2 px-2' : columnas === 1 ? 'mt-3 min-h-14 border-2 px-4' : 'mt-3 min-h-9 border px-1'} flex-row items-center justify-center rounded-xl border-white/45 bg-chido-exito`}>
+            </Pressable> : <View className={`${compactoBebida ? 'mt-1 min-h-10 border-2 px-2' : compactoCocina ? 'mt-1 min-h-9 border px-1' : columnas === 1 ? 'mt-3 min-h-14 border-2 px-4' : 'mt-3 min-h-9 border px-1'} flex-row items-center justify-center rounded-xl border-white/45 bg-chido-exito`}>
               <Ionicons name="checkmark-done-circle" size={compactoDetalle ? 20 : columnas === 1 ? 24 : 16} color={colores.textoSobreOscuro} />
               <Text className={`ml-1 text-center font-extrabold text-chido-texto-sobre-oscuro ${compactoDetalle ? 'text-base' : columnas === 1 ? 'text-lg' : 'text-[11px]'}`}>{columnas === 1 ? 'Producto listo' : 'Listo'}</Text>
             </View>}

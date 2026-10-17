@@ -50,9 +50,20 @@ export default function EncuestasPrevias() {
           gap: 12,
         }}
       >
-        <Text className="text-xl font-bold" style={{ color: colores.textoSecundarioSobreOscuro }}>
-          {hayDatos ? 'Opiniones de nuestros clientes.' : 'Todavía no hay encuestas.'}
-        </Text>
+        <View className="flex-row items-center justify-between">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="Volver"
+            className="flex-row items-center rounded-xl bg-chido-acento px-3 py-1.5"
+          >
+            <Ionicons name="arrow-back" size={20} color={colores.textoSobreOscuro} />
+            <Text className="ml-1 text-sm font-bold text-chido-texto-sobre-oscuro">Volver</Text>
+          </TouchableOpacity>
+          <Text className="text-lg font-bold" style={{ color: colores.textoSecundarioSobreOscuro }}>
+            {hayDatos ? 'Opiniones de clientes' : 'Todavía no hay encuestas'}
+          </Text>
+        </View>
         
         {cargando && <ActivityIndicator color={colores.textoSobreOscuro} />}
 

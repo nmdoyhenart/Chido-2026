@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Modal,
   StyleSheet,
   TouchableOpacity,
   Vibration,
@@ -62,6 +63,7 @@ export default function Login() {
 
   // Controla si el modal de acceso rápido está abierto o cerrado
   const [accesoRapidoVisible, setAccesoRapidoVisible] = useState(false);
+  const [avisoClienteAnonimoVisible, setAvisoClienteAnonimoVisible] = useState(false);
 
   const iniciarSesion = async () => {
     if (operacion.current) return;
@@ -102,8 +104,10 @@ export default function Login() {
     limpiarAviso();
     try {
       await enterGuest();
+      setAvisoClienteAnonimoVisible(false);
       router.push('/cliente-anonimo/alta');
     } catch {
+      setAvisoClienteAnonimoVisible(false);
       setMensaje('No se pudo iniciar el acceso de cliente. Revisá la conexión e intentá nuevamente.');
       Vibration.vibrate(180);
     } finally {
@@ -321,7 +325,7 @@ export default function Login() {
               {/* ACCESO PROPIO DEL CLIENTE ANÓNIMO */}
               <TouchableOpacity
                 disabled={loading}
-                onPress={() => void ingresarComoClienteAnonimo()}
+                onPress={() => setAvisoClienteAnonimoVisible(true)}
                 accessibilityRole="button"
                 accessibilityState={{ disabled: loading, busy: loading }}
                 activeOpacity={0.85}
@@ -358,6 +362,44 @@ export default function Login() {
 
       </SafeAreaView>
 
+      <Modal
+        visible={avisoClienteAnonimoVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setAvisoClienteAnonimoVisible(false)}
+      >
+        <View style={styles.fondoModal}>
+          <View style={styles.modalClienteAnonimo} accessibilityViewIsModal>
+            <View style={styles.iconoBeneficios}>
+              <Ionicons name="gift-outline" size={34} color={colores.textoSobreOscuro} />
+            </View>
+            <Text style={styles.tituloModal}>¡Registrate y disfrutá de más beneficios!</Text>
+            <Text style={styles.descripcionModal}>
+              ¡¡Al registrarte podés acceder a signficativos descuentos!!
+            </Text>
+            <TouchableOpacity
+              accessibilityRole="button"
+              activeOpacity={0.85}
+              onPress={() => {
+                setAvisoClienteAnonimoVisible(false);
+                router.push('/(auth)/registro');
+              }}
+              style={styles.botonModalPrincipal}
+            >
+              <Text style={styles.textoBotonModal}>Registrarme</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              accessibilityRole="button"
+              activeOpacity={0.85}
+              onPress={() => void ingresarComoClienteAnonimo()}
+              style={styles.botonModalSecundario}
+            >
+              <Text style={styles.textoBotonModal}>Continuar como Cliente Anónimo</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       {/* MODAL DE ACCESO RÁPIDO */}
       <AccesoRapidoModal
         visible={accesoRapidoVisible}
@@ -379,6 +421,14 @@ const styles = StyleSheet.create({
   iniciarSesion: { backgroundColor: colores.botonPrincipal, borderColor: '#ffb3ae' },
   registrarse: { backgroundColor: colores.botonPrincipal, borderColor: '#ffb3ae' },
   accesoRapido: { backgroundColor: colores.botonPrincipal, borderColor: '#ffb3ae' },
+  fondoModal: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: 'rgba(42,20,12,0.78)' },
+  modalClienteAnonimo: { width: '100%', maxWidth: 480, alignItems: 'center', borderRadius: 28, borderWidth: 2, borderColor: colores.bordeNaranja, padding: 24, backgroundColor: colores.cabecera },
+  iconoBeneficios: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginBottom: 12, backgroundColor: colores.acento },
+  tituloModal: { color: colores.textoSobreOscuro, fontSize: 22, fontWeight: '800', textAlign: 'center' },
+  descripcionModal: { color: colores.textoSecundarioSobreOscuro, fontSize: 17, lineHeight: 24, textAlign: 'center', marginTop: 12, marginBottom: 20 },
+  botonModalPrincipal: { width: '100%', minHeight: 54, justifyContent: 'center', alignItems: 'center', borderRadius: 16, borderWidth: 2, borderColor: colores.bordeError, paddingHorizontal: 14, backgroundColor: colores.botonPrincipal },
+  botonModalSecundario: { width: '100%', minHeight: 54, justifyContent: 'center', alignItems: 'center', borderRadius: 16, borderWidth: 2, borderColor: colores.bordeNaranja, paddingHorizontal: 14, marginTop: 12, backgroundColor: colores.acento },
+  textoBotonModal: { color: colores.textoSobreOscuro, fontSize: 17, fontWeight: '800', textAlign: 'center' },
   textoClaro: { color: colores.textoSobreOscuro, fontWeight: '800', textAlign: 'center' },
   deshabilitado: { opacity: 0.55 },
 });

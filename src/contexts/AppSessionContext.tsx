@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AppState } from 'react-native';
+import { setAudioModeAsync, setIsAudioActiveAsync, useAudioPlayer } from 'expo-audio';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
@@ -22,6 +23,7 @@ const VACIA: EstadoSesion = { mode: 'guest', role: null, usuario: null };
 const AppSessionContext = createContext<AppSessionContextType | undefined>(undefined);
 
 export function AppSessionProvider({ children }: { children: ReactNode }) {
+  const reproductorSalida = useAudioPlayer(require('../../assets/sounds/exit.mp3'), { updateInterval: 100 });
   const [estado, setEstado] = useState<EstadoSesion>(VACIA);
   const [cargando, setCargando] = useState(true);
   const [avisoSesion, setAviso] = useState<string | null>(null);
@@ -30,6 +32,50 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
   const ingresando = useRef(false);
   const modoLocal = useRef<EstadoSesion | null>(null);
   const identidadVerificada = useRef<string | null>(null);
+  const sonidoSalidaEnCurso = useRef(false);
+
+  // expo-audio requiere cambiar propiedades mutables del reproductor, igual que en el splash.
+  /* eslint-disable react-hooks/immutability */
+  const reproducirSonidoSalida = useCallback(async () => {
+    if (sonidoSalidaEnCurso.current || !reproductorSalida.isLoaded) return;
+    sonidoSalidaEnCurso.current = true;
+
+    try {
+      await setAudioModeAsync({
+        playsInSilentMode: true,
+        allowsRecording: false,
+        shouldRouteThroughEarpiece: false,
+        shouldPlayInBackground: false,
+        interruptionMode: 'duckOthers',
+      });
+      await setIsAudioActiveAsync(true);
+      reproductorSalida.volume = 1;
+      reproductorSalida.muted = false;
+      reproductorSalida.loop = false;
+      await reproductorSalida.seekTo(0);
+
+      await new Promise<void>((resolve) => {
+        let finalizado = false;
+        const terminar = () => {
+          if (finalizado) return;
+          finalizado = true;
+          clearTimeout(limite);
+          suscripcion.remove();
+          resolve();
+        };
+        const suscripcion = reproductorSalida.addListener('playbackStatusUpdate', (status) => {
+          if (status.didJustFinish || status.error) terminar();
+        });
+        const limite = setTimeout(terminar, Math.max(2500, (reproductorSalida.duration + 1) * 1000));
+        reproductorSalida.play();
+      });
+    } catch (error) {
+      console.warn('SONIDO_SALIDA', error);
+    } finally {
+      sonidoSalidaEnCurso.current = false;
+    }
+  }, [reproductorSalida]);
+  /* eslint-enable react-hooks/immutability */
 
   const sincronizar = useCallback(async (session: Session | null) => {
     if (ingresando.current || !activa.current) return;
@@ -64,6 +110,7 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  /* eslint-disable react-hooks/immutability */
   useEffect(() => {
     activa.current = true;
     const timers = new Set<ReturnType<typeof setTimeout>>();
@@ -86,7 +133,10 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
         }).catch(() => {
           if (activa.current && revision.current === numero) { identidadVerificada.current = null; setEstado(VACIA); setCargando(false); }
         });
-      } else supabase.auth.stopAutoRefresh();
+      } else {
+        supabase.auth.stopAutoRefresh();
+        if (next === 'background') void reproducirSonidoSalida();
+      }
     });
     return () => {
       activa.current = false;
@@ -97,7 +147,8 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
       subscription.unsubscribe();
       foreground.remove();
     };
-  }, [sincronizar]);
+  }, [sincronizar, reproducirSonidoSalida]);
+  /* eslint-enable react-hooks/immutability */
 
   async function iniciarSesion(correo: string, password: string) {
     if (ingresando.current) throw new ErrorAcceso('Ya hay un ingreso en curso.');
@@ -127,6 +178,8 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
 
   async function cerrarSesion() {
     revision.current++;
+    // Reproducir antes de abandonar la sesión, mientras la app sigue activa.
+    await reproducirSonidoSalida();
     // Evita que el siguiente aviso del dispositivo alcance a la cuenta que cerró sesión.
     await desvincularDispositivoPush().catch(() => undefined);
     await authService.logout();

@@ -30,7 +30,7 @@ import { useCampoVisibleConTeclado } from '../../hooks/useCampoVisibleConTeclado
 
 export default function Login() {
   const router = useRouter();
-  const { iniciarSesion: autenticar, mode, role, cargando, avisoSesion, limpiarAviso } = useAppSession();
+  const { iniciarSesion: autenticar, enterGuest, mode, role, cargando, avisoSesion, limpiarAviso } = useAppSession();
   const [mensaje, setMensaje] = useState<string | null>(null);
   const operacion = useRef(false);
   const scroll = useRef<ScrollView>(null);
@@ -38,7 +38,8 @@ export default function Login() {
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
-  const ALTO_DISENO = 900; // lo que mide el contenido con escala 1
+  // Incluye los accesos de cliente y de demostración para que entren sin scroll.
+  const ALTO_DISENO = 1000;
   const altoDisponible = height - insets.top - insets.bottom;
   const escala = Math.min(1, altoDisponible / ALTO_DISENO);
 
@@ -93,6 +94,24 @@ export default function Login() {
     }
   };
 
+  const ingresarComoClienteAnonimo = async () => {
+    if (operacion.current || loading) return;
+    operacion.current = true;
+    setLoading(true);
+    setMensaje(null);
+    limpiarAviso();
+    try {
+      await enterGuest();
+      router.push('/cliente-anonimo/alta');
+    } catch {
+      setMensaje('No se pudo iniciar el acceso de cliente. Revisá la conexión e intentá nuevamente.');
+      Vibration.vibrate(180);
+    } finally {
+      operacion.current = false;
+      setLoading(false);
+    }
+  };
+
   if (cargando && !loading) return <View className="flex-1 bg-chido-fondo justify-center"><ChidoLoader mensaje="Verificando sesión…" /></View>;
 
   return (
@@ -118,6 +137,7 @@ export default function Login() {
 
           <ScrollView
             ref={scroll}
+            scrollEnabled={rellenoInferior > 0}
             contentContainerStyle={{
               flexGrow: 1,
               justifyContent: 'center',
@@ -298,27 +318,19 @@ export default function Login() {
 
               </TouchableOpacity>
 
-              {/* INVITADO */}
-              {/* <Pressable
+              {/* ACCESO PROPIO DEL CLIENTE ANÓNIMO */}
+              <TouchableOpacity
                 disabled={loading}
-                onPress={ingresarInvitado}
-                className="
-                  h-16
-                  rounded-2xl
-                  border-2
-                  border-orange-100/40
-                  bg-red-900/70
-                  items-center
-                  justify-center
-                  mb-4
-                "
+                onPress={() => void ingresarComoClienteAnonimo()}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: loading, busy: loading }}
+                activeOpacity={0.85}
+                style={[styles.boton, { minHeight: 64 * escala, paddingVertical: 16 * escala, paddingHorizontal: 20 * escala, borderRadius: 16 * escala, marginBottom: 16 * escala }, styles.accesoRapido, loading && styles.deshabilitado]}
               >
-
-                <Text className="text-white text-xl font-bold">
-                  Ingresar como invitado
+                <Text style={[styles.textoClaro, { fontSize: 20 * escala, lineHeight: 26 * escala }]}>
+                  Cliente anónimo
                 </Text>
-
-              </Pressable> */}
+              </TouchableOpacity>
 
               {/* ACCESO RÁPIDO */}
               <TouchableOpacity

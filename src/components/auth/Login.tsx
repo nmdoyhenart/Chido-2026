@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   View,
@@ -11,6 +11,7 @@ import {
   Platform,
   ScrollView,
   Modal,
+  PanResponder,
   StyleSheet,
   TouchableOpacity,
   Vibration,
@@ -64,6 +65,13 @@ export default function Login() {
   // Controla si el modal de acceso rápido está abierto o cerrado
   const [accesoRapidoVisible, setAccesoRapidoVisible] = useState(false);
   const [avisoClienteAnonimoVisible, setAvisoClienteAnonimoVisible] = useState(false);
+  const gestoVolverClienteAnonimo = useMemo(() => PanResponder.create({
+    onMoveShouldSetPanResponder: (_evento, gesto) =>
+      gesto.x0 <= 32 && gesto.dx > 18 && Math.abs(gesto.dx) > Math.abs(gesto.dy),
+    onPanResponderRelease: (_evento, gesto) => {
+      if (gesto.dx > 70) setAvisoClienteAnonimoVisible(false);
+    },
+  }), []);
 
   const iniciarSesion = async () => {
     if (operacion.current) return;
@@ -368,8 +376,17 @@ export default function Login() {
         animationType="fade"
         onRequestClose={() => setAvisoClienteAnonimoVisible(false)}
       >
-        <View style={styles.fondoModal}>
+        <View style={styles.fondoModal} {...gestoVolverClienteAnonimo.panHandlers}>
           <View style={styles.modalClienteAnonimo} accessibilityViewIsModal>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Volver"
+              onPress={() => setAvisoClienteAnonimoVisible(false)}
+              style={styles.botonVolverModal}
+              hitSlop={10}
+            >
+              <Ionicons name="close" size={24} color={colores.textoSobreOscuro} />
+            </Pressable>
             <View style={styles.iconoBeneficios}>
               <Ionicons name="gift-outline" size={34} color={colores.textoSobreOscuro} />
             </View>
@@ -423,6 +440,7 @@ const styles = StyleSheet.create({
   accesoRapido: { backgroundColor: colores.botonPrincipal, borderColor: '#ffb3ae' },
   fondoModal: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: 'rgba(42,20,12,0.78)' },
   modalClienteAnonimo: { width: '100%', maxWidth: 480, alignItems: 'center', borderRadius: 28, borderWidth: 2, borderColor: colores.bordeNaranja, padding: 24, backgroundColor: colores.cabecera },
+  botonVolverModal: { position: 'absolute', top: 12, right: 12, zIndex: 1, width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 20, backgroundColor: colores.acento },
   iconoBeneficios: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginBottom: 12, backgroundColor: colores.acento },
   tituloModal: { color: colores.textoSobreOscuro, fontSize: 22, fontWeight: '800', textAlign: 'center' },
   descripcionModal: { color: colores.textoSecundarioSobreOscuro, fontSize: 17, lineHeight: 24, textAlign: 'center', marginTop: 12, marginBottom: 20 },

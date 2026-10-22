@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert, ImageBackground } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, ImageBackground } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAppSession } from '../../contexts/AppSessionContext';
@@ -7,12 +7,14 @@ import { Header } from '../../components/Header';
 import { getMensajes, enviarMensaje, suscribirMensajes, Mensaje } from '../../services/chat.service';
 import { colores } from '../../theme/colores';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAvisoResultado } from '../../hooks/useAvisoResultado';
 
 export default function ChatMesaMozo() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { mesaId, numero } = useLocalSearchParams<{ mesaId: string, numero: string }>();
   const { usuario, role } = useAppSession();
+  const { mostrarAviso, modalAviso } = useAvisoResultado();
 
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
   const [nuevoMensaje, setNuevoMensaje] = useState('');
@@ -48,7 +50,7 @@ export default function ChatMesaMozo() {
       // esMozo = true
       await enviarMensaje(mesaId, usuario.id, texto, true);
     } catch {
-      Alert.alert('Error', 'No se pudo enviar el mensaje.');
+      mostrarAviso('No se pudo enviar el mensaje', 'Revisá la conexión e intentá nuevamente.');
     }
   };
 
@@ -142,6 +144,7 @@ export default function ChatMesaMozo() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+      {modalAviso}
     </ImageBackground>
   );
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../Header';
@@ -7,6 +7,7 @@ import { useAppSession } from '../../contexts/AppSessionContext';
 import { colores } from '../../theme/colores';
 import { supabase } from '../../lib/supabase';
 import { actualizarEstadoItemSector, getPedidosSector } from '../../services/pedidos.service';
+import { useAvisoResultado } from '../../hooks/useAvisoResultado';
 
 type TipoSector = 'plato' | 'bebida';
 type EstadoItem = 'pendiente' | 'en_preparacion' | 'listo';
@@ -98,6 +99,7 @@ function CarruselDetalles({ detalles, tipo, actualizando, avanzar }: {
 export default function BandejaSector({ tipo }: { tipo: TipoSector }) {
   const router = useRouter();
   const { mode, role, usuario, cargando } = useAppSession();
+  const { mostrarAviso, modalAviso } = useAvisoResultado();
   const esperado = tipo === 'plato' ? 'cocinero' : 'cantinero';
   const titulo = tipo === 'plato' ? 'Pedidos de cocina' : 'Pedidos de bar';
   const scroll = useRef<ScrollView>(null);
@@ -170,7 +172,7 @@ export default function BandejaSector({ tipo }: { tipo: TipoSector }) {
     const siguiente: EstadoItem = item.estado === 'pendiente' ? 'en_preparacion' : 'listo';
     setActualizando(item.id);
     try { await actualizarEstadoItemSector(item.id, siguiente); await cargar(); }
-    catch (caught) { Alert.alert('No se pudo actualizar el producto', caught instanceof Error ? caught.message : 'Intentá nuevamente.'); }
+    catch (caught) { mostrarAviso('No se pudo actualizar el producto', caught instanceof Error ? caught.message : 'Intentá nuevamente.'); }
     finally { setActualizando(null); }
   }
 
@@ -238,5 +240,6 @@ export default function BandejaSector({ tipo }: { tipo: TipoSector }) {
         </View>
       </View>}
     </View>}
+    {modalAviso}
   </View>;
 }

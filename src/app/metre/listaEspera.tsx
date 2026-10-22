@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, FlatList, Image, TouchableOpacity, Modal, Alert } from 'react-native';
+import { View, Text, ActivityIndicator, FlatList, Image, TouchableOpacity, Modal } from 'react-native';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +9,7 @@ import { colores } from '../../theme/colores';
 import { obtenerListaEspera, suscribirseALista, eliminarDeLista, asignarMesaACliente, ClienteEnEspera } from '../../../lib/listaEspera';
 import { useMesas } from '../../hooks/useMesas';
 import { useAppSession } from '../../contexts/AppSessionContext';
+import { useAvisoResultado } from '../../hooks/useAvisoResultado';
 
 const CLIENTES_POR_PAGINA = 4;
 
@@ -21,6 +22,7 @@ function obtenerMensajeError(err: unknown): string {
 export default function ListaEsperaMetre() {
     const router = useRouter();
     const { usuario } = useAppSession();
+    const { mostrarAviso, modalAviso } = useAvisoResultado();
     const nombre = [usuario?.nombres, usuario?.apellidos].filter(Boolean).join(' ').trim() || 'Metre';
     const [lista, setLista] = useState<ClienteEnEspera[]>([]);
     const [cargando, setCargando] = useState(true);
@@ -94,7 +96,8 @@ export default function ListaEsperaMetre() {
             // no hace falta sacar el item a mano del estado local: Realtime refresca la lista_espera solo
         } catch (err) {
             console.error('Error al asignar mesa:', err);
-            Alert.alert('No se pudo asignar', obtenerMensajeError(err));
+            setClienteParaAsignar(null);
+            mostrarAviso('No se pudo asignar la mesa', obtenerMensajeError(err));
             recargarMesas(true);
         } finally {
             setAsignando(null);
@@ -267,6 +270,7 @@ export default function ListaEsperaMetre() {
                     </View>
                 </View>
             </Modal>
+            {modalAviso}
         </View>
     );
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert, ImageBackground } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, ImageBackground } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAppSession } from '../../contexts/AppSessionContext';
@@ -8,12 +8,14 @@ import { getMensajes, enviarMensaje, suscribirMensajes, Mensaje } from '../../se
 import { colores } from '../../theme/colores';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCampoVisibleConTeclado } from '../../hooks/useCampoVisibleConTeclado';
+import { useAvisoResultado } from '../../hooks/useAvisoResultado';
 
 export default function ChatCliente() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { mesaId: mesaIdParam, numero: numeroParam } = useLocalSearchParams<{ mesaId: string, numero: string }>();
   const { usuario } = useAppSession();
+  const { mostrarAviso, modalAviso } = useAvisoResultado();
 
   const [mesaId, setMesaId] = useState<string | null>(mesaIdParam || null);
   const [numero, setNumero] = useState<string | null>(numeroParam || null);
@@ -59,7 +61,7 @@ export default function ChatCliente() {
   const handleEnviar = async () => {
     if (!nuevoMensaje.trim() || !usuario?.id) return;
     if (!mesaId) {
-      Alert.alert('Aviso', 'No puedes enviar mensajes porque no estás asignado a ninguna mesa.');
+      mostrarAviso('No hay una mesa asignada', 'No podés enviar mensajes porque todavía no estás asignado a una mesa.');
       return;
     }
 
@@ -69,7 +71,7 @@ export default function ChatCliente() {
     try {
       await enviarMensaje(mesaId, usuario.id, texto, false);
     } catch {
-      Alert.alert('Error', 'No se pudo enviar el mensaje.');
+      mostrarAviso('No se pudo enviar el mensaje', 'Revisá la conexión e intentá nuevamente.');
     }
   };
 
@@ -158,6 +160,7 @@ export default function ChatCliente() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+      {modalAviso}
     </ImageBackground>
   );
 }

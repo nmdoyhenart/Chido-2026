@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Image, TouchableOpacity, Alert, FlatList, ScrollView, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Alert, FlatList, ScrollView, Dimensions, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAppSession } from '../../contexts/AppSessionContext';
@@ -37,12 +37,19 @@ export default function MenuCliente() {
   const enviandoRef = useRef(false);
   const solicitudId = useRef(Crypto.randomUUID());
   
-  const [filtro, setFiltro] = useState<'todos' | 'plato' | 'bebida' | 'postre'>('todos');
+  const [filtro, setFiltro] = useState<'todos' | 'plato' | 'bebida' >('todos');
+
+  // Cada tarjeta entra completa en el espacio de la lista (entre filtros y barra del total).
+  const { height: altoVentana } = useWindowDimensions();
+  const barraCompacta = altoVentana < 760;
+  const [altoLista, setAltoLista] = useState(0);
+  const altoTarjeta = altoLista > 0 ? Math.max(280, Math.min(ITEM_HEIGHT, altoLista - 40)) : ITEM_HEIGHT;
+  const altoFoto = Math.max(80, Math.min(192, altoTarjeta - 240));
 
   async function cargarProductos() {
     try {
       const data = await getProductos();
-      setProductos(data.filter(producto => producto.tipo === 'plato' || producto.tipo === 'bebida' || producto.tipo === 'postre'));
+      setProductos(data.filter(producto => producto.tipo === 'plato' || producto.tipo === 'bebida'));
     } catch (err: unknown) {
       console.log('Error fetching productos:', err);
       Alert.alert('Error', 'No se pudieron cargar los productos.');
@@ -139,7 +146,7 @@ export default function MenuCliente() {
   const renderCarousel = (fotos: string[]) => {
     if (!fotos || fotos.length === 0) {
       return (
-        <View className="w-full h-48 bg-chido-cabecera rounded-xl items-center justify-center">
+        <View className="w-full bg-chido-cabecera rounded-xl items-center justify-center" style={{ height: altoFoto }}>
           <Ionicons name="fast-food-outline" size={40} color={colores.textoSecundarioSobreOscuro} />
         </View>
       );
@@ -157,7 +164,7 @@ export default function MenuCliente() {
         renderItem={({ item }) => (
           <Image 
             source={{ uri: item }} 
-            style={{ width: width - 80, height: 192 }}
+            style={{ width: width - 80, height: altoFoto }}
             className="rounded-xl mr-4"
             resizeMode="cover"
           />
@@ -185,12 +192,6 @@ export default function MenuCliente() {
             <Text className={`font-bold ${filtro === 'plato' ? 'text-chido-cabecera' : 'text-chido-texto-secundario-sobre-oscuro'}`}>Plato</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            className={`px-4 py-2 rounded-full border-2 ${filtro === 'postre' ? 'bg-chido-texto-secundario-sobre-oscuro border-chido-texto-secundario-sobre-oscuro' : 'bg-chido-acento border-chido-texto-secundario-sobre-oscuro'}`}
-            onPress={() => setFiltro(filtro === 'postre' ? 'todos' : 'postre')}
-          >
-            <Text className={`font-bold ${filtro === 'postre' ? 'text-chido-cabecera' : 'text-chido-texto-secundario-sobre-oscuro'}`}>Postre</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
             className={`px-4 py-2 rounded-full border-2 ${filtro === 'bebida' ? 'bg-chido-texto-secundario-sobre-oscuro border-chido-texto-secundario-sobre-oscuro' : 'bg-chido-acento border-chido-texto-secundario-sobre-oscuro'}`}
             onPress={() => setFiltro(filtro === 'bebida' ? 'todos' : 'bebida')}
           >
@@ -214,12 +215,13 @@ export default function MenuCliente() {
       ) : (
         <FlatList 
           className="flex-1"
+          onLayout={({ nativeEvent }) => setAltoLista(Math.round(nativeEvent.layout.height))}
           data={productosFiltrados}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+          contentContainerStyle={{ padding: 20 }}
           snapToAlignment="start"
           decelerationRate="fast"
-          snapToInterval={ITEM_HEIGHT + ITEM_MARGIN}
+          snapToInterval={altoTarjeta + ITEM_MARGIN}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View className="flex-1 px-5">
@@ -231,17 +233,17 @@ export default function MenuCliente() {
             return (
               <View 
                 className="bg-chido-acento border-2 border-white/70 p-4 rounded-2xl"
-                style={{ height: ITEM_HEIGHT, marginBottom: ITEM_MARGIN }}
+                style={{ height: altoTarjeta, marginBottom: ITEM_MARGIN }}
               >
                 <Text className="text-xl font-bold text-chido-texto-sobre-oscuro mb-2" numberOfLines={1}>{prod.nombre}</Text>
 
-                <View className="mb-4">
+                <View className={altoTarjeta < 360 ? 'mb-2' : 'mb-4'}>
                   {renderCarousel(prod.fotos)}
                 </View>
 
-                <Text className="text-chido-texto-sobre-oscuro/90 text-sm mb-2 flex-1" numberOfLines={2}>{prod.descripcion}</Text>
+                <Text className="text-chido-texto-sobre-oscuro/90 text-sm mb-2 flex-1" numberOfLines={altoTarjeta < 360 ? 1 : 2}>{prod.descripcion}</Text>
 
-                <View className="flex-row justify-between items-center mb-4">
+                <View className={`flex-row justify-between items-center ${altoTarjeta < 360 ? 'mb-2' : 'mb-4'}`}>
                   <Text className="text-chido-texto-secundario-sobre-oscuro font-bold text-lg">${prod.precio}</Text>
                   <Text className="text-chido-texto-secundario-sobre-oscuro"><Ionicons name="time-outline" size={16} /> {prod.tiempo_elaboracion} min</Text>
                 </View>
@@ -272,18 +274,28 @@ export default function MenuCliente() {
       <View 
         className="w-full"
       >
-        <View 
-          className="p-5 bg-chido-cabecera rounded-t-3xl shadow-lg border-t border-chido-acento"
-          style={{ paddingBottom: Math.max(insets.bottom, 20) }}
+        <View
+          className={`${barraCompacta ? 'px-5 pt-3' : 'p-5'} bg-chido-cabecera rounded-t-3xl shadow-lg border-t border-chido-acento`}
+          style={{ paddingBottom: Math.max(insets.bottom, barraCompacta ? 12 : 20) }}
         >
-          <View className="flex-row justify-between mb-2">
-            <Text className="text-chido-texto-sobre-oscuro text-lg">Tiempo est. total:</Text>
-            <Text className="text-chido-texto-sobre-oscuro text-lg font-bold">{tiempoEstimado} min</Text>
-          </View>
-          <View className="flex-row justify-between mb-4">
-            <Text className="text-chido-texto-sobre-oscuro text-2xl font-bold">Total a pagar:</Text>
-            <Text className="text-chido-texto-sobre-oscuro text-2xl font-bold">${totalImporte}</Text>
-          </View>
+          {barraCompacta ? (
+            // En pantallas bajas tiempo y total van en una sola fila para dejarle lugar a la carta.
+            <View className="flex-row justify-between items-baseline mb-3">
+              <Text className="text-chido-texto-sobre-oscuro text-xl font-bold">Total: ${totalImporte}</Text>
+              <Text className="text-chido-texto-sobre-oscuro text-base">Tiempo est.: <Text className="font-bold">{tiempoEstimado} min</Text></Text>
+            </View>
+          ) : (
+            <>
+              <View className="flex-row justify-between mb-2">
+                <Text className="text-chido-texto-sobre-oscuro text-lg">Tiempo est. total:</Text>
+                <Text className="text-chido-texto-sobre-oscuro text-lg font-bold">{tiempoEstimado} min</Text>
+              </View>
+              <View className="flex-row justify-between mb-4">
+                <Text className="text-chido-texto-sobre-oscuro text-2xl font-bold">Total a pagar:</Text>
+                <Text className="text-chido-texto-sobre-oscuro text-2xl font-bold">${totalImporte}</Text>
+              </View>
+            </>
+          )}
           <PrimaryButton 
             className="border-2 border-white/70 rounded-2xl"
             title={enviando ? 'Enviando pedido…' : (pedidoId ? 'Volver a enviar pedido' : (Object.keys(pedido).length > 0 ? 'Realizar pedido' : 'Seleccione un producto'))}

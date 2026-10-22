@@ -104,6 +104,7 @@ export default function AccesoRapidoModal({
         case "dueño":
         case "supervisor":
         case "mozo":
+        case "cantinero":
           router.replace('/(app)/home');
           break;
         case "cliente registrado":
@@ -114,9 +115,6 @@ export default function AccesoRapidoModal({
           break;
         case "cocinero":
           router.replace('/(app)/home');
-          break;
-        case "cantinero":
-          router.push('/productos/alta-bebida');
           break;
         case "metre":
           router.push('../metre/home');

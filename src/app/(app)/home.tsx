@@ -8,6 +8,7 @@ import ChidoLoader from '../../components/ui/ChidoLoader';
 import InicioDueno from '../../components/dueno/InicioDueno';
 import InicioMozo from '../../components/mozo/InicioMozo';
 import InicioCocinero from '../../components/cocinero/InicioCocinero';
+import InicioCantinero from '../../components/cantinero/InicioCantinero';
 import { ENTRADA_APP, obtenerInicioPorPerfil } from '../../utils/inicioPorPerfil';
 
 export default function HomeScreen() {
@@ -28,7 +29,7 @@ export default function HomeScreen() {
     return <Redirect href="/(auth)/login" />;
   }
   const destino = obtenerInicioPorPerfil(role);
-  if (destino !== ENTRADA_APP && role !== 'cocinero' && role !== 'cocina') return <Redirect href={destino} />;
+  if (destino !== ENTRADA_APP && role !== 'cocinero' && role !== 'cocina' && role !== 'cantinero') return <Redirect href={destino} />;
 
   if ((role === 'dueño' || role === 'supervisor') && (mode === 'simulation' || (mode === 'authenticated' && usuario))) {
     return <InicioDueno key={usuario?.id ?? role} simulacion={mode === 'simulation'} usuario={usuario ?? { nombres: role === 'dueño' ? 'Dueño de demostración' : 'Supervisor de demostración', apellidos: '', foto_perfil: '', perfil: role }} saliendo={saliendo} error={error} onSalir={salir} onPendientes={() => router.push('/(app)/clientes-pendientes')} />;
@@ -36,6 +37,10 @@ export default function HomeScreen() {
 
   if (role === 'mozo' && (mode === 'simulation' || (mode === 'authenticated' && usuario))) {
     return <InicioMozo key={usuario?.id ?? role} usuario={usuario} role={role} saliendo={saliendo} onSalir={salir} />;
+  }
+
+  if (role === 'cantinero' && (mode === 'simulation' || (mode === 'authenticated' && usuario))) {
+    return <InicioCantinero key={usuario?.id ?? role} usuario={usuario} role={role} />;
   }
 
   if ((role === 'cocinero' || role === 'cocina') && (mode === 'simulation' || (mode === 'authenticated' && usuario))) {

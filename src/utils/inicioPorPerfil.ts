@@ -11,7 +11,7 @@ const destinos = {
   metre: '/metre/home',
   cocinero: ENTRADA_APP,
   cocina: ENTRADA_APP, // Alias local anterior de cocinero.
-  cantinero: '/bar/pedidos' as Href,
+  cantinero: ENTRADA_APP,
   'cliente registrado': '/cliente/home',
   'cliente anónimo': '/cliente-anonimo/escanear',
 } as const satisfies Record<AppRole, Href>;

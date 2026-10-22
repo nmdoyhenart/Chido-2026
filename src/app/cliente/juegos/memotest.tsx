@@ -6,6 +6,7 @@ import { Image, Pressable, Text, useWindowDimensions, Vibration, View } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '../../../components/Header';
 import ChidoLoader from '../../../components/ui/ChidoLoader';
+import { useAltoDisponible } from '../../../hooks/useAltoDisponible';
 import { iniciarMemotest, voltearMemotest } from '../../../services/juegos';
 import { colores } from '../../../theme/colores';
 import type { CartaMemotest, EstadoMemotest } from '../../../types/juegos';
@@ -25,7 +26,8 @@ function obtenerImagenCarta(carta: CartaMemotest | null) {
 export default function Memotest() {
   const router = useRouter();
   const { pedidoId } = useLocalSearchParams<{ pedidoId: string }>();
-  const { height, width } = useWindowDimensions();
+  const { width } = useWindowDimensions();
+  const { alMedir, compacto } = useAltoDisponible();
   const [juego, setJuego] = useState<EstadoMemotest | null>(null);
   const [cargandoPedido, setCargandoPedido] = useState(() => Boolean(pedidoId));
   const [imagenesListas, setImagenesListas] = useState(false);
@@ -72,8 +74,8 @@ export default function Memotest() {
   const mensajeError = aviso ?? (!pedidoId ? 'No encontramos el pedido para iniciar Memotest.' : null);
   const anchoCarta = Math.floor((Math.min(width - 52, 400) - 12) / 2);
   // Esta medida se toma dentro del área segura, después de cabecera, marcador y navegación Android.
-  const altoCarta = altoGrilla > 0 ? Math.max(48, Math.floor((altoGrilla - 36) / 4)) : 64;
-  const tamanioMascotaFinal = Math.min(width - 72, height < 720 ? 170 : height < 820 ? 240 : 280);
+  const separacionCartas = compacto ? 8 : 12;
+  const altoCarta = altoGrilla > 0 ? Math.max(40, Math.floor((altoGrilla - separacionCartas * 3) / 4)) : 64;
   const cargando = cargandoPedido || !imagenesListas;
 
   function iniciarRecreativo() {
@@ -139,19 +141,20 @@ export default function Memotest() {
     return (
       <SafeAreaView className="flex-1 bg-chido-fondo" edges={['left', 'right', 'bottom']}>
         <Header userName="Cliente" role="Memotest" />
-        <View className="flex-1 px-5 py-4">
+        <View className="flex-1" onLayout={alMedir} style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16 }}>
           <Pressable onPress={() => router.back()} accessibilityRole="button" className="min-h-12 self-start flex-row items-center rounded-xl bg-chido-acento px-4">
             <Ionicons name="arrow-back" size={22} color={colores.textoSobreOscuro} />
             <Text className="ml-2 text-base font-bold text-chido-texto-sobre-oscuro">Volver a juegos</Text>
           </Pressable>
-          <View className="flex-1 justify-center">
-            <Image source={mascota} resizeMode="contain" style={{ width: tamanioMascotaFinal, height: tamanioMascotaFinal }} className="mb-3 self-center" />
-            <View className="items-center rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera p-6">
-              <Ionicons name={gano ? 'trophy-outline' : 'game-controller-outline'} size={64} color={colores.textoSobreOscuro} />
-              <Text className="mt-4 text-center text-4xl font-extrabold text-chido-texto-sobre-oscuro">Resultado de Memotest</Text>
-              <Text className="mt-3 text-center text-2xl font-bold text-chido-texto-secundario-sobre-oscuro">{gano ? recreativo ? 'Ganaste la partida recreativa.' : 'Aplicamos 15% de descuento a tu cuenta.' : recreativo ? resultadoRec : 'No alcanzaste los cuatro pares.'}</Text>
-              <View className="mt-5 rounded-2xl bg-chido-acento px-5 py-3"><Text className="text-xl font-extrabold text-chido-texto-sobre-oscuro">Pares {emparejadas.length / 2} de 4</Text></View>
-            </View>
+          {/* La mascota usa solo el espacio libre; la tarjeta de resultado y el botón siempre quedan visibles. */}
+          <View className="flex-1 items-center justify-center py-2" style={{ minHeight: 0 }}>
+            <Image source={mascota} resizeMode="contain" style={{ width: '100%', height: '100%', maxWidth: 280, maxHeight: 280 }} />
+          </View>
+          <View className={`mb-3 items-center rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera ${compacto ? 'p-4' : 'p-6'}`}>
+            <Ionicons name={gano ? 'trophy-outline' : 'game-controller-outline'} size={compacto ? 44 : 64} color={colores.textoSobreOscuro} />
+            <Text className={`${compacto ? 'mt-2 text-3xl' : 'mt-4 text-4xl'} text-center font-extrabold text-chido-texto-sobre-oscuro`}>Resultado de Memotest</Text>
+            <Text className={`${compacto ? 'mt-2 text-xl' : 'mt-3 text-2xl'} text-center font-bold text-chido-texto-secundario-sobre-oscuro`}>{gano ? recreativo ? 'Ganaste la partida recreativa.' : juego?.descuento_otorgado === 15 ? 'Aplicamos 15% de descuento a tu cuenta.' : 'Ganaste, pero tu cuenta ya tenía un descuento aplicado.' : recreativo ? resultadoRec : 'No alcanzaste los cuatro pares.'}</Text>
+            <View className={`${compacto ? 'mt-3 py-2' : 'mt-5 py-3'} rounded-2xl bg-chido-acento px-5`}><Text className="text-xl font-extrabold text-chido-texto-sobre-oscuro">Pares {emparejadas.length / 2} de 4</Text></View>
           </View>
           <Pressable onPress={iniciarRecreativo} accessibilityRole="button" className="min-h-16 flex-row items-center justify-center rounded-2xl border-2 border-chido-texto-secundario-alternativo bg-chido-botonPrincipal px-5 py-4">
             <Ionicons name="refresh-outline" size={28} color={colores.textoSobreOscuro} />
@@ -165,24 +168,33 @@ export default function Memotest() {
   return (
     <SafeAreaView className="flex-1 bg-chido-fondo" edges={['left', 'right', 'bottom']}>
       <Header userName="Cliente" role="Memotest" />
-      <View className="flex-1 px-5 py-4">
+      <View className="flex-1" onLayout={alMedir} style={{ paddingHorizontal: 20, paddingTop: compacto ? 12 : 16, paddingBottom: 16 }}>
         <Pressable onPress={() => router.back()} accessibilityRole="button" className="min-h-12 self-start flex-row items-center rounded-xl bg-chido-acento px-4">
           <Ionicons name="arrow-back" size={22} color={colores.textoSobreOscuro} />
           <Text className="ml-2 text-base font-bold text-chido-texto-sobre-oscuro">Volver a juegos</Text>
         </Pressable>
-        <View className="mt-4 rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera p-4">
-          <Text className="text-5xl font-extrabold text-chido-texto-sobre-oscuro">Memotest</Text>
-          <Text className="mt-2 text-2xl text-chido-texto-secundario-sobre-oscuro">Completá los cuatro pares en seis intentos.</Text>
+        <View className={`rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera ${compacto ? 'mt-3 px-4 py-2' : 'mt-4 p-4'}`}>
+          <Text className={`${compacto ? 'text-3xl' : 'text-5xl'} font-extrabold text-chido-texto-sobre-oscuro`}>Memotest</Text>
+          <Text className={`${compacto ? 'mt-1 text-lg' : 'mt-2 text-2xl'} text-chido-texto-secundario-sobre-oscuro`}>Completá los cuatro pares en seis intentos.</Text>
         </View>
-        <View className="mt-4 items-center rounded-2xl bg-chido-acento px-4 py-3">
-          <Text className="text-3xl font-extrabold text-chido-texto-sobre-oscuro">Intentos {intentos} de 6</Text>
-          <Text className="mt-1 text-2xl font-extrabold text-chido-texto-sobre-oscuro">Pares {emparejadas.length / 2} de 4</Text>
+        {/* En pantallas bajas intentos y pares van en una sola fila. */}
+        <View className={`items-center rounded-2xl bg-chido-acento px-4 ${compacto ? 'mt-3 py-2' : 'mt-4 py-3'}`}>
+          {compacto ? (
+            <Text className="text-xl font-extrabold text-chido-texto-sobre-oscuro">Intentos {intentos} de 6 · Pares {emparejadas.length / 2} de 4</Text>
+          ) : (
+            <>
+              <Text className="text-3xl font-extrabold text-chido-texto-sobre-oscuro">Intentos {intentos} de 6</Text>
+              <Text className="mt-1 text-2xl font-extrabold text-chido-texto-sobre-oscuro">Pares {emparejadas.length / 2} de 4</Text>
+            </>
+          )}
         </View>
         {mensajeError && <View className="mt-3 rounded-2xl bg-chido-error p-3"><Text className="text-center font-bold text-chido-texto-sobre-oscuro">{mensajeError}</Text></View>}
-        <View className="mt-3 h-16 items-center justify-center">
-          {bloqueado && <ChidoLoader mensaje="Recordá las cartas…" compacto />}
+        <View className={`items-center justify-center ${compacto ? 'my-1 h-7' : 'mt-3 h-16'}`}>
+          {bloqueado && (compacto
+            ? <Text className="text-base font-bold text-chido-texto-sobre-oscuro" accessibilityLiveRegion="polite">Recordá las cartas…</Text>
+            : <ChidoLoader mensaje="Recordá las cartas…" compacto />)}
         </View>
-        <View onLayout={({ nativeEvent }) => setAltoGrilla(Math.round(nativeEvent.layout.height))} className="flex-1 flex-row flex-wrap justify-between" style={{ rowGap: 12 }}>
+        <View onLayout={({ nativeEvent }) => setAltoGrilla(Math.round(nativeEvent.layout.height))} className="flex-1 flex-row flex-wrap justify-between" style={{ rowGap: separacionCartas }}>
           {cartas.map((carta, indice) => {
             const imagen = obtenerImagenCarta(carta);
             return (

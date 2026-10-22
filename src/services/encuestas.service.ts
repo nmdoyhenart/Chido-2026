@@ -26,6 +26,18 @@ export const enviarEncuesta = async (data: EncuestaData) => {
     }
   }
 
+  if (data.pedido_id) {
+    const { data: pedido } = await supabase
+      .from('pedidos')
+      .select('estado')
+      .eq('id', data.pedido_id)
+      .maybeSingle();
+
+    if (pedido && !['recibido', 'pago_informado', 'finalizado'].includes(pedido.estado)) {
+      throw new Error('Debés confirmar la recepción de tu pedido antes de enviar la encuesta.');
+    }
+  }
+
   const { error } = await supabase
     .from('encuestas_pedidos')
     .insert([{

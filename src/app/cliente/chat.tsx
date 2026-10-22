@@ -78,6 +78,11 @@ export default function ChatCliente() {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const formatearFecha = (isoDate: string) => {
+    const date = new Date(isoDate);
+    return date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
   return (
     <ImageBackground 
       source={require('../../../assets/images/fondo.jpeg')} 
@@ -125,7 +130,7 @@ export default function ChatCliente() {
                   {msg.texto}
                 </Text>
                 <Text className={`text-xs mt-2 self-end ${isMe ? 'text-chido-texto-secundario-sobre-oscuro' : 'text-chido-texto-secundario-sobre-claro'}`}>
-                  {formatearHora(msg.created_at)}
+                  {formatearFecha(msg.created_at)} · {formatearHora(msg.created_at)}
                 </Text>
               </View>
             );

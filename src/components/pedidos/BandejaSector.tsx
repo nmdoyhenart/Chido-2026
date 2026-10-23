@@ -8,6 +8,7 @@ import { colores } from '../../theme/colores';
 import { supabase } from '../../lib/supabase';
 import { actualizarEstadoItemSector, getPedidosSector } from '../../services/pedidos.service';
 import { useAvisoResultado } from '../../hooks/useAvisoResultado';
+import { useVibrarError } from '../../hooks/useVibrarError';
 
 type TipoSector = 'plato' | 'bebida';
 type EstadoItem = 'pendiente' | 'en_preparacion' | 'listo';
@@ -107,6 +108,7 @@ export default function BandejaSector({ tipo }: { tipo: TipoSector }) {
   const [loading, setLoading] = useState(true);
   const [actualizando, setActualizando] = useState<string | null>(null);
   const [error, setError] = useState('');
+  useVibrarError(error);
   const [altoPagina, setAltoPagina] = useState(0);
   const [pagina, setPagina] = useState(0);
 

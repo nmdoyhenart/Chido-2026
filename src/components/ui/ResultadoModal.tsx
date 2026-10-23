@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colores } from '../../theme/colores';
+import { vibrarError } from '../../utils/errorVibration';
 
 type Props = {
   visible: boolean;
@@ -14,6 +16,10 @@ type Props = {
 
 export function ResultadoModal({ visible, tipo, titulo, mensaje, accion, onClose }: Props) {
   const exito = tipo === 'exito';
+  useEffect(() => {
+    if (visible && !exito) vibrarError();
+  }, [visible, exito, titulo, mensaje]);
+
   return (
     <Modal transparent animationType="fade" visible={visible} onRequestClose={onClose}>
       <SafeAreaView style={styles.fondo}>

@@ -8,6 +8,7 @@ import { authService, ErrorAcceso } from '../services/auth.service';
 import { desvincularDispositivoPush } from '../services/notificaciones-push';
 import type { AppRole, SessionMode } from '../types/roles';
 import type { Usuario } from '../../shared/acceso';
+import { useVibrarError } from '../hooks/useVibrarError';
 
 type EstadoSesion = { mode: SessionMode; role: AppRole | null; usuario: Usuario | null };
 type AppSessionContextType = EstadoSesion & {
@@ -27,6 +28,7 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
   const [estado, setEstado] = useState<EstadoSesion>(VACIA);
   const [cargando, setCargando] = useState(true);
   const [avisoSesion, setAviso] = useState<string | null>(null);
+  useVibrarError(avisoSesion);
   const activa = useRef(true);
   const revision = useRef(0);
   const ingresando = useRef(false);

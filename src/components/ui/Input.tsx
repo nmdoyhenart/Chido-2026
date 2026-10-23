@@ -1,6 +1,7 @@
 import React from 'react';
 import { TextInput, TextInputProps, View, Text } from 'react-native';
 import { colores } from '../../theme/colores';
+import { useVibrarError } from '../../hooks/useVibrarError';
 
 interface InputProps extends TextInputProps {
   label: string;
@@ -12,6 +13,7 @@ interface InputProps extends TextInputProps {
 }
 
 export function Input({ label, error, containerClassName = '', grande = false, ...props }: InputProps) {
+  useVibrarError(error);
   return (
     <View className={`${grande ? '' : 'mb-4 '}${containerClassName}`}>
       <Text className={`text-chido-texto-sobre-oscuro ml-1 ${grande ? 'text-lg font-bold mb-1' : 'text-sm mb-1'}`} style={grande ? { lineHeight: 22 } : undefined}>{label}</Text>

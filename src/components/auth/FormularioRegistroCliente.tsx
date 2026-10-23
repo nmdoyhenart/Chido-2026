@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { Image, ImageBackground, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, Vibration, View } from 'react-native';
+import { Image, ImageBackground, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { validarConfirmacion, validarRegistroCliente, type CampoRegistro, type DatosRegistroCliente, type ErroresRegistro } from '../../../shared/registro-cliente';
 import CampoFormulario from '../ui/CampoFormulario';
@@ -10,6 +10,7 @@ import ChidoLoader from '../ui/ChidoLoader';
 import CamaraRegistro, { type FotoCapturada } from './CamaraRegistro';
 import { colores } from '../../theme/colores';
 import { useCampoVisibleConTeclado } from '../../hooks/useCampoVisibleConTeclado';
+import { vibrarError } from '../../utils/errorVibration';
 
 export type ResultadoFormulario = { ok: true } | { ok: false; mensaje: string; campos?: ErroresRegistro };
 type Props = {
@@ -77,7 +78,7 @@ export default function FormularioRegistroCliente({ esMetre, onSubmit, onVolver 
   function editar(campo: CampoTexto, valor: string) {
     if (campo === 'dni' && /[^0-9]/.test(valor)) {
       setErrores((actual) => ({ ...actual, dni: 'El DNI sólo admite números, sin letras, símbolos ni espacios.' }));
-      Vibration.vibrate(180);
+      vibrarError();
       return;
     }
     const nuevos = { ...valores, [campo]: valor };
@@ -95,7 +96,7 @@ export default function FormularioRegistroCliente({ esMetre, onSubmit, onVolver 
     const resultado = validarRegistroCliente({ ...valores, fotoBase64: foto?.base64 ?? '' });
     const error = campo === 'confirmarPassword' ? validarConfirmacion(valores.password, valores.confirmarPassword) : resultado.errores[campo];
     setErrores((actual) => ({ ...actual, [campo]: error }));
-    if (error) Vibration.vibrate(180);
+    if (error) vibrarError();
   }
 
   function mostrarErrores(nuevos: ErroresRegistro) {
@@ -108,7 +109,7 @@ export default function FormularioRegistroCliente({ esMetre, onSubmit, onVolver 
       scroll.current?.scrollTo({ y: Math.max(0, paginasY.current[pagina] + (posiciones.current[primero] ?? 0) - 16), animated: true });
       if (primero !== 'fotoBase64') inputs.current[primero]?.focus();
     }
-    Vibration.vibrate(180);
+    vibrarError();
   }
 
   function volver() {
@@ -145,7 +146,7 @@ export default function FormularioRegistroCliente({ esMetre, onSubmit, onVolver 
     } catch {
       if (activa.current) {
         setMensaje('No pudimos confirmar el registro. Revisá la conexión antes de volver a intentarlo.');
-        Vibration.vibrate(180);
+        vibrarError();
         scroll.current?.scrollToEnd({ animated: true });
       }
     } finally {

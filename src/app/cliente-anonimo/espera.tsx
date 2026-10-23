@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colores } from '../../theme/colores';
 import { obtenerClienteEnListaPorId, suscribirseAMiEstado } from '../../../lib/clientesAnonimos';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useVibrarError } from '../../hooks/useVibrarError';
 
 const CLIENTE_ANONIMO_ID_KEY = 'cliente_anonimo_id';
 const CLIENTE_ANONIMO_NOMBRE_KEY = 'cliente_anonimo_nombre';
@@ -18,6 +19,7 @@ export default function EsperaClienteAnonimo() {
     const [mesaAsignada, setMesaAsignada] = useState<string | null>(null);
     const [saliendo, setSaliendo] = useState(false);
     const [error, setError] = useState('');
+    useVibrarError(error);
 
     useEffect(() => {
         let desuscribirse: (() => void) | undefined;

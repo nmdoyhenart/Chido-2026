@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ScrollView, StyleSheet, Vibration } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/Header';
@@ -68,7 +68,6 @@ export default function PedidosMozo() {
     try {
       await actualizarEstadoPedido(id, nuevoEstado);
     } catch (error) {
-      Vibration.vibrate(180);
       setAviso({ tipo: 'error', titulo: 'No pudimos actualizar el pedido', mensaje: error instanceof Error ? error.message : 'Intentá nuevamente.' });
     }
   };
@@ -77,7 +76,6 @@ export default function PedidosMozo() {
     try {
       await entregarPedido(id);
     } catch (error) {
-      Vibration.vibrate(180);
       setAviso({ tipo: 'error', titulo: 'El pedido todavía no está listo', mensaje: error instanceof Error ? error.message : 'Cocina y bar deben terminar los productos.' });
     }
   };
@@ -89,7 +87,6 @@ export default function PedidosMozo() {
       setSolicitudesCuenta((actuales) => actuales.filter((actual) => actual.pedido_id !== solicitud.pedido_id));
       setAviso({ tipo: 'exito', titulo: 'Pago confirmado', mensaje: `La mesa ${solicitud.numero} quedó liberada y avisamos al dueño y al supervisor.` });
     } catch (error) {
-      Vibration.vibrate(180);
       setAviso({ tipo: 'error', titulo: 'No pudimos confirmar el pago', mensaje: error instanceof Error ? error.message : 'Actualizá el listado antes de reintentar.' });
     } finally {
       setConfirmandoPagoId(null);

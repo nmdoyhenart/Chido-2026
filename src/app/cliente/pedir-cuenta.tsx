@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Image,
   useWindowDimensions,
-  Vibration,
 } from 'react-native';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -76,7 +75,6 @@ export default function PedirCuenta() {
         setPagoInformado(true);
       }
     } catch (error: any) {
-      Vibration.vibrate(180);
       setAviso({ titulo: 'No pudimos cargar la cuenta', mensaje: error.message || 'Intentá nuevamente.' });
     } finally {
       setCargando(false);
@@ -105,7 +103,6 @@ export default function PedirCuenta() {
       await informarPago(pedidoId, clienteAnonimoId);
       setPagoInformado(true);
     } catch (error: any) {
-      Vibration.vibrate(180);
       setAviso({ titulo: 'No pudimos informar el pago', mensaje: error.message || 'Intentá nuevamente.' });
     } finally {
       setProcesandoPago(false);

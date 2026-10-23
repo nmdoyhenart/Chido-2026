@@ -3,10 +3,12 @@ import { AppState } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { clientesDemostracion } from '../data/demostracion';
 import { contarPendientes } from '../services/aprobacion-cliente.service';
+import { useVibrarError } from './useVibrarError';
 
 export function useContadorPendientes(simulacion = false) {
   const [total, setTotal] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  useVibrarError(error);
   useFocusEffect(useCallback(() => {
     if (simulacion) return;
     let activo = true;

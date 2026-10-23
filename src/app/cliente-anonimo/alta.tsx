@@ -10,6 +10,7 @@ import { Input } from '../../components/ui/Input';
 import { subirFotoCliente } from '../../../lib/clientesAnonimos';
 import { colores } from '../../theme/colores';
 import { useCampoVisibleConTeclado } from '../../hooks/useCampoVisibleConTeclado';
+import { useVibrarError } from '../../hooks/useVibrarError';
 
 const CLIENTE_ANONIMO_ID_KEY = 'cliente_anonimo_id';
 const CLIENTE_ANONIMO_NOMBRE_KEY = 'cliente_anonimo_nombre';
@@ -21,6 +22,7 @@ export default function AltaClienteAnonimo() {
     const [foto, setFoto] = useState<string | null>(null);
     const [tomandoFoto, setTomandoFoto] = useState(false);
     const [error, setError] = useState('');
+    useVibrarError(error);
     const [guardando, setGuardando] = useState(false);
     const [permission, requestPermission] = useCameraPermissions();
     const cameraRef = useRef<any>(null);

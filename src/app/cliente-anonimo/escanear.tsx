@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colores } from '../../theme/colores';
 import { CerrarSesionButton } from '../../components/auth/CerrarSesionButton';
 import { obtenerClienteEnListaPorId } from '../../../lib/clientesAnonimos';
+import { useVibrarError } from '../../hooks/useVibrarError';
 
 const QR_ENTRADA = 'chido:ingreso:v1';
 const CLIENTE_ANONIMO_ID_KEY = 'cliente_anonimo_id';
@@ -17,6 +18,7 @@ export default function EscanearEntrada() {
     const [permission, requestPermission] = useCameraPermissions();
     const [escaneando, setEscaneando] = useState(false);
     const [mensaje, setMensaje] = useState('');
+    useVibrarError(mensaje);
     const procesando = useRef(false);
     const insets = useSafeAreaInsets();
 

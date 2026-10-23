@@ -1,6 +1,6 @@
 import { useAppSession } from '../../contexts/AppSessionContext';
 import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, Alert, Modal, StyleSheet, KeyboardAvoidingView, Keyboard, Platform, Pressable } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, Modal, StyleSheet, KeyboardAvoidingView, Keyboard, Platform, Pressable, Vibration } from 'react-native';
 
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
@@ -47,6 +47,7 @@ export default function AgregarEmpleado() {
 
   const mostrarErrorRegistro = (mensaje: string) => {
     Keyboard.dismiss();
+    Vibration.vibrate(180);
     setErrorRegistro(mensaje);
     setAvisoRegistro('error');
   };
@@ -146,7 +147,10 @@ export default function AgregarEmpleado() {
         setFormData(prev => ({ ...prev, fotoUri: foto.uri, fotoBase64: foto.base64! }));
       } finally { imagen?.release(); contexto.release(); }
       setTakingPhoto(false);
-    } catch { Alert.alert('Foto no disponible', 'No se pudo procesar la foto. Volvé a tomarla.'); }
+    } catch {
+      setTakingPhoto(false);
+      mostrarErrorRegistro('No se pudo procesar la foto. Volvé a tomarla.');
+    }
     finally { capturando.current = false; }
   };
 

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Image, TouchableOpacity, Alert, FlatList, ScrollView, Dimensions, ActivityIndicator, useWindowDimensions } from 'react-native';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { View, Text, Image, TouchableOpacity, FlatList, ScrollView, Dimensions, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAppSession } from '../../contexts/AppSessionContext';
@@ -13,6 +13,7 @@ import { colores } from '../../theme/colores';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Crypto from 'expo-crypto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAvisoResultado } from '../../hooks/useAvisoResultado';
 
 const { width } = Dimensions.get('window');
 const ITEM_HEIGHT = 440;
@@ -23,6 +24,7 @@ export default function MenuCliente() {
   const insets = useSafeAreaInsets();
   const { mesaId: mesaIdParametro, pedidoId, clienteAnonimoId: clienteAnonimoIdParametro } = useLocalSearchParams<{ mesaId?: string; pedidoId?: string; clienteAnonimoId?: string }>();
   const { usuario } = useAppSession();
+  const { mostrarAviso, modalAviso } = useAvisoResultado();
   const [mesaId, setMesaId] = useState(mesaIdParametro ?? '');
   const [clienteAnonimoId, setClienteAnonimoId] = useState(usuario?.id ? '' : (clienteAnonimoIdParametro ?? ''));
 
@@ -46,17 +48,17 @@ export default function MenuCliente() {
   const altoTarjeta = altoLista > 0 ? Math.max(280, Math.min(ITEM_HEIGHT, altoLista - 40)) : ITEM_HEIGHT;
   const altoFoto = Math.max(80, Math.min(192, altoTarjeta - 240));
 
-  async function cargarProductos() {
+  const cargarProductos = useCallback(async () => {
     try {
       const data = await getProductos();
       setProductos(data.filter(producto => producto.tipo === 'plato' || producto.tipo === 'bebida'));
     } catch (err: unknown) {
       console.log('Error fetching productos:', err);
-      Alert.alert('Error', 'No se pudieron cargar los productos.');
+      mostrarAviso('No se pudo cargar la carta', 'No se pudieron cargar los productos. Revisá la conexión e intentá nuevamente.');
     } finally {
       setLoading(false);
     }
-  }
+  }, [mostrarAviso]);
 
   useEffect(() => {
     const cargaInicial = setTimeout(() => { void cargarProductos(); }, 0);
@@ -88,7 +90,7 @@ export default function MenuCliente() {
       if (mesaIdParametro) void mostrarNumeroMesa(mesaIdParametro);
     }
     return () => { activo = false; clearTimeout(cargaInicial); };
-  }, [mesaIdParametro, pedidoId, clienteAnonimoIdParametro, usuario?.id]);
+  }, [mesaIdParametro, pedidoId, clienteAnonimoIdParametro, usuario?.id, cargarProductos]);
 
   const updateCantidad = (id: string, delta: number) => {
     solicitudId.current = Crypto.randomUUID();
@@ -118,12 +120,12 @@ export default function MenuCliente() {
   const handleRealizarPedido = async () => {
     if (enviandoRef.current) return;
     if (Object.keys(pedido).length === 0) {
-      Alert.alert('Aviso', 'Agrega productos al pedido.');
+      mostrarAviso('Tu pedido está vacío', 'Agregá al menos un producto antes de continuar.');
       return;
     }
     const esAnonimo = !usuario?.id && !!clienteAnonimoId;
     if ((!usuario?.id && !esAnonimo) || !mesaId || (pedidoId && !Object.keys(pedido).length)) {
-      Alert.alert('Error', 'No encontramos la mesa o el pedido. Escaneá el QR de tu mesa y volvé a intentarlo.');
+      mostrarAviso('No encontramos la mesa o el pedido', 'Escaneá el código QR de tu mesa y volvé a intentarlo.');
       return;
     }
     
@@ -136,7 +138,7 @@ export default function MenuCliente() {
         : await crearPedido(mesaId, solicitudId.current, detalles, pedidoId);
       router.replace({ pathname: '/cliente/estado-pedido', params: { pedidoId: guardado.pedido_id, ...(esAnonimo ? { clienteAnonimoId } : {}) } });
     } catch (error: unknown) {
-      Alert.alert('No se pudo enviar el pedido', error instanceof Error ? error.message : 'Intentá nuevamente.');
+      mostrarAviso('No se pudo enviar el pedido', error instanceof Error ? error.message : 'Intentá nuevamente.');
     } finally {
       enviandoRef.current = false;
       setEnviando(false);
@@ -304,6 +306,7 @@ export default function MenuCliente() {
           />
         </View>
       </View>
+      {modalAviso}
     </View>
   );
 }

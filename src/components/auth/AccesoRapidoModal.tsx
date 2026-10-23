@@ -48,12 +48,6 @@ const roles: {
     icono: 'briefcase-outline',
   },
   {
-    id: 'cliente anónimo',
-    nombre: 'Cliente anónimo',
-    descripcion: 'Simular vista de cliente anónimo',
-    icono: 'person-outline',
-  },
-  {
     id: 'metre',
     nombre: 'Metre',
     descripcion: 'Simular atención y asignación de mesas',
@@ -109,9 +103,6 @@ export default function AccesoRapidoModal({
           break;
         case "cliente registrado":
           router.push('../cliente/home');
-          break;
-        case "cliente anónimo":
-          router.push('../cliente-anonimo/alta')
           break;
         case "cocinero":
           router.replace('/(app)/home');

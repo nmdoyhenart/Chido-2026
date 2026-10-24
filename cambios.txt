@@ -1,0 +1,128 @@
+diff --git a/supabase/migrations/202610020001_pedidos_confirmacion_y_sectores.sql b/supabase/migrations/202610020001_pedidos_confirmacion_y_sectores.sql
+index 69acbb7..65223eb 100644
+--- a/supabase/migrations/202610020001_pedidos_confirmacion_y_sectores.sql
++++ b/supabase/migrations/202610020001_pedidos_confirmacion_y_sectores.sql
+@@ -183,12 +183,12 @@ DECLARE
+ BEGIN
+   SELECT u.perfil::text INTO v_perfil FROM public.usuarios AS u
+   WHERE u.auth_id = auth.uid() AND u.estado_registro::text = 'aceptado';
+-  IF v_perfil <> 'mozo' THEN RAISE EXCEPTION 'Solo un mozo puede decidir este pedido.' USING ERRCODE = '42501'; END IF;
++  IF v_perfil IS DISTINCT FROM 'mozo' THEN RAISE EXCEPTION 'Solo un mozo puede decidir este pedido.' USING ERRCODE = '42501'; END IF;
+   IF p_decision NOT IN ('confirmado', 'rechazado') THEN RAISE EXCEPTION 'La decisión no es válida.' USING ERRCODE = '22023'; END IF;
+   SELECT estado INTO v_estado FROM public.pedidos WHERE id = p_pedido_id FOR UPDATE;
+   IF v_estado IS NULL THEN RAISE EXCEPTION 'No encontramos ese pedido.' USING ERRCODE = 'P0002'; END IF;
+   IF v_estado = p_decision THEN RETURN; END IF;
+-  IF v_estado <> 'pendiente_mozo' THEN RAISE EXCEPTION 'El pedido ya fue atendido.' USING ERRCODE = '40001'; END IF;
++  IF v_estado <> 'pendiente_mozo' THEN RAISE EXCEPTION 'El pedido ya fue atendido.' USING ERRCODE = 'P0001'; END IF;
+   IF p_decision = 'confirmado' AND NOT EXISTS (SELECT 1 FROM public.pedido_detalles WHERE pedido_id = p_pedido_id) THEN
+     RAISE EXCEPTION 'No se puede confirmar un pedido sin productos.' USING ERRCODE = '22023';
+   END IF;
+@@ -208,7 +208,7 @@ DECLARE
+ BEGIN
+   SELECT u.perfil::text INTO v_perfil FROM public.usuarios AS u
+   WHERE u.auth_id = auth.uid() AND u.estado_registro::text = 'aceptado';
+-  IF v_perfil <> 'mozo' THEN RAISE EXCEPTION 'Solo un mozo puede consultar esta bandeja.' USING ERRCODE = '42501'; END IF;
++  IF v_perfil IS DISTINCT FROM 'mozo' THEN RAISE EXCEPTION 'Solo un mozo puede consultar esta bandeja.' USING ERRCODE = '42501'; END IF;
+   SELECT COALESCE(jsonb_agg(jsonb_build_object(
+     'id', p.id, 'cliente_id', p.cliente_id, 'mesa_id', p.mesa_id,
+     'estado', p.estado, 'total', p.total, 'created_at', p.created_at,
+@@ -283,7 +283,7 @@ BEGIN
+   IF NOT ((v_tipo = 'plato' AND v_perfil = 'cocinero') OR (v_tipo = 'bebida' AND v_perfil = 'cantinero')) THEN
+     RAISE EXCEPTION 'Tu perfil no puede actualizar este producto.' USING ERRCODE = '42501';
+   END IF;
+-  IF v_estado_pedido NOT IN ('confirmado', 'en_preparacion') THEN RAISE EXCEPTION 'El pedido todavía no fue confirmado por el mozo.' USING ERRCODE = '40001'; END IF;
++  IF v_estado_pedido NOT IN ('confirmado', 'en_preparacion') THEN RAISE EXCEPTION 'El pedido todavía no fue confirmado por el mozo.' USING ERRCODE = 'P0001'; END IF;
+   UPDATE public.pedido_detalles SET estado_sector = p_estado WHERE id = p_detalle_id;
+   UPDATE public.pedidos SET estado = 'en_preparacion' WHERE id = (
+     SELECT pedido_id FROM public.pedido_detalles WHERE id = p_detalle_id
+@@ -302,11 +302,11 @@ DECLARE
+ BEGIN
+   SELECT u.perfil::text INTO v_perfil FROM public.usuarios AS u
+   WHERE u.auth_id = auth.uid() AND u.estado_registro::text = 'aceptado';
+-  IF v_perfil <> 'mozo' THEN RAISE EXCEPTION 'Solo un mozo puede entregar el pedido.' USING ERRCODE = '42501'; END IF;
++  IF v_perfil IS DISTINCT FROM 'mozo' THEN RAISE EXCEPTION 'Solo un mozo puede entregar el pedido.' USING ERRCODE = '42501'; END IF;
+   PERFORM 1 FROM public.pedidos WHERE id = p_pedido_id AND estado = 'en_preparacion' FOR UPDATE;
+   IF NOT FOUND OR NOT EXISTS (SELECT 1 FROM public.pedido_detalles WHERE pedido_id = p_pedido_id)
+     OR EXISTS (SELECT 1 FROM public.pedido_detalles WHERE pedido_id = p_pedido_id AND estado_sector <> 'listo') THEN
+-    RAISE EXCEPTION 'Cocina y bar todavía no terminaron este pedido.' USING ERRCODE = '40001';
++    RAISE EXCEPTION 'Cocina y bar todavía no terminaron este pedido.' USING ERRCODE = 'P0001';
+   END IF;
+   UPDATE public.pedidos SET estado = 'entregado' WHERE id = p_pedido_id;
+ END;
+diff --git a/supabase/migrations/202610020002_lista_espera_clientes_registrados.sql b/supabase/migrations/202610020002_lista_espera_clientes_registrados.sql
+index 48104ea..8844e9e 100644
+--- a/supabase/migrations/202610020002_lista_espera_clientes_registrados.sql
++++ b/supabase/migrations/202610020002_lista_espera_clientes_registrados.sql
+@@ -124,7 +124,8 @@ DECLARE
+ BEGIN
+   SELECT perfil::text INTO v_perfil FROM public.usuarios
+   WHERE auth_id = auth.uid() AND estado_registro::text = 'aceptado';
+-  IF v_perfil <> 'metre' THEN
++  -- IS DISTINCT FROM también bloquea cuando v_perfil es NULL (usuario inexistente o no aceptado).
++  IF v_perfil IS DISTINCT FROM 'metre' THEN
+     RAISE EXCEPTION 'Solo el metre puede consultar la lista de espera.' USING ERRCODE = '42501';
+   END IF;
+ 
+@@ -156,21 +157,23 @@ DECLARE
+ BEGIN
+   SELECT perfil::text INTO v_perfil FROM public.usuarios
+   WHERE auth_id = auth.uid() AND estado_registro::text = 'aceptado';
+-  IF v_perfil <> 'metre' THEN
++  -- IS DISTINCT FROM también bloquea cuando v_perfil es NULL (usuario inexistente o no aceptado).
++  IF v_perfil IS DISTINCT FROM 'metre' THEN
+     RAISE EXCEPTION 'Solo el metre puede asignar mesas.' USING ERRCODE = '42501';
+   END IF;
+ 
++  -- Errores de negocio con P0001: NO usar 40001, porque PostgREST lo reintenta en loop.
+   SELECT usuario_id INTO v_usuario_id FROM public.lista_espera
+   WHERE id = p_lista_id AND estado = 'esperando' FOR UPDATE;
+   IF NOT FOUND THEN
+-    RAISE EXCEPTION 'El cliente ya no está esperando.' USING ERRCODE = '40001';
++    RAISE EXCEPTION 'El cliente ya no está esperando.' USING ERRCODE = 'P0001';
+   END IF;
+ 
+   PERFORM 1 FROM public.mesas
+   WHERE id = p_mesa_id AND disponibilidad::text = 'vacía' AND cliente_id IS NULL
+   FOR UPDATE;
+   IF NOT FOUND THEN
+-    RAISE EXCEPTION 'La mesa ya no está disponible.' USING ERRCODE = '40001';
++    RAISE EXCEPTION 'La mesa ya no está disponible.' USING ERRCODE = 'P0001';
+   END IF;
+ 
+   UPDATE public.mesas
+@@ -192,12 +195,13 @@ DECLARE v_perfil text;
+ BEGIN
+   SELECT perfil::text INTO v_perfil FROM public.usuarios
+   WHERE auth_id = auth.uid() AND estado_registro::text = 'aceptado';
+-  IF v_perfil <> 'metre' THEN
++  -- IS DISTINCT FROM también bloquea cuando v_perfil es NULL (usuario inexistente o no aceptado).
++  IF v_perfil IS DISTINCT FROM 'metre' THEN
+     RAISE EXCEPTION 'Solo el metre puede quitar clientes de la lista.' USING ERRCODE = '42501';
+   END IF;
+   UPDATE public.lista_espera SET estado = 'eliminado'
+   WHERE id = p_lista_id AND estado = 'esperando';
+-  IF NOT FOUND THEN RAISE EXCEPTION 'El cliente ya no está esperando.' USING ERRCODE = '40001'; END IF;
++  IF NOT FOUND THEN RAISE EXCEPTION 'El cliente ya no está esperando.' USING ERRCODE = 'P0001'; END IF;
+ END;
+ $$;
+ 
+@@ -210,4 +214,4 @@ GRANT EXECUTE ON FUNCTION public.ingresar_lista_espera_cliente() TO authenticate
+ GRANT EXECUTE ON FUNCTION public.estado_lista_espera_cliente() TO authenticated;
+ GRANT EXECUTE ON FUNCTION public.obtener_lista_espera_metre() TO authenticated;
+ GRANT EXECUTE ON FUNCTION public.asignar_mesa_lista_espera(uuid, uuid) TO authenticated;
+-GRANT EXECUTE ON FUNCTION public.eliminar_de_lista_espera_metre(uuid) TO authenticated;
++GRANT EXECUTE ON FUNCTION public.eliminar_de_lista_espera_metre(uuid) TO authenticated;
+\ No newline at end of file
+diff --git a/supabase/migrations/202610020003_pedidos_cliente_anonimo.sql b/supabase/migrations/202610020003_pedidos_cliente_anonimo.sql
+index c296930..7d31192 100644
+--- a/supabase/migrations/202610020003_pedidos_cliente_anonimo.sql
++++ b/supabase/migrations/202610020003_pedidos_cliente_anonimo.sql
+@@ -123,7 +123,7 @@ RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pu
+ DECLARE v_perfil text; v_resultado jsonb;
+ BEGIN
+   SELECT u.perfil::text INTO v_perfil FROM public.usuarios u WHERE u.auth_id = auth.uid() AND u.estado_registro::text = 'aceptado';
+-  IF v_perfil <> 'mozo' THEN RAISE EXCEPTION 'Solo un mozo puede consultar esta bandeja.' USING ERRCODE = '42501'; END IF;
++  IF v_perfil IS DISTINCT FROM 'mozo' THEN RAISE EXCEPTION 'Solo un mozo puede consultar esta bandeja.' USING ERRCODE = '42501'; END IF;
+   SELECT COALESCE(jsonb_agg(jsonb_build_object(
+     'id', p.id, 'cliente_id', p.cliente_id, 'lista_espera_id', p.lista_espera_id, 'mesa_id', p.mesa_id,
+     'estado', p.estado, 'total', p.total, 'created_at', p.created_at,

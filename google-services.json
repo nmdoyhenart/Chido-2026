@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "555315682575",
+    "project_id": "chido-2026",
+    "storage_bucket": "chido-2026.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:555315682575:android:501e5b13edf4e2ecdf727a",
+        "android_client_info": {
+          "package_name": "com.chido.tfi2026"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCsJgf0AJ83c5ZtVnHWH4cAMTMkW1vrzos"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -41,10 +41,9 @@ export default function FormularioRegistroCliente({ esMetre, onSubmit, onVolver 
   const paginasY = useRef<number[]>([0, 0]);
   const { alDesplazar, alEnfocar, rellenoInferior } = useCampoVisibleConTeclado(scroll);
 
-  // Registro del cliente: la primera pantalla ocupa el alto visible (foto + lectura del DNI) y el
-  // scroll frena justo al comienzo de los datos personales, para que nada quede cortado.
-  // El metre conserva el formato continuo.
-  const paginado = !esMetre;
+  // Todos los registros usan el mismo paginado: foto/DNI en la primera pantalla
+  // y datos personales en la segunda, con el scroll frenando entre ambas.
+  const paginado = true;
   const [altoVista, setAltoVista] = useState(0);
   const [inicioPaginas, setInicioPaginas] = useState<number[]>([]);
   // Pantalla 2: todos los campos y las acciones entran en el alto visible, repartiendo el espacio sin huecos.
@@ -205,10 +204,14 @@ export default function FormularioRegistroCliente({ esMetre, onSubmit, onVolver 
           <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
             <ScrollView
               ref={scroll}
+              className="flex-1"
               keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              nestedScrollEnabled
+              bounces={false}
               onScroll={alDesplazar}
               scrollEventThrottle={16}
-              contentContainerStyle={{ flexGrow: 1, paddingBottom: rellenoInferior }}
+              contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 + rellenoInferior }}
               // El alto de cada pantalla se toma con el teclado cerrado para que nada salte al escribir.
               onLayout={({ nativeEvent }) => {
                 const alto = Math.round(nativeEvent.layout.height);

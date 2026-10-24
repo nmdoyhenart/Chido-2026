@@ -72,7 +72,7 @@ WITH
     SELECT serie AS posicion,
       date_trunc('day', now()) - make_interval(days => ((serie - 1) / 2)::integer)
         + CASE WHEN serie % 2 = 0 THEN interval '20 hours 15 minutes' ELSE interval '13 hours 30 minutes' END AS creado_en
-    FROM generate_series(1, 56) AS serie
+    FROM generate_series(1, 10) AS serie
   ),
   pedidos_demo AS (
     INSERT INTO public.pedidos (

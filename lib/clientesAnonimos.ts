@@ -63,8 +63,10 @@ export async function anotarseEnListaDeEspera({
 }
 
 export function suscribirseAMiEstado(identificador: string, alCambiar: (fila: any) => void) {
+    // Nombre único: supabase reutiliza canales con el mismo nombre y no permite
+    // agregar callbacks a uno que ya está suscrito.
     const canal = supabase
-        .channel(`cliente-estado-${identificador}`)
+        .channel(`cliente-estado-${identificador}-${Date.now()}`)
         .on(
             'postgres_changes',
             {

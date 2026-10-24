@@ -22,11 +22,12 @@ export default function EsperaClienteAnonimo() {
     useVibrarError(error);
 
     useEffect(() => {
+        let cancelado = false;
         let desuscribirse: (() => void) | undefined;
 
         (async () => {
             const identificador = await AsyncStorage.getItem(CLIENTE_ANONIMO_ID_KEY);
-            if (!identificador) return;
+            if (!identificador || cancelado) return;
 
             try {
                 const filaActual = await obtenerClienteEnListaPorId(identificador);
@@ -39,6 +40,8 @@ export default function EsperaClienteAnonimo() {
                 console.error('Error al chequear el estado inicial:', err);
             }
 
+            // La pantalla pudo desmontarse mientras se esperaba la consulta.
+            if (cancelado) return;
             desuscribirse = suscribirseAMiEstado(identificador, (fila) => {
                 if (fila.estado === 'eliminado') {
                     setFueEliminado(true);
@@ -49,6 +52,7 @@ export default function EsperaClienteAnonimo() {
         })();
 
         return () => {
+            cancelado = true;
             if (desuscribirse) desuscribirse();
         };
     }, []);

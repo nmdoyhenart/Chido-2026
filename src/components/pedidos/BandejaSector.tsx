@@ -9,6 +9,7 @@ import { supabase } from '../../lib/supabase';
 import { actualizarEstadoItemSector, getPedidosSector } from '../../services/pedidos.service';
 import { useAvisoResultado } from '../../hooks/useAvisoResultado';
 import { useVibrarError } from '../../hooks/useVibrarError';
+import { EstadoVacio } from '../ui/EstadoVacio';
 
 type TipoSector = 'plato' | 'bebida';
 type EstadoItem = 'pendiente' | 'en_preparacion' | 'listo';
@@ -211,8 +212,7 @@ export default function BandejaSector({ tipo }: { tipo: TipoSector }) {
       >
         {altoPagina > 0 && (pedidosOrdenados.length === 0 ? <View style={{ height: altoPagina, paddingHorizontal: 20, paddingVertical: 12 }}>
           <View className="flex-1 items-center justify-center rounded-3xl border-2 border-white/60 bg-chido-cabecera px-8">
-            <Ionicons name="restaurant-outline" size={58} color={colores.textoSobreOscuro} />
-            <Text className="mt-4 text-center text-xl font-bold text-chido-texto-sobre-oscuro">Todavía no hay pedidos confirmados para este sector.</Text>
+            <EstadoVacio mensaje="Nada para mostrar" compacto />
           </View>
         </View> : paginas.map((pedidosPagina, indicePagina) => <View key={`${indicePagina}-${pedidosPagina.map((pedido) => pedido.id).join('-')}`} style={{ height: altoPagina, paddingHorizontal: 16, paddingVertical: 8 }}>
           <View style={{ flex: 1, gap: 12 }}>

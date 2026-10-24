@@ -88,7 +88,7 @@ export default function AltaClienteAnonimo() {
             >
                 <ScrollView ref={scroll} className="flex-1 px-6" contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 + rellenoInferior }} keyboardShouldPersistTaps="handled" onScroll={alDesplazar} scrollEventThrottle={16}>
                     <TouchableOpacity
-                        onPress={() => router.back()}
+                        onPress={() => router.canGoBack() ? router.back() : router.replace('/(auth)/login')}
                         className="w-14 h-14 rounded-xl bg-chido-cabecera items-center justify-center mt-4"
                     >
                         <Ionicons name="arrow-back" size={26} color={colores.textoSobreOscuro} />

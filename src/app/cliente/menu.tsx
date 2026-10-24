@@ -6,6 +6,7 @@ import { useAppSession } from '../../contexts/AppSessionContext';
 import { supabase } from '../../../lib/supabase';
 import { Header } from '../../components/Header';
 import { PrimaryButton } from '../../components/ui/Buttons';
+import { EstadoVacio } from '../../components/ui/EstadoVacio';
 import { Producto } from '../../types/producto';
 import { getProductos } from '../../services/productos.service';
 import { crearPedido, crearPedidoAnonimo, getPedidoRechazado, getPedidoRechazadoAnonimo } from '../../services/pedidos.service';
@@ -239,9 +240,7 @@ export default function MenuCliente() {
           snapToInterval={altoTarjeta + ITEM_MARGIN}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <View className="flex-1 px-5">
-              <Text className="text-chido-texto-sobre-oscuro text-center text-lg mt-10">No hay productos en esta categoría.</Text>
-            </View>
+            <EstadoVacio mensaje="Nada para mostrar" />
           }
           renderItem={({ item: prod }) => {
             const cant = pedido[prod.id] || 0;

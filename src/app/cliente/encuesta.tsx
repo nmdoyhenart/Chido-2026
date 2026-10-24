@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -39,6 +39,10 @@ export default function EncuestaCliente() {
   const { usuario } = useAppSession();
   const clienteAnonimoId = !usuario?.id && rawAnonimoId ? rawAnonimoId : undefined;
   const { nombreCliente } = useNombreCliente(clienteAnonimoId);
+  const volverAEncuestas = useCallback(() => router.replace({
+    pathname: '/cliente/encuestas',
+    params: { ...(pedidoId ? { pedidoId } : {}), ...(clienteAnonimoId ? { clienteAnonimoId } : {}) },
+  }), [clienteAnonimoId, pedidoId]);
 
   const [comida, setComida] = useState<number>(0);
   const [atencion, setAtencion] = useState<number>(0);
@@ -62,7 +66,7 @@ export default function EncuestaCliente() {
             accion: 'Volver',
             onClose: () => {
               setModalConfig(null);
-              router.back();
+              volverAEncuestas();
             },
           });
         }
@@ -71,7 +75,7 @@ export default function EncuestaCliente() {
       }
     };
     void verificarRecepcion();
-  }, [pedidoId, clienteAnonimoId]);
+  }, [pedidoId, clienteAnonimoId, volverAEncuestas]);
 
   const handleSubmit = async () => {
     Keyboard.dismiss();
@@ -100,7 +104,7 @@ export default function EncuestaCliente() {
             accion: 'Entendido',
             onClose: () => {
               setModalConfig(null);
-              router.back();
+              volverAEncuestas();
             },
           });
           return;
@@ -128,7 +132,7 @@ export default function EncuestaCliente() {
         accion: 'Aceptar',
         onClose: () => {
           setModalConfig(null);
-          router.back();
+          volverAEncuestas();
         },
       });
     } catch (error: any) {
@@ -143,7 +147,7 @@ export default function EncuestaCliente() {
           accion: 'Aceptar',
           onClose: () => {
             setModalConfig(null);
-            router.back();
+            volverAEncuestas();
           },
         });
         return;

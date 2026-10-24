@@ -11,6 +11,7 @@ import { useMesas } from '../../hooks/useMesas';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { useAvisoResultado } from '../../hooks/useAvisoResultado';
 import { useVibrarError } from '../../hooks/useVibrarError';
+import { EstadoVacio } from '../../components/ui/EstadoVacio';
 
 const CLIENTES_POR_PAGINA = 4;
 
@@ -121,7 +122,7 @@ export default function ListaEsperaMetre() {
       <View className="flex-1 px-5 pt-5" style={{ paddingBottom: Math.max(insets.bottom, 12) }}>
         <View className="flex-row items-center mb-5">
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Volver al inicio del metre"
-            onPress={() => router.dismissTo('/metre/home')} className="rounded-xl p-3 mr-4" style={{ backgroundColor: colores.cabecera }}>
+            onPress={() => router.push('/metre/home')} className="rounded-xl p-3 mr-4" style={{ backgroundColor: colores.cabecera }}>
             <Ionicons name="arrow-back" size={28} color={colores.textoSobreOscuro} />
           </TouchableOpacity>
           <Text className="text-3xl font-bold flex-1" style={{ color: colores.textoSobreOscuro }}>
@@ -145,9 +146,7 @@ export default function ListaEsperaMetre() {
 
                 {!cargando && error === '' && lista.length === 0 && (
                     <View className="flex-1 items-center justify-center">
-                        <Text className="text-xl text-center" style={{ color: colores.textoSecundarioAlternativo }}>
-                            No hay clientes esperando en este momento.
-                        </Text>
+                        <EstadoVacio mensaje="Nada para mostrar" />
                     </View>
                 )}
 

@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { colores as c } from '../../theme/colores';
 import ChidoLoader from '../ui/ChidoLoader';
+import { EstadoVacio } from '../ui/EstadoVacio';
 import { Header } from '../Header';
 import { getProductos } from '../../services/productos.service';
 import { useCampoVisibleConTeclado } from '../../hooks/useCampoVisibleConTeclado';
@@ -178,7 +179,7 @@ export default function CartaAdministracion({ soloLectura = false, soloTipoProdu
             <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Eliminar ${plato.nombre}`} onPress={() => setAccion({ tipo: 'eliminar', plato })} style={s.eliminar}><Ionicons name="trash-outline" size={19} color={c.textoSobreOscuro} /><Text style={s.eliminarTexto}>Eliminar</Text></TouchableOpacity>
           </View>}
         </View>)}
-        {(!cargandoProductos && !errorProductos) && !visibles.length && <View style={s.vacio}><Ionicons name="search-outline" size={32} color={c.textoSobreOscuro} /><Text style={s.intro}>{productos.length ? 'No encontramos productos con esos filtros.' : 'Todavía no hay productos en la carta.'}</Text><TouchableOpacity accessibilityRole="button" onPress={() => { setBusqueda(''); setTipo('Todos'); setPagina(0); }} style={s.volver}><Text style={s.botonTexto}>Ver todos</Text></TouchableOpacity></View>}
+        {(!cargandoProductos && !errorProductos) && !visibles.length && <View style={s.vacio}><EstadoVacio mensaje="Nada para mostrar" compacto /><TouchableOpacity accessibilityRole="button" onPress={() => { setBusqueda(''); setTipo('Todos'); setPagina(0); }} style={s.volver}><Text style={s.botonTexto}>Ver todos</Text></TouchableOpacity></View>}
       </View>
       {(!cargandoProductos && !errorProductos) && !!visibles.length && <View style={s.paginacion}>
         <Text style={s.paginaTexto} accessibilityLiveRegion="polite">{paginaActual === 0 && !soloLectura ? 'Producto 1' : `Productos ${inicio + 1}–${inicio + productosPagina.length}`} de {visibles.length} · Página {paginaActual + 1} de {totalPaginas}</Text>

@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import ChidoLoader from '../ui/ChidoLoader';
+import { EstadoVacio } from '../ui/EstadoVacio';
 import { listarPendientes, resolverCliente, type ClientePendiente } from '../../services/aprobacion-cliente.service';
 import { colores } from '../../theme/colores';
 import { SolicitudClienteCard, ConfirmacionCliente } from './SolicitudClienteCard';
@@ -219,11 +220,11 @@ export default function SolicitudesClientes() {
           </View>}
         </View>}
       /> : <View style={styles.centro}>
-        {cargando ? <ChidoLoader mensaje="Consultando solicitudes…" /> : <>
-          <Feather name={error ? 'wifi-off' : 'check-circle'} size={52} color={colores.textoSobreOscuro} />
-          <Text style={styles.textoVacio}>{error ? 'No se pudo actualizar la lista.' : 'Estás al día'}</Text>
-          <Text style={styles.ayudaVacio}>{error ? 'Tocá actualizar para volver a intentarlo.' : 'Las nuevas solicitudes aparecerán acá.'}</Text>
-        </>}
+        {cargando ? <ChidoLoader mensaje="Consultando solicitudes…" /> : error ? <>
+          <Feather name="wifi-off" size={52} color={colores.textoSobreOscuro} />
+          <Text style={styles.textoVacio}>No se pudo actualizar la lista.</Text>
+          <Text style={styles.ayudaVacio}>Tocá actualizar para volver a intentarlo.</Text>
+        </> : <EstadoVacio mensaje="Nada para mostrar" compacto />}
       </View>}
       {cargando && !!tarjetas[pagina] && <View style={styles.procesando} pointerEvents="auto"><ChidoLoader mensaje="Actualizando…" /></View>}
     </View>

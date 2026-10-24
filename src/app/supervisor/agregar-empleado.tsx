@@ -166,7 +166,7 @@ export default function AgregarEmpleado() {
           <View style={altoVista > 0 ? { minHeight: altoVista, justifyContent: 'space-evenly', paddingVertical: 12 } : undefined}>
             <View className="flex-row items-center relative">
               <TouchableOpacity
-                onPress={() => router.back()}
+                onPress={() => router.canGoBack() ? router.back() : router.replace('/supervisor/home')}
                 accessibilityRole="button"
                 accessibilityLabel="Volver"
                 className="w-12 h-12 rounded-xl bg-chido-acento items-center justify-center absolute left-0 z-10"
@@ -389,7 +389,7 @@ export default function AgregarEmpleado() {
         mensaje={avisoRegistro === 'exito' ? 'El empleado se guardó correctamente y ya puede ingresar con su correo y contraseña.' : errorRegistro}
         accion={avisoRegistro === 'exito' ? 'Volver al inicio' : 'Volver al formulario'}
         onClose={() => {
-          if (avisoRegistro === 'exito') router.back();
+          if (avisoRegistro === 'exito') router.replace('/supervisor/home');
           else setAvisoRegistro(null);
         }}
       />

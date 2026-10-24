@@ -8,6 +8,7 @@ import { getMensajes, enviarMensaje, suscribirMensajes, Mensaje } from '../../se
 import { colores } from '../../theme/colores';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAvisoResultado } from '../../hooks/useAvisoResultado';
+import { EstadoVacio } from '../../components/ui/EstadoVacio';
 
 export default function ChatMesaMozo() {
   const router = useRouter();
@@ -87,13 +88,7 @@ export default function ChatMesaMozo() {
       <View className="flex-row items-center px-4 py-2 bg-transparent">
         <TouchableOpacity
           className="flex-row items-center bg-chido-acento border-2 border-white/70 px-3 py-1 rounded-full"
-          onPress={() => {
-            if (router.canGoBack()) {
-              router.back();
-            } else {
-              router.replace('/mozo/chats');
-            }
-          }}
+          onPress={() => router.replace('/mozo/chats')}
         >
           <Ionicons name="arrow-back" size={20} color={colores.textoSobreOscuro} />
           <Text className="text-chido-texto-sobre-oscuro font-bold ml-1">Volver</Text>
@@ -112,7 +107,7 @@ export default function ChatMesaMozo() {
           onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
         >
           {mensajes.length === 0 ? (
-            <Text className="text-chido-texto-sobre-oscuro text-center mt-10">No hay mensajes en esta mesa.</Text>
+            <EstadoVacio mensaje="Nada para mostrar" compacto />
           ) : (
             mensajes.map(msg => {
               const isMe = msg.es_mozo;

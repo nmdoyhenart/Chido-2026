@@ -9,6 +9,7 @@ import { ListadoMesas } from "../../components/negocio/mesas/ListadoMesas";
 import { CerrarSesionButton } from "../../components/auth/CerrarSesionButton";
 import { Header } from "../../components/Header";
 import { QRDisplay } from "../../components/ui/QRDisplay";
+import { EstadoVacio } from "../../components/ui/EstadoVacio";
 import { useMesas } from "../../hooks/useMesas";
 import type { Mesa } from "../../types/mesa";
 import { createMesaQr } from "../../utils/qr";
@@ -193,7 +194,7 @@ export default function GestionMesas() {
             ) : !cargando ? (
               <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}>
                 <View className="m-5 rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-acento p-5">
-                  <Text className="text-center text-xl font-bold text-chido-texto-sobre-oscuro">{errorCarga ? "No se pudo consultar el listado." : "Todavía no hay mesas registradas."}</Text>
+                  {!errorCarga ? <EstadoVacio mensaje="Nada para mostrar" compacto /> : <Text className="text-center text-xl font-bold text-chido-texto-sobre-oscuro">No se pudo consultar el listado.</Text>}
                   <Text className="mt-2 text-center text-base text-chido-texto-secundario-sobre-oscuro">{errorCarga ? "Revisá la conexión y volvé a intentarlo." : "Agregá la primera mesa para ver sus datos y su código QR."}</Text>
                   {errorCarga ? <Pressable accessibilityRole="button" className="mt-4 rounded-xl bg-chido-cabecera p-4" onPress={() => void cargarMesas()}><Text className="text-center font-bold text-chido-texto-sobre-oscuro">Reintentar</Text></Pressable> : null}
                 </View>

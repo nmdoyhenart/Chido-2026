@@ -2,18 +2,19 @@ import { Image, Text, View } from 'react-native';
 
 type EstadoVacioProps = {
   mensaje?: string;
+  compacto?: boolean;
 };
 
-export function EstadoVacio({ mensaje = 'No hay nada para mostrar' }: EstadoVacioProps) {
+export function EstadoVacio({ mensaje = 'Nada para mostrar', compacto = false }: EstadoVacioProps) {
   return (
-    <View className="flex-1 items-center justify-center px-8 py-8" style={{ transform: [{ translateY: -32 }] }}>
+    <View className="flex-1 items-center justify-center px-8 py-8" style={compacto ? undefined : { transform: [{ translateY: -96 }] }}>
       <Image
         source={require('../../../assets/images/mascota-pensando.png')}
         resizeMode="contain"
-        style={{ width: 330, height: 330 }}
+        style={{ width: compacto ? 150 : 390, height: compacto ? 150 : 390 }}
         accessibilityLabel="Mascota esperando contenido"
       />
-      <Text className="mt-6 text-center text-4xl font-extrabold text-chido-texto-sobre-oscuro">{mensaje}</Text>
+      <Text className={`${compacto ? 'mt-3 text-xl' : 'mt-7 text-5xl'} text-center font-extrabold text-chido-texto-sobre-oscuro`}>{mensaje}</Text>
     </View>
   );
 }

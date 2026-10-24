@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colores } from '../../theme/colores';
 import { obtenerResultadosEncuestas, resumirEncuestas, ResultadoEncuesta } from '../../../lib/encuestas';
 import { Header } from '../../components/Header';
+import { EstadoVacio } from '../../components/ui/EstadoVacio';
 import { useNombreCliente } from '../../hooks/useNombreCliente';
 
 type NombreIcono = ComponentProps<typeof Ionicons>['name'];
@@ -67,7 +68,7 @@ export default function EncuestasPrevias() {
           </Text>
         </View>
         
-        {cargando && <ActivityIndicator color={colores.textoSobreOscuro} />}
+        {cargando ? <ActivityIndicator color={colores.textoSobreOscuro} /> : !hayDatos ? <EstadoVacio mensaje="Nada para mostrar" /> : <>
 
         {/* Promedios de Comida y Atención (Nuevo) */}
         <View className="flex-row" style={{ height: 130, gap: 12 }}>
@@ -118,6 +119,7 @@ export default function EncuestasPrevias() {
             onPress={() => router.push('/encuestas/grafico-lineal')}
           />
         </View>
+        </>}
       </View>
     </View>
   );

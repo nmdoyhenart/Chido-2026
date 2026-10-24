@@ -42,6 +42,13 @@ export default function EncuestasCliente() {
     ? { fontSize: 14, lineHeight: 18 }
     : { fontSize: 16, lineHeight: 22 };
   const iconoTarjeta = muyCompacto ? 38 : compacto ? 46 : 54;
+  const volverAlPedido = () => {
+    if (!pedidoId) {
+      router.replace('/cliente/home');
+      return;
+    }
+    router.replace({ pathname: '/cliente/pedido-realizado', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } });
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -115,7 +122,7 @@ export default function EncuestasCliente() {
         >
           {/* Botón Volver al pedido */}
           <Pressable
-            onPress={() => router.back()}
+            onPress={volverAlPedido}
             accessibilityRole="button"
             accessibilityLabel="Volver al pedido"
             className="self-start flex-row items-center rounded-xl bg-chido-acento px-4"

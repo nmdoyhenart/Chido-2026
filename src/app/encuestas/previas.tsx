@@ -6,12 +6,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colores } from '../../theme/colores';
 import { obtenerResultadosEncuestas, resumirEncuestas, ResultadoEncuesta } from '../../../lib/encuestas';
 import { Header } from '../../components/Header';
+import { EstadoVacio } from '../../components/ui/EstadoVacio';
+import { useNombreCliente } from '../../hooks/useNombreCliente';
 
 type NombreIcono = ComponentProps<typeof Ionicons>['name'];
 
 export default function EncuestasPrevias() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { nombreCliente } = useNombreCliente();
   const [resultados, setResultados] = useState<ResultadoEncuesta[]>([]);
   const [cargando, setCargando] = useState(true);
 
@@ -39,7 +42,7 @@ export default function EncuestasPrevias() {
   return (
     <View className="flex-1 bg-chido-fondo">
       <Stack.Screen options={{ headerShown: false }} />
-      <Header userName="Cliente" role="Estadísticas" />
+      <Header userName={nombreCliente} role="Estadísticas" />
 
       <View
         className="flex-1"
@@ -65,7 +68,7 @@ export default function EncuestasPrevias() {
           </Text>
         </View>
         
-        {cargando && <ActivityIndicator color={colores.textoSobreOscuro} />}
+        {cargando ? <ActivityIndicator color={colores.textoSobreOscuro} /> : !hayDatos ? <EstadoVacio mensaje="Nada para mostrar" /> : <>
 
         {/* Promedios de Comida y Atención (Nuevo) */}
         <View className="flex-row" style={{ height: 130, gap: 12 }}>
@@ -116,6 +119,7 @@ export default function EncuestasPrevias() {
             onPress={() => router.push('/encuestas/grafico-lineal')}
           />
         </View>
+        </>}
       </View>
     </View>
   );

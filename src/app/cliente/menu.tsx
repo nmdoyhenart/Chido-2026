@@ -6,6 +6,7 @@ import { useAppSession } from '../../contexts/AppSessionContext';
 import { supabase } from '../../../lib/supabase';
 import { Header } from '../../components/Header';
 import { PrimaryButton } from '../../components/ui/Buttons';
+import { EstadoVacio } from '../../components/ui/EstadoVacio';
 import { Producto } from '../../types/producto';
 import { getProductos } from '../../services/productos.service';
 import { crearPedido, crearPedidoAnonimo, getPedidoRechazado, getPedidoRechazadoAnonimo } from '../../services/pedidos.service';
@@ -14,6 +15,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Crypto from 'expo-crypto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAvisoResultado } from '../../hooks/useAvisoResultado';
+import { useNombreCliente } from '../../hooks/useNombreCliente';
+import { formatearRolMesa } from '../../utils/formatoMesa';
 
 const { width } = Dimensions.get('window');
 const ITEM_HEIGHT = 440;
@@ -27,10 +30,12 @@ export default function MenuCliente() {
   const { mostrarAviso, modalAviso } = useAvisoResultado();
   const [mesaId, setMesaId] = useState(mesaIdParametro ?? '');
   const [clienteAnonimoId, setClienteAnonimoId] = useState(usuario?.id ? '' : (clienteAnonimoIdParametro ?? ''));
+  const { nombreCliente } = useNombreCliente(clienteAnonimoId);
 
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
   const [mesaNumero, setMesaNumero] = useState<number | null>(null);
+  const [mesaTipo, setMesaTipo] = useState<string | null>(null);
   
   const [pedido, setPedido] = useState<Record<string, number>>({});
   const [cargandoPedido, setCargandoPedido] = useState(!!pedidoId);
@@ -39,7 +44,7 @@ export default function MenuCliente() {
   const enviandoRef = useRef(false);
   const solicitudId = useRef(Crypto.randomUUID());
   
-  const [filtro, setFiltro] = useState<'todos' | 'plato' | 'bebida' >('todos');
+  const [filtro, setFiltro] = useState<'todos' | 'plato' | 'postre' | 'bebida'>('todos');
 
   // Cada tarjeta entra completa en el espacio de la lista (entre filtros y barra del total).
   const { height: altoVentana } = useWindowDimensions();
@@ -51,7 +56,7 @@ export default function MenuCliente() {
   const cargarProductos = useCallback(async () => {
     try {
       const data = await getProductos();
-      setProductos(data.filter(producto => producto.tipo === 'plato' || producto.tipo === 'bebida'));
+      setProductos(data.filter(producto => producto.tipo === 'plato' || producto.tipo === 'postre' || producto.tipo === 'bebida'));
     } catch (err: unknown) {
       console.log('Error fetching productos:', err);
       mostrarAviso('No se pudo cargar la carta', 'No se pudieron cargar los productos. Revisá la conexión e intentá nuevamente.');
@@ -64,8 +69,11 @@ export default function MenuCliente() {
     const cargaInicial = setTimeout(() => { void cargarProductos(); }, 0);
     let activo = true;
     const mostrarNumeroMesa = async (id: string) => {
-      const { data } = await supabase.from('mesas').select('numero').eq('id', id).single();
-      if (activo && data) setMesaNumero(data.numero);
+      const { data } = await supabase.from('mesas').select('numero, tipo').eq('id', id).single();
+      if (activo && data) {
+        setMesaNumero(data.numero);
+        setMesaTipo(data.tipo);
+      }
     };
     if (!usuario?.id) {
       void AsyncStorage.getItem('cliente_anonimo_id').then(id => {
@@ -182,7 +190,7 @@ export default function MenuCliente() {
 
   return (
     <View className="flex-1 bg-chido-fondo">
-      <Header userName="Cliente" role={mesaNumero ? `Mesa ${mesaNumero}` : "Mesa"} />
+      <Header userName={nombreCliente} role={formatearRolMesa(mesaNumero, mesaTipo, 'Mesa')} />
       {!!errorCargaPedido && <Text className="bg-chido-error p-3 text-center text-chido-texto-sobre-oscuro">{errorCargaPedido}</Text>}
       
       <View className="flex-row items-center p-4 bg-chido-acento">
@@ -199,6 +207,12 @@ export default function MenuCliente() {
           >
             <Text className={`font-bold ${filtro === 'bebida' ? 'text-chido-cabecera' : 'text-chido-texto-secundario-sobre-oscuro'}`}>Bebida</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            className={`px-4 py-2 rounded-full border-2 ${filtro === 'postre' ? 'bg-chido-texto-secundario-sobre-oscuro border-chido-texto-secundario-sobre-oscuro' : 'bg-chido-acento border-chido-texto-secundario-sobre-oscuro'}`}
+            onPress={() => setFiltro(filtro === 'postre' ? 'todos' : 'postre')}
+          >
+            <Text className={`font-bold ${filtro === 'postre' ? 'text-chido-cabecera' : 'text-chido-texto-secundario-sobre-oscuro'}`}>Postre</Text>
+          </TouchableOpacity>
         </ScrollView>
 
         <TouchableOpacity 
@@ -206,7 +220,7 @@ export default function MenuCliente() {
           onPress={() => router.push({ pathname: '/cliente/chat', params: { mesaId, numero: mesaNumero, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } })}
         >
           <Ionicons name="chatbubbles-outline" size={20} color={colores.textoSobreOscuro} />
-          <Text className="text-chido-texto-sobre-oscuro font-bold ml-2">Consultar al mozo</Text>
+          <Text className="text-chido-texto-sobre-oscuro font-bold ml-2">Chat mozo</Text>
         </TouchableOpacity>
       </View>
 
@@ -226,9 +240,7 @@ export default function MenuCliente() {
           snapToInterval={altoTarjeta + ITEM_MARGIN}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <View className="flex-1 px-5">
-              <Text className="text-chido-texto-sobre-oscuro text-center text-lg mt-10">No hay productos en esta categoría.</Text>
-            </View>
+            <EstadoVacio mensaje="Nada para mostrar" />
           }
           renderItem={({ item: prod }) => {
             const cant = pedido[prod.id] || 0;

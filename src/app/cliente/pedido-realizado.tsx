@@ -13,6 +13,9 @@ import { verificarEncuesta } from '../../services/encuestas.service';
 import { puedeJugarPedido } from '../../services/juegos';
 import { confirmarRecepcionPedido, getEstadoPedido, getEstadoPedidoAnonimo, suscribirEstadoPedido } from '../../services/pedidos.service';
 import { colores } from '../../theme/colores';
+import { useNombreCliente } from '../../hooks/useNombreCliente';
+import { formatearRolMesa } from '../../utils/formatoMesa';
+import { supabase } from '../../../lib/supabase';
 
 export default function PedidoRealizado() {
   const router = useRouter();
@@ -22,6 +25,9 @@ export default function PedidoRealizado() {
   const pedidoId = Array.isArray(params.pedidoId) ? params.pedidoId[0] : params.pedidoId;
   const rawAnonimoId = Array.isArray(params.clienteAnonimoId) ? params.clienteAnonimoId[0] : params.clienteAnonimoId;
   const clienteAnonimoId = !usuario?.id && rawAnonimoId ? rawAnonimoId : undefined;
+  const { nombreCliente } = useNombreCliente(clienteAnonimoId);
+  const [mesaNumero, setMesaNumero] = useState<number | null>(null);
+  const [mesaTipo, setMesaTipo] = useState<string | null>(null);
   const [cargando, setCargando] = useState(() => Boolean(pedidoId));
   const [encuestaCompletada, setEncuestaCompletada] = useState(false);
   const [estadoPedido, setEstadoPedido] = useState<string | null>(null);
@@ -51,6 +57,23 @@ export default function PedidoRealizado() {
       else void verificarEncuesta(pedidoId).then(setEncuestaCompletada).catch(() => setEncuestaCompletada(false));
     });
   }, [pedidoId]));
+
+  useEffect(() => {
+    if (!pedidoId) return;
+    let activo = true;
+    void supabase
+      .from('pedidos')
+      .select('mesas(numero, tipo)')
+      .eq('id', pedidoId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!activo || !data?.mesas) return;
+        const m = data.mesas as unknown as { numero: number; tipo: string };
+        setMesaNumero(m.numero);
+        setMesaTipo(m.tipo);
+      });
+    return () => { activo = false; };
+  }, [pedidoId]);
 
   useEffect(() => {
     if (!pedidoId) return;
@@ -107,7 +130,7 @@ export default function PedidoRealizado() {
 
   return (
     <View className="flex-1 bg-chido-fondo">
-      <Header userName="Cliente" role="Tu Mesa" />
+      <Header userName={nombreCliente} role={formatearRolMesa(mesaNumero, mesaTipo, 'Tu Mesa')} />
       <View
         className="flex-1"
         onLayout={alMedir}
@@ -149,24 +172,24 @@ export default function PedidoRealizado() {
           </Pressable>
         )}
 
-        {!clienteAnonimoId && <Pressable
+        <Pressable
           accessibilityRole="button"
-          accessibilityLabel={juegosHabilitados ? 'Juegos con premios' : 'Juegos bloqueados hasta confirmar el pedido o solicitar la cuenta'}
-          accessibilityState={{ disabled: !juegosHabilitados }}
-          disabled={!juegosHabilitados}
-          className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera ${juegosHabilitados ? '' : 'opacity-60'}`}
+          accessibilityLabel={clienteAnonimoId ? 'Juegos recreativos sin descuento' : juegosHabilitados ? 'Juegos con premios' : 'Juegos bloqueados hasta confirmar el pedido o solicitar la cuenta'}
+          accessibilityState={{ disabled: !clienteAnonimoId && !juegosHabilitados }}
+          disabled={!clienteAnonimoId && !juegosHabilitados}
+          className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera ${clienteAnonimoId || juegosHabilitados ? '' : 'opacity-60'}`}
           style={tarjeta}
-          onPress={() => juegosHabilitados && router.push({ pathname: '/cliente/juegos', params: { pedidoId } })}
+          onPress={() => (clienteAnonimoId || juegosHabilitados) && router.push({ pathname: '/cliente/juegos', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } })}
         >
           <View className="flex-row items-center">
-            <Ionicons name={juegosHabilitados ? 'game-controller-outline' : 'lock-closed-outline'} size={iconoTarjeta}color={colores.textoSobreOscuro} />
+            <Ionicons name={clienteAnonimoId || juegosHabilitados ? 'game-controller-outline' : 'lock-closed-outline'} size={iconoTarjeta}color={colores.textoSobreOscuro} />
             <View className="ml-4 flex-1">
               <Text className="font-extrabold text-chido-texto-sobre-oscuro" style={tituloTarjeta}>Jugar</Text>
-              <Text className="mt-1 text-base font-bold text-chido-texto-secundario-sobre-oscuro">{juegosHabilitados ? 'Ganá descuentos para tu cuenta' : 'Disponible al confirmar; se bloquea al pedir la cuenta'}</Text>
+              <Text className="mt-1 text-base font-bold text-chido-texto-secundario-sobre-oscuro">{clienteAnonimoId ? 'Partidas recreativas sin descuento' : juegosHabilitados ? 'Ganá descuentos para tu cuenta' : 'Disponible al confirmar; se bloquea al pedir la cuenta'}</Text>
             </View>
             <Ionicons name="chevron-forward" size={30} color={colores.textoSobreOscuro} />
           </View>
-        </Pressable>}
+        </Pressable>
 
         <Pressable
           accessibilityRole="button"

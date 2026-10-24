@@ -6,6 +6,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Header } from '../../components/Header';
 import { useAltoDisponible } from '../../hooks/useAltoDisponible';
+import { useNombreCliente } from '../../hooks/useNombreCliente';
 import { colores } from '../../theme/colores';
 import { verificarEncuesta } from '../../services/encuestas.service';
 import { getEstadoPedido, getEstadoPedidoAnonimo } from '../../services/pedidos.service';
@@ -16,6 +17,7 @@ export default function EncuestasCliente() {
   const pedidoId = Array.isArray(params.pedidoId) ? params.pedidoId[0] : params.pedidoId;
   const clienteAnonimoId = Array.isArray(params.clienteAnonimoId) ? params.clienteAnonimoId[0] : params.clienteAnonimoId;
   const rawEstado = Array.isArray(params.estadoPedido) ? params.estadoPedido[0] : params.estadoPedido;
+  const { nombreCliente } = useNombreCliente(clienteAnonimoId);
 
   const [estadoPedido, setEstadoPedido] = useState<string | null>(() => rawEstado || null);
   const [encuestaCompletada, setEncuestaCompletada] = useState(false);
@@ -40,6 +42,13 @@ export default function EncuestasCliente() {
     ? { fontSize: 14, lineHeight: 18 }
     : { fontSize: 16, lineHeight: 22 };
   const iconoTarjeta = muyCompacto ? 38 : compacto ? 46 : 54;
+  const volverAlPedido = () => {
+    if (!pedidoId) {
+      router.replace('/cliente/home');
+      return;
+    }
+    router.replace({ pathname: '/cliente/pedido-realizado', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } });
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -95,7 +104,7 @@ export default function EncuestasCliente() {
   return (
     <View className="flex-1 bg-chido-fondo">
       <Stack.Screen options={{ headerShown: false }} />
-      <Header userName={clienteAnonimoId ? 'Invitado' : 'Cliente'} role="Encuestas" />
+      <Header userName={nombreCliente} role="Encuestas" />
 
       <SafeAreaView
         edges={['left', 'right', 'bottom']}
@@ -113,7 +122,7 @@ export default function EncuestasCliente() {
         >
           {/* Botón Volver al pedido */}
           <Pressable
-            onPress={() => router.back()}
+            onPress={volverAlPedido}
             accessibilityRole="button"
             accessibilityLabel="Volver al pedido"
             className="self-start flex-row items-center rounded-xl bg-chido-acento px-4"

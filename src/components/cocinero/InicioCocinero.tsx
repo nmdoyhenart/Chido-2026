@@ -62,8 +62,8 @@ export default function InicioCocinero({ usuario, role }: Props) {
   };
   const opciones = [
     { titulo: 'Alta de plato', icono: 'restaurant-outline' as const, destino: '/productos/alta' as const },
-    { titulo: 'Platos en preparación', icono: 'file-tray-full-outline' as const, destino: '/cocina/pedidos' as const, cantidad: pedidos },
-    { titulo: 'Carta de platos', icono: 'book-outline' as const, destino: '/cocina/carta' as const },
+    { titulo: 'Platos y postres en preparación', icono: 'file-tray-full-outline' as const, destino: '/cocina/pedidos' as const, cantidad: pedidos },
+    { titulo: 'Carta de cocina', icono: 'book-outline' as const, destino: '/cocina/carta' as const },
   ];
 
   return (

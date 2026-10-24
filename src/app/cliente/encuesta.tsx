@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Header } from '../../components/Header';
+import { useNombreCliente } from '../../hooks/useNombreCliente';
 import { colores } from '../../theme/colores';
 import { enviarEncuesta } from '../../services/encuestas.service';
 import { useAppSession } from '../../contexts/AppSessionContext';
@@ -37,6 +38,11 @@ export default function EncuestaCliente() {
   }>();
   const { usuario } = useAppSession();
   const clienteAnonimoId = !usuario?.id && rawAnonimoId ? rawAnonimoId : undefined;
+  const { nombreCliente } = useNombreCliente(clienteAnonimoId);
+  const volverAEncuestas = useCallback(() => router.replace({
+    pathname: '/cliente/encuestas',
+    params: { ...(pedidoId ? { pedidoId } : {}), ...(clienteAnonimoId ? { clienteAnonimoId } : {}) },
+  }), [clienteAnonimoId, pedidoId]);
 
   const [comida, setComida] = useState<number>(0);
   const [atencion, setAtencion] = useState<number>(0);
@@ -60,7 +66,7 @@ export default function EncuestaCliente() {
             accion: 'Volver',
             onClose: () => {
               setModalConfig(null);
-              router.back();
+              volverAEncuestas();
             },
           });
         }
@@ -69,7 +75,7 @@ export default function EncuestaCliente() {
       }
     };
     void verificarRecepcion();
-  }, [pedidoId, clienteAnonimoId]);
+  }, [pedidoId, clienteAnonimoId, volverAEncuestas]);
 
   const handleSubmit = async () => {
     Keyboard.dismiss();
@@ -98,7 +104,7 @@ export default function EncuestaCliente() {
             accion: 'Entendido',
             onClose: () => {
               setModalConfig(null);
-              router.back();
+              volverAEncuestas();
             },
           });
           return;
@@ -126,7 +132,7 @@ export default function EncuestaCliente() {
         accion: 'Aceptar',
         onClose: () => {
           setModalConfig(null);
-          router.back();
+          volverAEncuestas();
         },
       });
     } catch (error: any) {
@@ -141,7 +147,7 @@ export default function EncuestaCliente() {
           accion: 'Aceptar',
           onClose: () => {
             setModalConfig(null);
-            router.back();
+            volverAEncuestas();
           },
         });
         return;
@@ -162,7 +168,7 @@ export default function EncuestaCliente() {
   return (
     <View className="flex-1 bg-chido-fondo">
       <Stack.Screen options={{ headerShown: false }} />
-      <Header userName="Cliente" role="Encuesta" />
+      <Header userName={nombreCliente} role="Encuesta" />
 
       <SafeAreaView
         edges={['left', 'right', 'bottom']}

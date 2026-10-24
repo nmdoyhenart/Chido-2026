@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Image, Pressable, Text, useWindowDimensions, Vibration, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '../../../components/Header';
+import { useNombreCliente } from '../../../hooks/useNombreCliente';
 import ChidoLoader from '../../../components/ui/ChidoLoader';
 import { useAltoDisponible } from '../../../hooks/useAltoDisponible';
 import { iniciarMemotest, voltearMemotest } from '../../../services/juegos';
@@ -25,17 +26,19 @@ function obtenerImagenCarta(carta: CartaMemotest | null) {
 
 export default function Memotest() {
   const router = useRouter();
-  const { pedidoId } = useLocalSearchParams<{ pedidoId: string }>();
+  const { pedidoId, recreativo: recreativoParam, clienteAnonimoId } = useLocalSearchParams<{ pedidoId: string; recreativo?: string; clienteAnonimoId?: string }>();
+  const recreativoInicial = recreativoParam === 'true';
+  const { nombreCliente } = useNombreCliente(clienteAnonimoId);
   const { width } = useWindowDimensions();
   const { alMedir, compacto } = useAltoDisponible();
   const [juego, setJuego] = useState<EstadoMemotest | null>(null);
-  const [cargandoPedido, setCargandoPedido] = useState(() => Boolean(pedidoId));
+  const [cargandoPedido, setCargandoPedido] = useState(() => Boolean(pedidoId) && !recreativoInicial);
   const [imagenesListas, setImagenesListas] = useState(false);
   const [altoGrilla, setAltoGrilla] = useState(0);
   const [bloqueado, setBloqueado] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
-  const [recreativo, setRecreativo] = useState(false);
-  const [mazoRec, setMazoRec] = useState<CartaMemotest[]>([]);
+  const [recreativo, setRecreativo] = useState(recreativoInicial);
+  const [mazoRec, setMazoRec] = useState<CartaMemotest[]>(() => recreativoInicial ? crearMazoMemotest() : []);
   const [reveladasRec, setReveladasRec] = useState<number[]>([]);
   const [emparejadasRec, setEmparejadasRec] = useState<number[]>([]);
   const [intentosRec, setIntentosRec] = useState(0);
@@ -55,7 +58,7 @@ export default function Memotest() {
   }, []);
 
   useEffect(() => {
-    if (!pedidoId) return;
+    if (!pedidoId || recreativoInicial) return;
     void iniciarMemotest(pedidoId)
       .then(setJuego)
       .catch((error: unknown) => {
@@ -63,7 +66,7 @@ export default function Memotest() {
         Vibration.vibrate(180);
       })
       .finally(() => setCargandoPedido(false));
-  }, [pedidoId]);
+  }, [pedidoId, recreativoInicial]);
 
   const cartas = recreativo
     ? mazoRec.map((carta, indice) => reveladasRec.includes(indice) || emparejadasRec.includes(indice) ? carta : null)
@@ -71,7 +74,7 @@ export default function Memotest() {
   const emparejadas = recreativo ? emparejadasRec : juego?.emparejadas ?? [];
   const intentos = recreativo ? intentosRec : juego?.intentos ?? 0;
   const terminado = recreativo ? Boolean(resultadoRec) : juego ? juego.estado !== 'en_curso' : false;
-  const mensajeError = aviso ?? (!pedidoId ? 'No encontramos el pedido para iniciar Memotest.' : null);
+  const mensajeError = aviso ?? (!pedidoId && !recreativo ? 'No encontramos el pedido para iniciar Memotest.' : null);
   const anchoCarta = Math.floor((Math.min(width - 52, 400) - 12) / 2);
   // Esta medida se toma dentro del área segura, después de cabecera, marcador y navegación Android.
   const separacionCartas = compacto ? 8 : 12;
@@ -140,7 +143,7 @@ export default function Memotest() {
   if (terminado) {
     return (
       <SafeAreaView className="flex-1 bg-chido-fondo" edges={['left', 'right', 'bottom']}>
-        <Header userName="Cliente" role="Memotest" />
+        <Header userName={nombreCliente} role="Memotest" />
         <View className="flex-1" onLayout={alMedir} style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16 }}>
           <Pressable onPress={() => router.back()} accessibilityRole="button" className="min-h-12 self-start flex-row items-center rounded-xl bg-chido-acento px-4">
             <Ionicons name="arrow-back" size={22} color={colores.textoSobreOscuro} />
@@ -167,7 +170,7 @@ export default function Memotest() {
 
   return (
     <SafeAreaView className="flex-1 bg-chido-fondo" edges={['left', 'right', 'bottom']}>
-      <Header userName="Cliente" role="Memotest" />
+      <Header userName={nombreCliente} role="Memotest" />
       <View className="flex-1" onLayout={alMedir} style={{ paddingHorizontal: 20, paddingTop: compacto ? 12 : 16, paddingBottom: 16 }}>
         <Pressable onPress={() => router.back()} accessibilityRole="button" className="min-h-12 self-start flex-row items-center rounded-xl bg-chido-acento px-4">
           <Ionicons name="arrow-back" size={22} color={colores.textoSobreOscuro} />
@@ -175,7 +178,7 @@ export default function Memotest() {
         </Pressable>
         <View className={`rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera ${compacto ? 'mt-3 px-4 py-2' : 'mt-4 p-4'}`}>
           <Text className={`${compacto ? 'text-3xl' : 'text-5xl'} font-extrabold text-chido-texto-sobre-oscuro`}>Memotest</Text>
-          <Text className={`${compacto ? 'mt-1 text-lg' : 'mt-2 text-2xl'} text-chido-texto-secundario-sobre-oscuro`}>Completá los cuatro pares en seis intentos.</Text>
+          <Text className={`${compacto ? 'mt-1 text-lg' : 'mt-2 text-2xl'} text-chido-texto-secundario-sobre-oscuro`}>{recreativo ? 'Completá los cuatro pares en seis intentos. Partida recreativa sin descuento.' : 'Completá los cuatro pares en seis intentos.'}</Text>
         </View>
         {/* En pantallas bajas intentos y pares van en una sola fila. */}
         <View className={`items-center rounded-2xl bg-chido-acento px-4 ${compacto ? 'mt-3 py-2' : 'mt-4 py-3'}`}>

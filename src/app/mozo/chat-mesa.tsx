@@ -8,11 +8,15 @@ import { getMensajes, enviarMensaje, suscribirMensajes, Mensaje } from '../../se
 import { colores } from '../../theme/colores';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAvisoResultado } from '../../hooks/useAvisoResultado';
+import { EstadoVacio } from '../../components/ui/EstadoVacio';
 
 export default function ChatMesaMozo() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { mesaId, numero } = useLocalSearchParams<{ mesaId: string, numero: string }>();
+  const params = useLocalSearchParams<{ mesaId?: string | string[]; numero?: string | string[] }>();
+  const mesaId = Array.isArray(params.mesaId) ? params.mesaId[0] : params.mesaId;
+  const numero = Array.isArray(params.numero) ? params.numero[0] : params.numero;
+
   const { usuario, role } = useAppSession();
   const { mostrarAviso, modalAviso } = useAvisoResultado();
 
@@ -23,21 +27,27 @@ export default function ChatMesaMozo() {
   useEffect(() => {
     if (!mesaId) return;
 
+    let cancelado = false;
     const cargarMensajes = async () => {
       try {
         const data = await getMensajes(mesaId);
-        setMensajes(data);
+        if (!cancelado) {
+          setMensajes(data);
+        }
       } catch (error) {
         console.error(error);
       }
     };
-    cargarMensajes();
+    void cargarMensajes();
 
     const desuscribir = suscribirMensajes(mesaId, (nuevoMsg) => {
-      setMensajes(prev => [...prev, nuevoMsg]);
+      setMensajes((prev) => (prev.some((m) => m.id === nuevoMsg.id) ? prev : [...prev, nuevoMsg]));
     });
 
-    return desuscribir;
+    return () => {
+      cancelado = true;
+      desuscribir();
+    };
   }, [mesaId]);
 
   const handleEnviar = async () => {
@@ -73,12 +83,12 @@ export default function ChatMesaMozo() {
       className="flex-1"
       resizeMode="cover"
     >
-      <Header userName={userName} role={`${displayRole} - Chat Mesa ${numero}`} />
+      <Header userName={userName} role={`${displayRole} - Chat Mesa ${numero || ''}`} />
 
       <View className="flex-row items-center px-4 py-2 bg-transparent">
         <TouchableOpacity
           className="flex-row items-center bg-chido-acento border-2 border-white/70 px-3 py-1 rounded-full"
-          onPress={() => router.back()}
+          onPress={() => router.replace('/mozo/chats')}
         >
           <Ionicons name="arrow-back" size={20} color={colores.textoSobreOscuro} />
           <Text className="text-chido-texto-sobre-oscuro font-bold ml-1">Volver</Text>
@@ -97,7 +107,7 @@ export default function ChatMesaMozo() {
           onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
         >
           {mensajes.length === 0 ? (
-            <Text className="text-chido-texto-sobre-oscuro text-center mt-10">No hay mensajes en esta mesa.</Text>
+            <EstadoVacio mensaje="Nada para mostrar" compacto />
           ) : (
             mensajes.map(msg => {
               const isMe = msg.es_mozo;

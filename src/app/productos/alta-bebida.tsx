@@ -226,12 +226,12 @@ export default function AltaBebida() {
             >
                 <ScrollView ref={scroll} className="flex-1 p-5" contentContainerStyle={{ flexGrow: 1, paddingBottom: 16 + insets.bottom + rellenoInferior }} bounces={false} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" onScroll={alDesplazar} scrollEventThrottle={16}>
                     <View className={`flex-row items-center relative ${compacto ? 'mb-3' : 'mb-8'}`}>
-                        {router.canGoBack() && <Pressable
-                            onPress={() => router.back()}
+                        <Pressable
+                            onPress={() => router.canGoBack() ? router.back() : router.replace('/(app)/home')}
                             className="w-12 h-12 rounded-xl bg-chido-acento items-center justify-center absolute left-0 z-10"
                         >
                         <Ionicons name="arrow-back" size={26} color={colores.textoSobreOscuro} />
-                        </Pressable>}
+                        </Pressable>
                         <Text className={`font-bold text-chido-texto-sobre-oscuro text-center flex-1 ${compacto ? 'text-2xl' : 'text-3xl'}`}>Alta de bebida</Text>
                     </View>
 

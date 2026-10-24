@@ -1,9 +1,7 @@
 import { useAppSession } from '../../contexts/AppSessionContext';
 import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, Modal, StyleSheet, KeyboardAvoidingView, Keyboard, Platform, Pressable, Vibration } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, KeyboardAvoidingView, Keyboard, Platform, Pressable, Vibration } from 'react-native';
 
-import { CameraView, useCameraPermissions } from 'expo-camera';
-import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { Stack, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,7 +22,6 @@ export default function AgregarEmpleado() {
   const { role, usuario, mode } = useAppSession();
   const { bloquear, modal: modalSimulacion } = useRestriccionSimulacion();
   const enviando = useRef(false);
-  const capturando = useRef(false);
   const [errorRegistro, setErrorRegistro] = useState('');
   const [avisoRegistro, setAvisoRegistro] = useState<'exito' | 'error' | null>(null);
   const empleadoGuardado = useRef(false);
@@ -56,7 +53,6 @@ export default function AgregarEmpleado() {
   const userName = usuario ? `${usuario.nombres} ${usuario.apellidos}` : "Supervisor";
   const displayRole = role ? role.charAt(0).toUpperCase() + role.slice(1) : "Supervisor";
 
-  const [permission, requestPermission] = useCameraPermissions();
   const [scanningDni, setScanningDni] = useState(false);
   const [takingPhoto, setTakingPhoto] = useState(false);
   const [guardando, setGuardando] = useState(false);
@@ -75,9 +71,6 @@ export default function AgregarEmpleado() {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const cameraRef = useRef<any>(null);
-
-  const [cameraFacing, setCameraFacing] = useState<'front' | 'back'>('back');
   const [avisoDni, setAvisoDni] = useState(false);
 
   const formatName = (name: string) => {
@@ -144,33 +137,6 @@ export default function AgregarEmpleado() {
     }
   };
 
-  const takePicture = async () => {
-    if (!cameraRef.current || capturando.current) return;
-    capturando.current = true;
-    try {
-      const photo = await cameraRef.current.takePictureAsync({ quality: 0.85 });
-      if (!photo?.uri) throw new Error('FOTO_VACIA');
-      const contexto = ImageManipulator.manipulate(photo.uri);
-      let imagen: Awaited<ReturnType<typeof contexto.renderAsync>> | undefined;
-      try {
-        if (photo.width > 960 || photo.height > 960) contexto.resize(photo.width >= photo.height ? { width: 960 } : { height: 960 });
-        imagen = await contexto.renderAsync();
-        const foto = await imagen.saveAsync({ format: SaveFormat.JPEG, compress: 0.75, base64: true });
-        if (!foto.base64) throw new Error('FOTO_VACIA');
-        setFormData(prev => ({ ...prev, fotoUri: foto.uri, fotoBase64: foto.base64! }));
-      } finally { imagen?.release(); contexto.release(); }
-      setTakingPhoto(false);
-    } catch {
-      setTakingPhoto(false);
-      mostrarErrorRegistro('No se pudo procesar la foto. Volvé a tomarla.');
-    }
-    finally { capturando.current = false; }
-  };
-
-  const toggleCameraFacing = () => {
-    setCameraFacing(current => (current === 'back' ? 'front' : 'back'));
-  };
-
   return (
     <View className="flex-1 bg-chido-fondo">
       <Stack.Screen options={{ headerShown: false }} />
@@ -200,7 +166,7 @@ export default function AgregarEmpleado() {
           <View style={altoVista > 0 ? { minHeight: altoVista, justifyContent: 'space-evenly', paddingVertical: 12 } : undefined}>
             <View className="flex-row items-center relative">
               <TouchableOpacity
-                onPress={() => router.back()}
+                onPress={() => router.canGoBack() ? router.back() : router.replace('/supervisor/home')}
                 accessibilityRole="button"
                 accessibilityLabel="Volver"
                 className="w-12 h-12 rounded-xl bg-chido-acento items-center justify-center absolute left-0 z-10"
@@ -210,10 +176,7 @@ export default function AgregarEmpleado() {
               <Text className="text-3xl font-bold text-chido-texto-sobre-oscuro text-center flex-1">Alta de empleado</Text>
             </View>
 
-            <Pressable className="items-center" onPress={() => {
-              if (!permission?.granted) requestPermission();
-              else setTakingPhoto(true);
-            }}>
+            <Pressable className="items-center" onPress={() => setTakingPhoto(true)}>
               <View style={{ width: altoFoto, height: altoFoto, borderRadius: altoFoto / 2 }} className="overflow-hidden border-2 border-dashed border-chido-texto-secundario-alternativo bg-chido-acento items-center justify-center">
                 {formData.fotoUri ? (
                   <Image source={{uri: formData.fotoUri}} className="w-full h-full" resizeMode="cover" />
@@ -409,35 +372,15 @@ export default function AgregarEmpleado() {
         }}
       />}
 
-      {/* Modal Tomar Foto */}
-      <Modal visible={takingPhoto} animationType="slide">
-        <View className="flex-1 bg-black">
-          {permission?.granted && (
-            <CameraView
-              style={StyleSheet.absoluteFill}
-              ref={cameraRef}
-              facing={cameraFacing}
-            />
-          )}
-
-          {/* Flip Camera Button */}
-          <TouchableOpacity
-            className="absolute top-12 right-6 bg-black/50 p-3 rounded-full"
-            onPress={toggleCameraFacing}
-          >
-            <Ionicons name="camera-reverse-outline" size={28} color={colores.textoSobreOscuro} />
-          </TouchableOpacity>
-
-          <View className="absolute bottom-10 left-0 right-0 flex-row justify-center gap-4">
-            <TouchableOpacity className="bg-chido-error px-6 py-4 rounded-full" onPress={() => setTakingPhoto(false)}>
-              <Text className="text-chido-texto-sobre-oscuro font-bold text-lg">Cancelar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity className="bg-chido-acento px-6 py-4 rounded-full" onPress={takePicture}>
-              <Text className="text-chido-texto-sobre-oscuro font-bold text-lg">Capturar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      {takingPhoto && <CamaraRegistro
+        modo="foto"
+        onClose={() => setTakingPhoto(false)}
+        onFoto={(foto) => {
+          setFormData(actual => ({ ...actual, fotoUri: foto.uri, fotoBase64: foto.base64 }));
+          setErrors(actual => { const siguientes = { ...actual }; delete siguientes.fotoBase64; return siguientes; });
+        }}
+        onDni={() => {}}
+      />}
       {modalSimulacion}
       <ResultadoModal
         visible={avisoRegistro !== null}
@@ -446,7 +389,7 @@ export default function AgregarEmpleado() {
         mensaje={avisoRegistro === 'exito' ? 'El empleado se guardó correctamente y ya puede ingresar con su correo y contraseña.' : errorRegistro}
         accion={avisoRegistro === 'exito' ? 'Volver al inicio' : 'Volver al formulario'}
         onClose={() => {
-          if (avisoRegistro === 'exito') router.back();
+          if (avisoRegistro === 'exito') router.replace('/supervisor/home');
           else setAvisoRegistro(null);
         }}
       />

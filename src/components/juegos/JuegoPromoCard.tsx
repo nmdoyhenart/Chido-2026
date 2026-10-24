@@ -17,7 +17,7 @@ export function JuegoPromoCard({ titulo, descuento, icono, onPress, compacto = f
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${titulo}, descuento de ${descuento}`}
+      accessibilityLabel={descuento === 'Recreativo' ? `${titulo}, juego recreativo sin descuento` : `${titulo}, descuento de ${descuento}`}
       style={{ flexGrow: 1, flexBasis: 0 }}
       className={`justify-center rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera ${compacto ? 'px-5 py-2' : 'p-5'}`}
     >

@@ -4,11 +4,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BarChart } from 'react-native-chart-kit';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/Header';
+import { EstadoVacio } from '../../components/ui/EstadoVacio';
+import { useNombreCliente } from '../../hooks/useNombreCliente';
 import { colores } from '../../theme/colores';
 import { obtenerResultadosEncuestas, resumirEncuestas, ResultadoEncuesta } from '../../../lib/encuestas';
 
 export default function GraficoBarra() {
   const insets = useSafeAreaInsets();
+  const { nombreCliente } = useNombreCliente();
   const [resultados, setResultados] = useState<ResultadoEncuesta[]>([]);
   const [cargando, setCargando] = useState(true);
 
@@ -52,7 +55,7 @@ export default function GraficoBarra() {
 
   return (
     <View className="flex-1 bg-chido-fondo">
-      <Header userName="Cliente" role="Gráficos" />
+      <Header userName={nombreCliente} role="Gráficos" />
       
       <View className="flex-1 p-4" style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
         <Text className="text-3xl font-bold text-chido-texto-sobre-oscuro mb-6">
@@ -77,7 +80,7 @@ export default function GraficoBarra() {
         {/* Contenedor del gráfico */}
         <View className="flex-1 rounded-3xl justify-center items-center border-2 border-white/70 overflow-hidden" style={{ backgroundColor: colores.superficieTerracota, paddingRight: 10 }}>
           {resumen.total === 0 ? (
-            <Text className="text-xl text-chido-texto-secundario-sobre-oscuro">No hay datos.</Text>
+            <EstadoVacio mensaje="Nada para mostrar" compacto />
           ) : (
             <BarChart
               data={chartData}

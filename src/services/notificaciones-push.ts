@@ -8,6 +8,8 @@ import type { DatosNotificacionPush } from '../types/notificaciones';
 const CANAL_ANDROID = 'chido-avisos';
 let registroEnCurso: Promise<boolean> | null = null;
 let moduloNotificaciones: typeof import('expo-notifications') | null | undefined;
+// A nivel de módulo para que sobreviva si el listener se vuelve a montar.
+let ultimoIdProcesado: string | null = null;
 
 function obtenerModuloNotificaciones() {
   if (moduloNotificaciones) return moduloNotificaciones;
@@ -142,15 +144,28 @@ export async function desvincularDispositivoPush() {
 export function escucharRespuestasPush(onDatos: (datos: DatosNotificacionPush) => void) {
   const notifications = obtenerModuloNotificaciones();
   if (!notifications) return () => undefined;
-  const procesar = (datos: unknown) => onDatos(datos as DatosNotificacionPush);
+  const procesar = (respuesta: unknown) => {
+    const res = respuesta as { notification?: { request?: { identifier?: string; content?: { data?: unknown } } } } | null;
+    const identifier = res?.notification?.request?.identifier;
+    const data = res?.notification?.request?.content?.data;
+    if (!data) return;
+
+    if (identifier) {
+      if (ultimoIdProcesado === identifier) return;
+      ultimoIdProcesado = identifier;
+    }
+    // Sin esto, getLastNotificationResponseAsync devuelve la misma notificación en cada montaje.
+    notifications.clearLastNotificationResponse();
+    onDatos(data as DatosNotificacionPush);
+  };
   const suscripcionRespuesta = notifications.addNotificationResponseReceivedListener((respuesta) => {
-    procesar(respuesta.notification.request.content.data);
+    procesar(respuesta);
   });
   const suscripcionToken = notifications.addPushTokenListener(() => {
     void registrarDispositivoPush().catch(() => undefined);
   });
   void notifications.getLastNotificationResponseAsync().then((respuesta) => {
-    if (respuesta) procesar(respuesta.notification.request.content.data);
+    if (respuesta) procesar(respuesta);
   }).catch(() => undefined);
   return () => {
     suscripcionRespuesta.remove();

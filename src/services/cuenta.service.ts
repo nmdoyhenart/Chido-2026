@@ -20,6 +20,7 @@ export type CuentaCompleta = {
   pedidoId: string;
   mesaId: string;
   mesaNumero: number | null;
+  mesaTipo?: string | null;
   estado: string;
   subtotal: number;
   descuentoPorcentaje: number;
@@ -85,10 +86,21 @@ export async function obtenerCuentaPedido(pedidoId: string, clienteAnonimoId?: s
 
   const totalFinal = baseConDescuento + propinaMonto;
 
+  let mesaTipo: string | null = null;
+  if (pedido.mesa_id) {
+    try {
+      const { data: mData } = await supabase.from('mesas').select('tipo').eq('id', pedido.mesa_id).maybeSingle();
+      mesaTipo = mData?.tipo ?? null;
+    } catch {
+      // ignore
+    }
+  }
+
   return {
     pedidoId: pedido.pedido_id,
     mesaId: pedido.mesa_id,
     mesaNumero: pedido.mesa_numero ?? null,
+    mesaTipo,
     estado: pedido.estado,
     subtotal,
     descuentoPorcentaje,
@@ -104,11 +116,11 @@ export async function obtenerCuentaPedido(pedidoId: string, clienteAnonimoId?: s
 export async function registrarPropinaPorQr(
   pedidoId: string,
   rawQr: string,
-  clienteAnonimoId?: string,
+  clienteAnonimoId?: string
 ): Promise<PorcentajePropina> {
   const payload = parseQrPayload(rawQr);
   if (!payload || payload.tipo !== 'propina') {
-    throw new Error('El código escaneado no corresponde a una propina válida.');
+    throw new Error('El código QR escaneado no corresponde a una propina válida.');
   }
 
   const { data, error } = clienteAnonimoId
@@ -123,7 +135,7 @@ export async function registrarPropinaPorQr(
     });
 
   if (error || data === null) {
-    throw new Error('No se pudo guardar la propina seleccionada.');
+    throw new Error(error?.message || 'No se pudo guardar la propina seleccionada.');
   }
 
   return payload.porcentaje;
@@ -146,7 +158,7 @@ export async function registrarPropinaDirecta(
     });
 
   if (error || data === null) {
-    throw new Error('No se pudo guardar la propina seleccionada.');
+    throw new Error(error?.message || 'No se pudo guardar la propina seleccionada.');
   }
 
   return porcentaje;
@@ -154,16 +166,40 @@ export async function registrarPropinaDirecta(
 
 export async function informarPago(
   pedidoId: string,
-  clienteAnonimoId?: string,
+  clienteAnonimoId?: string
 ): Promise<void> {
   const { error } = clienteAnonimoId
     ? await supabase.rpc('informar_pago_pedido_anonimo', {
       p_cliente_anonimo_id: clienteAnonimoId,
       p_pedido_id: pedidoId,
     })
-    : await supabase.rpc('informar_pago_pedido_cliente', { p_pedido_id: pedidoId });
+    : await supabase.rpc('informar_pago_pedido_cliente', {
+      p_pedido_id: pedidoId,
+    });
 
   if (error) {
-    throw new Error(error.message || 'No se pudo registrar el pago.');
+    throw new Error(error.message || 'No se pudo confirmar el aviso de pago.');
   }
+}
+
+export async function verificarEstadoPago(
+  pedidoId: string,
+  clienteAnonimoId?: string
+): Promise<'pendiente' | 'pago_informado' | 'pagado'> {
+  const { data, error } = clienteAnonimoId
+    ? await supabase.rpc('obtener_cuenta_pedido_anonimo', {
+      p_cliente_anonimo_id: clienteAnonimoId,
+      p_pedido_id: pedidoId,
+    })
+    : await supabase.rpc('obtener_cuenta_pedido_cliente', {
+      p_pedido_id: pedidoId,
+    });
+
+  if (error || !data || typeof data !== 'object') {
+    return 'pendiente';
+  }
+  const estado = (data as any).estado;
+  if (estado === 'pagado') return 'pagado';
+  if (estado === 'pago_informado') return 'pago_informado';
+  return 'pendiente';
 }

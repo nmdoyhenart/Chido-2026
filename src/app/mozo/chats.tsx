@@ -7,6 +7,7 @@ import { getMesasMozo } from '../../services/mesas';
 import { Mesa } from '../../types/mesa';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { colores } from '../../theme/colores';
+import { EstadoVacio } from '../../components/ui/EstadoVacio';
 
 const ITEM_HEIGHT = 140;
 const ITEM_MARGIN = 16;
@@ -62,7 +63,7 @@ export default function ListaChatsMozo() {
           data={mesasVisibles}
           extraData={altoTarjeta}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: LIST_PADDING }}
+          contentContainerStyle={{ padding: LIST_PADDING, flexGrow: 1 }}
           ItemSeparatorComponent={() => <View style={{ height: ITEM_MARGIN }} />}
           showsVerticalScrollIndicator
           renderItem={({ item }) => (
@@ -88,9 +89,7 @@ export default function ListaChatsMozo() {
               </View>
             </TouchableOpacity>
           )}
-          ListEmptyComponent={
-            <Text className="text-chido-texto-sobre-oscuro text-center mt-10 text-lg">No hay mesas activas con chats.</Text>
-          }
+          ListEmptyComponent={<EstadoVacio />}
         />
         {mesas.length > 0 && <View style={[styles.paginacion, { paddingBottom: Math.max(insets.bottom, 12) }]}>
           <Text style={styles.resumen} accessibilityLiveRegion="polite">

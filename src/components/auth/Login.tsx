@@ -46,11 +46,13 @@ export default function Login() {
   const escala = Math.min(1, altoDisponible / ALTO_DISENO);
 
   useEffect(() => {
-    if (mode === 'authenticated' && !cargando) {
-      if (role === 'supervisor') {
-        router.replace('/supervisor/home');
+    if (mode === 'authenticated' && !cargando && role) {
+      if (role === 'cliente registrado') {
+        router.replace('/cliente/home');
       } else if (role === 'metre') {
         router.replace('/metre/home');
+      } else if (role === 'supervisor') {
+        router.replace('/supervisor/home');
       } else {
         router.replace('/(app)/home');
       }
@@ -102,6 +104,14 @@ export default function Login() {
       operacion.current = false;
       setLoading(false);
     }
+  };
+
+  const iniciarSesionRapido = async (correo: string, pass: string) => {
+    setEmail(correo);
+    setPassword(pass);
+    setMensaje(null);
+    limpiarAviso();
+    await autenticar(correo, pass);
   };
 
   const ingresarComoClienteAnonimo = async () => {
@@ -209,26 +219,11 @@ export default function Login() {
               {/* CONTRASEÑA */}
               <View style={{ marginBottom: 28 * escala }}>
 
-                <View className="flex-row items-center justify-between" style={{ marginBottom: 8 * escala }}>
+                <View style={{ marginBottom: 8 * escala }}>
 
                   <Text className="text-chido-texto-sobre-oscuro font-bold" style={{ fontSize: 18 * escala }}>
                     Contraseña
                   </Text>
-
-                  <Pressable
-                    disabled={loading}
-                    onPress={() =>
-                      router.push(
-                        '/(auth)/recuperar-contraseña'
-                      )
-                    }
-                  >
-
-                    <Text className="text-chido-texto-sobre-oscuro font-bold underline" style={{ fontSize: 16 * escala }}>
-                      ¿Olvidaste tu contraseña?
-                    </Text>
-
-                  </Pressable>
 
                 </View>
 
@@ -423,6 +418,7 @@ export default function Login() {
         onClose={() =>
           setAccesoRapidoVisible(false)
         }
+        onSeleccionar={iniciarSesionRapido}
       />
 
     </ImageBackground>

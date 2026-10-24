@@ -40,16 +40,6 @@ export const crearPedido = async (
     throw new Error('Supabase no confirmó el pedido completo.');
   }
 
-  // Notificar al mozo del nuevo pedido (Punto 12 del TP)
-  void encolarPushSegura(
-    'nuevo_pedido',
-    'Nuevo pedido recibido',
-    'Hay un nuevo pedido pendiente de confirmación en una mesa.',
-    { ruta: '/mozo/pedidos', pedidoId: resultado.pedido_id },
-    ['mozo'],
-    `pedido_nuevo:${resultado.pedido_id}:${Date.now()}`
-  );
-
   return resultado;
 };
 
@@ -70,16 +60,6 @@ export const crearPedidoAnonimo = async (
   if (error) throw new Error(error.message || 'No se pudo guardar el pedido.');
   const resultado = data as { pedido_id?: string; total?: number } | null;
   if (!resultado?.pedido_id || typeof resultado.total !== 'number') throw new Error('No se confirmó el pedido.');
-
-  // Notificar al mozo del nuevo pedido anónimo (Punto 12 del TP)
-  void encolarPushSegura(
-    'nuevo_pedido',
-    'Nuevo pedido recibido',
-    'Hay un nuevo pedido pendiente de confirmación en una mesa.',
-    { ruta: '/mozo/pedidos', pedidoId: resultado.pedido_id },
-    ['mozo'],
-    `pedido_nuevo:${resultado.pedido_id}:${Date.now()}`
-  );
 
   return resultado;
 };

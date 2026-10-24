@@ -21,8 +21,8 @@ export default function InicioMozo({ usuario, role }: any) {
   const textoResumen = Math.min(16, Math.max(13, Math.round(textoSecundario * 0.95)));
   const rellenoTarjeta = Math.round(24 * escalaTarjeta);
   const escalaConsulta = altoConsulta > 0 ? Math.min(2.05, Math.max(1, altoConsulta / 230)) : 1;
-  const iconoConsulta = Math.round(42 * escalaConsulta);
-  const tituloConsulta = Math.round(28 * escalaConsulta);
+  const iconoConsulta = Math.min(48, Math.round(42 * escalaConsulta));
+  const tituloConsulta = Math.min(32, Math.round(28 * escalaConsulta));
   
   useEffect(() => {
     const fetchStats = async () => {
@@ -113,8 +113,14 @@ export default function InicioMozo({ usuario, role }: any) {
             style={{ paddingHorizontal: rellenoTarjeta }}
           >
             <Ionicons name="chatbubbles-outline" size={iconoConsulta} color={colores.textoSobreOscuro} />
-            <Text className="ml-5 flex-1 font-bold text-chido-texto-sobre-oscuro" style={{ fontSize: tituloConsulta, lineHeight: Math.round(tituloConsulta * 1.16) }}>Consultas de Mesas</Text>
-            <Ionicons name="chevron-forward" size={Math.round(32 * escalaConsulta)} color={colores.textoSobreOscuro} />
+            <Text
+              numberOfLines={2}
+              adjustsFontSizeToFit
+              minimumFontScale={0.82}
+              className="ml-4 flex-1 font-bold text-chido-texto-sobre-oscuro"
+              style={{ fontSize: tituloConsulta, lineHeight: Math.round(tituloConsulta * 1.16) }}
+            >Consultas de mesas</Text>
+            <Ionicons name="chevron-forward" size={Math.min(36, Math.round(32 * escalaConsulta))} color={colores.textoSobreOscuro} />
           </TouchableOpacity>
         </View>
       </View>

@@ -39,7 +39,10 @@ export default function PushNotificationsBootstrap() {
     return detener;
   }, []);
 
-  // Escuchar eventos en tiempo real para disparar la notificación en el dispositivo
+  // Escuchar eventos en tiempo real para disparar la notificación en el dispositivo.
+  // Nuevo pedido, pago informado y chat hacia mozo/cliente registrado ya los envía
+  // el servidor como push (triggers notificar_nuevo_pedido, chido_notificar_pago_pedido
+  // y chido_notificar_chat); repetirlos acá generaba avisos duplicados.
   useEffect(() => {
     const esAutenticado = autenticado && !!usuario;
     const esInvitado = mode === 'guest';
@@ -49,44 +52,6 @@ export default function PushNotificationsBootstrap() {
     const canalNombre = `push_realtime_${identificadorCanal}_${Date.now()}`;
     const canal = supabase
       .channel(canalNombre)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'pedidos' },
-        async (payload) => {
-          if (!usuario) return;
-          const nuevo = payload.new as any;
-          const viejo = payload.old as any;
-          if (!nuevo) return;
-
-          // 1. Punto 12: Nuevo pedido para el mozo
-          if (
-            (payload.eventType === 'INSERT' || nuevo.estado === 'pendiente_mozo') &&
-            viejo?.estado !== 'pendiente_mozo' &&
-            usuario.perfil === 'mozo'
-          ) {
-            await dispararNotificacionLocal(
-              'Nuevo pedido recibido',
-              'Hay un pedido pendiente de confirmación en una mesa.',
-              { ruta: '/mozo/pedidos', pedidoId: nuevo.id }
-            );
-          }
-
-          // 2. Punto 21: el cliente informa el pago; avisar al mozo,
-          // dueño y supervisor mientras esperan la confirmación del mozo.
-          if (
-            nuevo.estado === 'pago_informado' &&
-            (!viejo || viejo.estado !== 'pago_informado') &&
-            ['mozo', 'dueño', 'supervisor'].includes(usuario.perfil)
-          ) {
-            const rutaDestino = usuario.perfil === 'mozo' ? '/mozo/pedidos' : '/mesas/gestion';
-            await dispararNotificacionLocal(
-              'Pago informado',
-              `El cliente informó el pago de $${Number(nuevo.total || 0).toLocaleString('es-AR')}. Espera la confirmación del mozo.`,
-              { ruta: rutaDestino as any, pedidoId: nuevo.id }
-            );
-          }
-        }
-      )
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'mesas' },
@@ -114,54 +79,7 @@ export default function PushNotificationsBootstrap() {
           const nuevo = payload.new as any;
           if (!nuevo) return;
 
-          // Caso 1: Mensaje del cliente hacia el mozo
-          if (!nuevo.es_mozo && usuario?.perfil === 'mozo') {
-            try {
-              const { data: mesa } = await supabase
-                .from('mesas')
-                .select('numero')
-                .eq('id', nuevo.mesa_id)
-                .maybeSingle();
-
-              const numeroMesa = mesa?.numero != null ? String(mesa.numero) : '';
-              const titulo = numeroMesa ? `Mensaje de la Mesa ${numeroMesa}` : 'Nuevo mensaje de cliente';
-              const ruta = numeroMesa
-                ? `/mozo/chat-mesa?mesaId=${nuevo.mesa_id}&numero=${numeroMesa}`
-                : `/mozo/chat-mesa?mesaId=${nuevo.mesa_id}`;
-
-              await dispararNotificacionLocal(titulo, nuevo.texto || 'Tienes un nuevo mensaje.', {
-                ruta,
-                mesaId: nuevo.mesa_id,
-                numero: numeroMesa,
-                evento: 'chat_mozo',
-              });
-            } catch (err) {
-              console.log('Error al notificar mensaje de chat al mozo:', err);
-            }
-          }
-
-          // Caso 2: Mensaje del mozo hacia el cliente registrado
-          if (nuevo.es_mozo && usuario?.perfil === 'cliente registrado') {
-            try {
-              const { data: mesa } = await supabase
-                .from('mesas')
-                .select('id')
-                .eq('id', nuevo.mesa_id)
-                .eq('cliente_id', usuario.id)
-                .maybeSingle();
-
-              if (mesa) {
-                await dispararNotificacionLocal('Nuevo mensaje del mozo', nuevo.texto || 'Tienes un mensaje del mozo.', {
-                  ruta: '/cliente/chat',
-                  evento: 'chat_cliente',
-                });
-              }
-            } catch (err) {
-              console.log('Error al notificar mensaje de chat al cliente:', err);
-            }
-          }
-
-          // Caso 3: Mensaje del mozo hacia el cliente anónimo
+          // Mensaje del mozo hacia el cliente anónimo: no tiene usuario_id, así que el servidor no puede enviarle push.
           if (nuevo.es_mozo && mode === 'guest') {
             try {
               const anonimoId = await AsyncStorage.getItem('cliente_anonimo_id');

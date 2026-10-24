@@ -4,7 +4,7 @@ import { Stack, router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { colores } from '../../theme/colores';
-import { obtenerClienteEnListaPorId, suscribirseAMiEstado } from '../../../lib/clientesAnonimos';
+import { obtenerClienteEnListaPorId, obtenerNumeroMesa, suscribirseAMiEstado } from '../../../lib/clientesAnonimos';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useVibrarError } from '../../hooks/useVibrarError';
 
@@ -17,9 +17,20 @@ export default function EsperaClienteAnonimo() {
     const insets = useSafeAreaInsets();
     const [fueEliminado, setFueEliminado] = useState(false);
     const [mesaAsignada, setMesaAsignada] = useState<string | null>(null);
+    const [numeroMesa, setNumeroMesa] = useState<number | null>(null);
     const [saliendo, setSaliendo] = useState(false);
     const [error, setError] = useState('');
     useVibrarError(error);
+
+    // El metre asigna la mesa por id: se busca su número para indicarle al cliente qué QR escanear.
+    useEffect(() => {
+        if (!mesaAsignada) return;
+        let activo = true;
+        obtenerNumeroMesa(mesaAsignada)
+            .then(numero => { if (activo) setNumeroMesa(numero); })
+            .catch(err => console.error('Error al obtener el número de mesa:', err));
+        return () => { activo = false; };
+    }, [mesaAsignada]);
 
     useEffect(() => {
         let cancelado = false;
@@ -128,8 +139,18 @@ export default function EsperaClienteAnonimo() {
                 <Text className="text-chido-texto-sobre-oscuro text-4xl font-bold text-center w-full mt-4 mb-3">
                     ¡Te asignaron una mesa!
                 </Text>
+                {numeroMesa !== null && (
+                    <Text
+                        className="text-chido-texto-sobre-oscuro text-5xl font-extrabold text-center w-full mb-3"
+                        accessibilityLiveRegion="polite"
+                    >
+                        Mesa {numeroMesa}
+                    </Text>
+                )}
                 <Text className="text-chido-texto-secundario-alternativo text-2xl text-center w-full mb-8">
-                    Escaneá el código QR de tu mesa para ingresar.
+                    {numeroMesa !== null
+                        ? `Escaneá el código QR de la mesa ${numeroMesa} para ingresar.`
+                        : 'Escaneá el código QR de tu mesa para ingresar.'}
                 </Text>
 
                 <TouchableOpacity
@@ -178,7 +199,7 @@ export default function EsperaClienteAnonimo() {
                 className="bg-chido-acento w-full px-6 py-7 rounded-2xl flex-row items-center justify-center mb-4"
             >
                 <Ionicons name="stats-chart-outline" size={36} color={colores.textoSobreOscuro} />
-                <Text className="text-chido-texto-sobre-oscuro font-bold text-3xl ml-3 flex-shrink">Ver encuestas anteriores</Text>
+                <Text className="text-chido-texto-sobre-oscuro font-bold text-3xl ml-3 flex-shrink text-center">Ver encuestas anteriores</Text>
             </TouchableOpacity>
 
             <TouchableOpacity

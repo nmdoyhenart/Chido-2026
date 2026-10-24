@@ -8,7 +8,8 @@ import { Stack, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { crearEmpleado } from '../../services/empleados.service';
-import { Input } from '../../components/ui/Input';
+import { validarRegistroEmpleado } from '../../../shared/registro-empleado';
+import { Input, ALTO_ERROR_RESERVADO } from '../../components/ui/Input';
 import { PrimaryButton } from '../../components/ui/Buttons';
 import { Header } from '../../components/Header';
 import { colores } from '../../theme/colores';
@@ -30,15 +31,16 @@ export default function AgregarEmpleado() {
   const scroll = useRef<ScrollView>(null);
   const { alDesplazar, alEnfocar, rellenoInferior } = useCampoVisibleConTeclado(scroll);
 
-  // Dos pantallas del alto visible: 1) título → lectura del DNI; 2) datos, perfil y Guardar, todo sin scroll.
+  // Dos pantallas del alto visible: 1) título → lectura del DNI → perfil; 2) datos y Guardar, todo sin scroll.
   // El scroll sólo pasa de una a otra y frena justo al inicio de la segunda.
   // El alto se toma con el teclado cerrado para que nada salte mientras se escribe.
   const [altoVista, setAltoVista] = useState(0);
   const [inicioPantalla2, setInicioPantalla2] = useState(0);
   const altoFoto = altoVista > 0 ? Math.max(128, Math.min(220, Math.floor(altoVista * 0.3))) : 128;
   // Para que todo entre se achica la altura de los inputs (40–60 px), nunca la letra.
-  // 322 ≈ etiquetas de los 6 campos + Perfil + Guardar + separaciones mínimas.
-  const altoInput = altoVista > 0 ? Math.max(40, Math.min(60, Math.floor((altoVista - 322) / 6))) : undefined;
+  // 274 ≈ etiquetas de los 7 campos + Guardar + separaciones mínimas,
+  // más el renglón fijo que cada campo reserva para su error (así los avisos no agregan scroll).
+  const altoInput = altoVista > 0 ? Math.max(40, Math.min(60, Math.floor((altoVista - 274 - 7 * ALTO_ERROR_RESERVADO) / 7))) : undefined;
   const estiloInput = altoInput ? { height: altoInput, paddingVertical: 4 } : undefined;
 
   // Selector de perfil en dos grupos fijos (sin scroll, nada cortado):
@@ -66,6 +68,7 @@ export default function AgregarEmpleado() {
     cuil: '',
     correo: '',
     password: '',
+    confirmarPassword: '',
     perfil: 'cocinero',
     fotoBase64: '',
     fotoUri: null as string | null
@@ -98,22 +101,32 @@ export default function AgregarEmpleado() {
       mostrarErrorRegistro('Ingresá con una cuenta de dueño o supervisor para registrar empleados.');
       return;
     }
+    const datos = {
+      nombres: formData.nombres,
+      apellidos: formData.apellidos,
+      dni: formData.dni,
+      cuil: formData.cuil,
+      correo: formData.correo,
+      perfil: formData.perfil,
+      fotoBase64: formData.fotoBase64,
+      password: formData.password
+    };
+    // La confirmación sólo se controla acá; al servidor viaja una única contraseña.
+    const errorConfirmacion = !formData.confirmarPassword
+      ? 'Repetí la contraseña para confirmarla.'
+      : formData.confirmarPassword !== formData.password ? 'Las contraseñas no coinciden.' : '';
+    if (errorConfirmacion) {
+      setErrors({ ...validarRegistroEmpleado(datos).errores, confirmarPassword: errorConfirmacion });
+      mostrarErrorRegistro('Revisá los campos indicados.');
+      return;
+    }
     enviando.current = true;
     Keyboard.dismiss();
     setGuardando(true);
     setErrorRegistro('');
     setErrors({});
     try {
-      const resultado = await crearEmpleado({
-        nombres: formData.nombres,
-        apellidos: formData.apellidos,
-        dni: formData.dni,
-        cuil: formData.cuil,
-        correo: formData.correo,
-        perfil: formData.perfil,
-        fotoBase64: formData.fotoBase64,
-        password: formData.password
-      });
+      const resultado = await crearEmpleado(datos);
 
       if (!resultado.ok) {
         if (resultado.campos) setErrors(resultado.campos);
@@ -232,79 +245,6 @@ export default function AgregarEmpleado() {
                 {avisoDni ? 'Datos del DNI cargados. Revisalos antes de continuar.' : 'La lectura del DNI es opcional. También podés escribir los datos.'}
               </Text>
             </View>
-          </View>
-
-          {/* Pantalla 2: datos uno debajo del otro, perfil y guardar; todo entra en el alto visible. */}
-          <View
-            style={altoVista > 0 ? { minHeight: altoVista, justifyContent: 'space-between', paddingVertical: 8 } : undefined}
-            onLayout={({ nativeEvent }) => setInicioPantalla2(Math.round(nativeEvent.layout.y))}
-          >
-            <Input
-              grande
-              style={estiloInput}
-              label="Nombres"
-              placeholder="Ej. María José"
-              value={formData.nombres}
-              onChangeText={(t) => setFormData(prev => ({...prev, nombres: formatName(t)}))}
-              onFocus={alEnfocar}
-              error={errors.nombres}
-            />
-            <Input
-              grande
-              style={estiloInput}
-              label="Apellidos"
-              placeholder="Ej. González"
-              value={formData.apellidos}
-              onChangeText={(t) => setFormData(prev => ({...prev, apellidos: formatName(t)}))}
-              onFocus={alEnfocar}
-              error={errors.apellidos}
-            />
-            <Input
-              grande
-              style={estiloInput}
-              label="DNI"
-              placeholder="Ej. 34567890"
-              value={formData.dni}
-              keyboardType="numeric"
-              maxLength={8}
-              onChangeText={(t) => setFormData(prev => ({...prev, dni: t}))}
-              onFocus={alEnfocar}
-              error={errors.dni}
-            />
-            <Input
-              grande
-              style={estiloInput}
-              label="CUIL"
-              placeholder="Ej. 20-34567890-3"
-              value={formData.cuil}
-              keyboardType="numeric"
-              onChangeText={(t) => setFormData(prev => ({...prev, cuil: formatCuil(t)}))}
-              onFocus={alEnfocar}
-              error={errors.cuil}
-            />
-            <Input
-              grande
-              style={estiloInput}
-              label="Correo electrónico"
-              placeholder="empleado@correo.com"
-              value={formData.correo}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              onChangeText={(t) => setFormData(prev => ({...prev, correo: t}))}
-              onFocus={alEnfocar}
-              error={errors.correo}
-            />
-            <Input
-              grande
-              style={estiloInput}
-              label="Contraseña"
-              placeholder="Mínimo 8 caracteres"
-              value={formData.password}
-              secureTextEntry
-              onChangeText={(t) => setFormData(prev => ({...prev, password: t}))}
-              onFocus={alEnfocar}
-              error={errors.password}
-            />
 
             {/* Perfil Selector */}
             <View>
@@ -346,9 +286,101 @@ export default function AgregarEmpleado() {
                 )}
               </View>
             </View>
+          </View>
+
+          {/* Pantalla 2: datos uno debajo del otro y guardar; todo entra en el alto visible. */}
+          <View
+            style={altoVista > 0 ? { minHeight: altoVista, justifyContent: 'space-between', paddingVertical: 8 } : undefined}
+            onLayout={({ nativeEvent }) => setInicioPantalla2(Math.round(nativeEvent.layout.y))}
+          >
+            <Input
+              grande
+              reservarError
+              style={estiloInput}
+              label="Nombres"
+              placeholder="Ej. María José"
+              value={formData.nombres}
+              onChangeText={(t) => setFormData(prev => ({...prev, nombres: formatName(t)}))}
+              onFocus={alEnfocar}
+              error={errors.nombres}
+            />
+            <Input
+              grande
+              reservarError
+              style={estiloInput}
+              label="Apellidos"
+              placeholder="Ej. González"
+              value={formData.apellidos}
+              onChangeText={(t) => setFormData(prev => ({...prev, apellidos: formatName(t)}))}
+              onFocus={alEnfocar}
+              error={errors.apellidos}
+            />
+            <Input
+              grande
+              reservarError
+              style={estiloInput}
+              label="DNI"
+              placeholder="Ej. 34567890"
+              value={formData.dni}
+              keyboardType="numeric"
+              maxLength={8}
+              onChangeText={(t) => setFormData(prev => ({...prev, dni: t}))}
+              onFocus={alEnfocar}
+              error={errors.dni}
+            />
+            <Input
+              grande
+              reservarError
+              style={estiloInput}
+              label="CUIL"
+              placeholder="Ej. 20-34567890-3"
+              value={formData.cuil}
+              keyboardType="numeric"
+              onChangeText={(t) => setFormData(prev => ({...prev, cuil: formatCuil(t)}))}
+              onFocus={alEnfocar}
+              error={errors.cuil}
+            />
+            <Input
+              grande
+              reservarError
+              style={estiloInput}
+              label="Correo electrónico"
+              placeholder="empleado@correo.com"
+              value={formData.correo}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              onChangeText={(t) => setFormData(prev => ({...prev, correo: t}))}
+              onFocus={alEnfocar}
+              error={errors.correo}
+            />
+            <Input
+              grande
+              reservarError
+              style={estiloInput}
+              label="Contraseña"
+              placeholder="Mínimo 8 caracteres"
+              value={formData.password}
+              secureTextEntry
+              conOjo
+              onChangeText={(t) => setFormData(prev => ({...prev, password: t}))}
+              onFocus={alEnfocar}
+              error={errors.password}
+            />
+            <Input
+              grande
+              reservarError
+              style={estiloInput}
+              label="Confirmar contraseña"
+              placeholder="Repetí la contraseña"
+              value={formData.confirmarPassword}
+              secureTextEntry
+              conOjo
+              onChangeText={(t) => setFormData(prev => ({...prev, confirmarPassword: t}))}
+              onFocus={alEnfocar}
+              error={errors.confirmarPassword}
+            />
 
             {/* Guardar */}
-            {!!errorRegistro && <View className="bg-chido-cabecera rounded-xl p-3" accessibilityLiveRegion="assertive"><Text className="text-chido-texto-sobre-oscuro text-lg">{errorRegistro}</Text></View>}
             <PrimaryButton
               title="Guardar Empleado"
               onPress={handleSubmit}

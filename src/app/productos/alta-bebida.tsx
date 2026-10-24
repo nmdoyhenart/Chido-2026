@@ -330,8 +330,9 @@ export default function AltaBebida() {
                     </Pressable>
 
                     <Modal visible={selectorVisible} transparent animationType="fade">
-                        <View className="flex-1 bg-chido-cabecera/50 items-center justify-center">
-                            <View className="bg-chido-cabecera rounded-2xl p-5 w-80 gap-4">
+                        {/* Fondo oscuro y borde, como ResultadoModal, para que el selector se destaque del formulario. */}
+                        <View className="flex-1 items-center justify-center" style={{ backgroundColor: 'rgba(42,20,12,0.75)' }}>
+                            <View className="bg-chido-cabecera rounded-2xl p-5 w-80 gap-4" style={{ borderWidth: 1, borderColor: colores.bordeNaranja }}>
                                 <Pressable
                                     onPress={() => {
                                         if (indiceSeleccionado !== null) {

@@ -122,8 +122,18 @@ export default function AltaClienteAnonimo() {
                                 onFocus={alEnfocar}
                             />
 
+                            {/* Rojo oscuro de la paleta: un rojo vivo no se distingue sobre el fondo naranja. */}
                             {error !== '' && (
-                                <Text className="text-chido-notificacion text-lg text-center mt-3 font-semibold">{error}</Text>
+                                <View className="flex-row items-center justify-center gap-2 mt-3">
+                                    <Ionicons name="alert-circle" size={26} color={colores.error} />
+                                    <Text
+                                        className="shrink text-lg font-bold text-chido-error"
+                                        accessibilityRole="alert"
+                                        accessibilityLiveRegion="assertive"
+                                    >
+                                        {error}
+                                    </Text>
+                                </View>
                             )}
                         </View>
 

@@ -43,8 +43,8 @@ export default function FormularioRegistroCliente({ esMetre, onSubmit, onVolver 
 
   // Registro del cliente: la primera pantalla ocupa el alto visible (foto + lectura del DNI) y el
   // scroll frena justo al comienzo de los datos personales, para que nada quede cortado.
-  // El metre conserva el formato continuo.
-  const paginado = !esMetre;
+  // El metre usa el mismo formato que el registro desde el inicio de la aplicación.
+  const paginado = true;
   const [altoVista, setAltoVista] = useState(0);
   const [inicioPaginas, setInicioPaginas] = useState<number[]>([]);
   // Pantalla 2: todos los campos y las acciones entran en el alto visible, repartiendo el espacio sin huecos.

@@ -16,11 +16,12 @@ import { SolicitudClienteCard, ConfirmacionCliente } from './SolicitudClienteCar
 import { clientesDemostracion } from '../../data/demostracion';
 import { useRestriccionSimulacion } from '../ui/RestriccionSimulacion';
 import { useVibrarError } from '../../hooks/useVibrarError';
+import { Header } from '../Header';
 
 type Decision = { cliente: ClientePendiente; estado: 'aceptado' | 'rechazado' };
 
 export default function SolicitudesClientes() {
-  const { mode, role, cargando: sesionCargando } = useAppSession();
+  const { mode, role, usuario, cargando: sesionCargando } = useAppSession();
   const router = useRouter();
   const { bloquear, modal } = useRestriccionSimulacion();
   const permitido = (mode === 'authenticated' || mode === 'simulation') && (role === 'dueño' || role === 'supervisor');
@@ -148,9 +149,14 @@ export default function SolicitudesClientes() {
   if (sesionCargando) return <ChidoLoader mensaje="Verificando sesión…" />;
   if (!permitido) return <Redirect href="/(app)/home" />;
 
-  return <SafeAreaView style={styles.pantalla}>
+  const rolMostrado = role ? role.charAt(0).toUpperCase() + role.slice(1) : 'Supervisor';
+  const nombreUsuario = usuario ? `${usuario.nombres} ${usuario.apellidos}` : rolMostrado;
+
+  // El Header ya contempla el margen superior del dispositivo.
+  return <SafeAreaView style={styles.pantalla} edges={['left', 'right', 'bottom']}>
     <StatusBar style="light" />
     {modal}
+    <Header userName={nombreUsuario} role={rolMostrado} />
     <View style={styles.cabecera}>
       <TouchableOpacity accessibilityRole="button" accessibilityLabel="Volver al inicio" disabled={cargando}
         onPress={() => router.replace('/(app)/home')} style={styles.botonIcono} activeOpacity={0.75}>
@@ -251,7 +257,8 @@ export default function SolicitudesClientes() {
 }
 
 const styles = StyleSheet.create({
-  pantalla: { flex: 1, backgroundColor: colores.cabecera },
+  // Fondo general (no el de cabecera) para que la barra de Solicitudes se distinga del Header.
+  pantalla: { flex: 1, backgroundColor: colores.fondo },
   cabecera: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 10 },
   botonIcono: { width: 46, height: 46, borderRadius: 15, backgroundColor: colores.textoBotonOutline, alignItems: 'center', justifyContent: 'center' },
   titulos: { flex: 1, minWidth: 0 },

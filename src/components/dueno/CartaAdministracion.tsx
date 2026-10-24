@@ -138,11 +138,12 @@ export default function CartaAdministracion({ soloLectura = false, soloTipoProdu
             <Ionicons name="add" size={20} color={c.textoSobreOscuro} /><Text style={[s.botonTexto, s.textoAlta]}>Agregar bebida</Text>
           </TouchableOpacity>
         </View>}
-        <View style={s.buscador}>
+        {/* En "Gestionar carta" (Dueño y Supervisor) no hay buscador: alcanza con el filtro por tipo. */}
+        {soloLectura && <View style={s.buscador}>
           <Ionicons name="search-outline" size={22} color={c.textoSecundarioSobreOscuro} />
           <TextInput accessibilityLabel="Buscar platos o bebidas" placeholder="Buscar platos o bebidas…" placeholderTextColor={c.textoSecundarioSobreOscuro} value={busqueda} onChangeText={texto => { setBusqueda(texto); setPagina(0); }} style={s.busqueda} returnKeyType="search" />
           {!!busqueda && <TouchableOpacity accessibilityRole="button" accessibilityLabel="Limpiar búsqueda" onPress={() => { setBusqueda(''); setPagina(0); }} style={s.limpiar}><Ionicons name="close-circle" size={22} color={c.textoSecundarioSobreOscuro} /></TouchableOpacity>}
-        </View>
+        </View>}
         {!soloTipoProducto && <View style={s.tipos}>{tipos.map(item => <TouchableOpacity key={item} accessibilityRole="button" accessibilityLabel={`Mostrar ${item.toLowerCase()}`} accessibilityState={{ selected: tipo === item }} onPress={() => { setTipo(item); setPagina(0); }} style={[s.tipo, tipo === item && s.tipoActivo]}><Text style={[s.filtroTexto, tipo === item && s.filtroTextoActivo]}>{item}</Text></TouchableOpacity>)}</View>}
 
         </View>}

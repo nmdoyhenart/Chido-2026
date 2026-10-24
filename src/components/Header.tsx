@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -30,9 +31,24 @@ export function Header({ userName, role }: HeaderProps) {
         } finally { setSaliendo(false); }
     };
 
-    const fotoUrl = usuario?.fotoUrl ?? (usuario?.foto_perfil && /^https:\/\//i.test(usuario.foto_perfil) ? usuario.foto_perfil : null);
+    // Cliente anónimo: no tiene cuenta, así que se muestran el nombre y la foto con que se registró.
+    // Esos datos se borran al ingresar con una cuenta real (AppSessionContext).
+    const generico = userName === 'Cliente' || userName === 'Invitado';
+    const [anonimo, setAnonimo] = useState<{ nombre: string | null; foto: string | null } | null>(null);
+    useEffect(() => {
+        if (usuario || !generico) return;
+        let activo = true;
+        AsyncStorage.multiGet(['cliente_anonimo_nombre', 'cliente_anonimo_foto_url'])
+            .then(([[, nombre], [, foto]]) => { if (activo) setAnonimo({ nombre, foto }); })
+            .catch(() => undefined);
+        return () => { activo = false; };
+    }, [usuario, generico]);
+
+    const fotoUrl = usuario?.fotoUrl ?? (usuario?.foto_perfil && /^https:\/\//i.test(usuario.foto_perfil) ? usuario.foto_perfil : null)
+        ?? (!usuario && generico ? anonimo?.foto ?? null : null);
     const nombreCompleto = [usuario?.nombres, usuario?.apellidos].filter(Boolean).join(' ');
-    const nombreMostrado = userName === 'Cliente' && nombreCompleto ? nombreCompleto : userName;
+    const nombreMostrado = userName === 'Cliente' && nombreCompleto ? nombreCompleto
+        : !usuario && generico && anonimo?.nombre ? anonimo.nombre : userName;
 
     return (
         // En iPhone con notch o Dynamic Island el margen fijo de 56 quedaba corto.

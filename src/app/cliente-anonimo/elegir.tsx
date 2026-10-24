@@ -46,7 +46,8 @@ export default function ElegirOpcion() {
     };
 
     const verEncuestas = () => {
-        router.push('/encuestas/acceso');
+        // Ya escaneó el QR de ingreso para llegar acá: va directo a los resultados.
+        router.push('/encuestas/previas');
     };
 
     return (
@@ -86,7 +87,7 @@ export default function ElegirOpcion() {
                     className="bg-chido-acento w-full px-6 py-8 rounded-2xl flex-row items-center justify-center"
                 >
                     <Ionicons name="stats-chart-outline" size={36} color={colores.textoSobreOscuro} />
-                    <Text className="text-chido-texto-sobre-oscuro font-bold text-2xl ml-3 flex-shrink">Ver encuestas anteriores</Text>
+                    <Text className="text-chido-texto-sobre-oscuro font-bold text-2xl ml-3 flex-shrink text-center">Ver encuestas anteriores</Text>
                 </TouchableOpacity>
 
                 {/* Fondo bordó oscuro con texto claro para que el error se lea bien sobre el fondo naranja */}

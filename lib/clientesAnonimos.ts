@@ -22,6 +22,12 @@ export async function subirFotoCliente(uri: string) {
     return data.publicUrl;
 }
 
+export async function obtenerNumeroMesa(mesaId: string): Promise<number | null> {
+    const { data, error } = await supabase.from('mesas').select('numero').eq('id', mesaId).maybeSingle();
+    if (error) throw error;
+    return data?.numero ?? null;
+}
+
 export async function obtenerClienteEnListaPorId(identificador: string) {
     const { data, error } = await supabase
         .from('lista_espera')

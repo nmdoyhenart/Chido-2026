@@ -46,11 +46,13 @@ export default function Login() {
   const escala = Math.min(1, altoDisponible / ALTO_DISENO);
 
   useEffect(() => {
-    if (mode === 'authenticated' && !cargando) {
-      if (role === 'supervisor') {
-        router.replace('/supervisor/home');
+    if (mode === 'authenticated' && !cargando && role) {
+      if (role === 'cliente registrado') {
+        router.replace('/cliente/home');
       } else if (role === 'metre') {
         router.replace('/metre/home');
+      } else if (role === 'supervisor') {
+        router.replace('/supervisor/home');
       } else {
         router.replace('/(app)/home');
       }
@@ -102,6 +104,14 @@ export default function Login() {
       operacion.current = false;
       setLoading(false);
     }
+  };
+
+  const iniciarSesionRapido = async (correo: string, pass: string) => {
+    setEmail(correo);
+    setPassword(pass);
+    setMensaje(null);
+    limpiarAviso();
+    await autenticar(correo, pass);
   };
 
   const ingresarComoClienteAnonimo = async () => {
@@ -423,6 +433,7 @@ export default function Login() {
         onClose={() =>
           setAccesoRapidoVisible(false)
         }
+        onSeleccionar={iniciarSesionRapido}
       />
 
     </ImageBackground>

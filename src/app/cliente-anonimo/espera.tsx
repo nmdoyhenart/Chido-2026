@@ -93,28 +93,32 @@ export default function EsperaClienteAnonimo() {
 
     if (fueEliminado) {
         return (
-            <View className="flex-1 bg-chido-fondo items-center justify-center p-6">
+            // Mismo formato que las otras pantallas de espera: la mascota toma el espacio libre y todo entra sin scroll.
+            <View
+                className="flex-1 bg-chido-fondo"
+                style={{ paddingTop: insets.top + 16, paddingHorizontal: 16, paddingBottom: Math.max(insets.bottom, 16) + 8 }}
+            >
                 <Stack.Screen options={{ headerShown: false }} />
 
                 <Image
                     source={require('../../../assets/images/mascota-rechazado.png')}
-                    style={{ width: 200, height: 200 }}
+                    style={{ flex: 1, width: '90%', minHeight: 0, alignSelf: 'center', marginVertical: 8 }}
                     resizeMode="contain"
                 />
 
-                <Text className="text-chido-texto-sobre-oscuro text-3xl font-bold text-center mt-4 mb-3">
+                <Text className="text-chido-texto-sobre-oscuro text-4xl font-bold text-center w-full mt-4 mb-3">
                     Fuiste eliminado de la lista
                 </Text>
-                <Text className="text-chido-texto-secundario-alternativo text-xl text-center mb-10">
+                <Text className="text-chido-texto-secundario-alternativo text-2xl text-center w-full mb-8">
                     El metre te sacó de la lista de espera. Podés volver a anotarte cuando quieras.
                 </Text>
 
                 <TouchableOpacity
                     onPress={salirDelLocal}
-                    className="bg-chido-cabecera w-full px-8 py-6 rounded-2xl flex-row items-center justify-center"
+                    className="bg-chido-cabecera w-full px-6 py-7 rounded-2xl flex-row items-center justify-center"
                 >
-                    <Ionicons name="arrow-back-outline" size={28} color={colores.textoSobreOscuro} />
-                    <Text className="text-chido-texto-sobre-oscuro font-bold text-2xl ml-2">Volver al inicio</Text>
+                    <Ionicons name="arrow-back-outline" size={36} color={colores.textoSobreOscuro} />
+                    <Text className="text-chido-texto-sobre-oscuro font-bold text-3xl ml-3 flex-shrink text-center">Volver al inicio</Text>
                 </TouchableOpacity>
             </View>
         );

@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { setAudioModeAsync, setIsAudioActiveAsync, useAudioPlayer } from 'expo-audio';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Session } from '@supabase/supabase-js';
@@ -24,7 +24,10 @@ const VACIA: EstadoSesion = { mode: 'guest', role: null, usuario: null };
 const AppSessionContext = createContext<AppSessionContextType | undefined>(undefined);
 
 export function AppSessionProvider({ children }: { children: ReactNode }) {
-  const reproductorSalida = useAudioPlayer(require('../../assets/sounds/exit.mp3'), { updateInterval: 100 });
+  const reproductorSalida = useAudioPlayer(require('../../assets/sounds/exit.mp3'), {
+    downloadFirst: true,
+    updateInterval: 100,
+  });
   const [estado, setEstado] = useState<EstadoSesion>(VACIA);
   const [cargando, setCargando] = useState(true);
   const [avisoSesion, setAviso] = useState<string | null>(null);
@@ -47,7 +50,9 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
         playsInSilentMode: true,
         allowsRecording: false,
         shouldRouteThroughEarpiece: false,
-        shouldPlayInBackground: false,
+        // El sonido de salida se inicia cuando Android ya está enviando la app
+        // al fondo; permitirlo evita que el sistema lo corte en esa transición.
+        shouldPlayInBackground: Platform.OS === 'android',
         interruptionMode: 'duckOthers',
       });
       await setIsAudioActiveAsync(true);

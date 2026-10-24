@@ -84,13 +84,19 @@ export default function HomeMetre() {
                     style={{ backgroundColor: colores.superficieTerracota, flex: 1 }}
                 >
                     <View className="flex-row items-center justify-between mb-5">
-                        <View className="flex-row items-center flex-1">
+                        <View className="flex-row items-center flex-1 min-w-0">
                             <Ionicons name="restaurant-outline" size={44} color={colores.textoSobreOscuro} />
-                            <Text className="ml-4 text-3xl font-bold" style={{ color: colores.textoSobreOscuro }}>
+                            <Text
+                                numberOfLines={2}
+                                adjustsFontSizeToFit
+                                minimumFontScale={0.8}
+                                className="ml-4 flex-1 font-bold"
+                                style={{ color: colores.textoSobreOscuro, fontSize: 30, lineHeight: 35, flexShrink: 1 }}
+                            >
                                 Mesas ocupadas
                             </Text>
                         </View>
-                        <Text className="text-4xl font-bold" style={{ color: colores.textoSobreOscuro }}>
+                        <Text className="ml-3 text-3xl font-bold" style={{ color: colores.textoSobreOscuro, flexShrink: 0, fontVariant: ['tabular-nums'] }}>
                             {mesas.ocupadas}/{mesas.total}
                         </Text>
                     </View>

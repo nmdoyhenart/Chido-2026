@@ -41,7 +41,7 @@ export default function PantallaMozo({ vista = 'inicio', mesa = '5' }: { vista?:
         if (error) throw error;
         const grupos: typeof cartaPrueba = [];
         for (const producto of data ?? []) {
-          const categoria = producto.tipo === 'bebida' ? 'Bebidas' : 'Platos';
+          const categoria = producto.tipo === 'bebida' ? 'Bebidas' : producto.tipo === 'postre' ? 'Postres' : 'Platos';
           let grupo = grupos.find(g => g.categoria === categoria);
           if (!grupo) { grupo = { categoria, productos: [] }; grupos.push(grupo); }
           grupo.productos.push({ nombre: producto.nombre, descripcion: producto.descripcion, precio: producto.precio });

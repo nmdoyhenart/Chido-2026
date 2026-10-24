@@ -53,16 +53,30 @@ export default function PushNotificationsBootstrap() {
           const viejo = payload.old as any;
           if (!nuevo) return;
 
-          // Punto 21: Pago realizado para mozo, dueño y supervisor
+          // 1. Punto 12: Nuevo pedido para el mozo
           if (
-            nuevo.estado === 'pagado' &&
-            (!viejo || viejo.estado !== 'pagado') &&
+            (payload.eventType === 'INSERT' || nuevo.estado === 'pendiente_mozo') &&
+            viejo?.estado !== 'pendiente_mozo' &&
+            usuario.perfil === 'mozo'
+          ) {
+            await dispararNotificacionLocal(
+              'Nuevo pedido recibido',
+              'Hay un pedido pendiente de confirmación en una mesa.',
+              { ruta: '/mozo/pedidos', pedidoId: nuevo.id }
+            );
+          }
+
+          // 2. Punto 21: el cliente informa el pago; avisar al mozo,
+          // dueño y supervisor mientras esperan la confirmación del mozo.
+          if (
+            nuevo.estado === 'pago_informado' &&
+            (!viejo || viejo.estado !== 'pago_informado') &&
             ['mozo', 'dueño', 'supervisor'].includes(usuario.perfil)
           ) {
             const rutaDestino = usuario.perfil === 'mozo' ? '/mozo/pedidos' : '/mesas/gestion';
             await dispararNotificacionLocal(
-              'Pago recibido',
-              `El cliente realizó el pago de $${Number(nuevo.total || 0).toLocaleString('es-AR')}. Espera confirmación.`,
+              'Pago informado',
+              `El cliente informó el pago de $${Number(nuevo.total || 0).toLocaleString('es-AR')}. Espera la confirmación del mozo.`,
               { ruta: rutaDestino as any, pedidoId: nuevo.id }
             );
           }

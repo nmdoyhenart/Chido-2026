@@ -36,21 +36,22 @@ function FiguraAhorcado({ errores, alto = 142 }: { errores: number; alto?: numbe
 
 export default function Ahorcado() {
   const router = useRouter();
-  const { pedidoId } = useLocalSearchParams<{ pedidoId: string }>();
+  const { pedidoId, recreativo: recreativoParam } = useLocalSearchParams<{ pedidoId: string; recreativo?: string }>();
+  const recreativoInicial = recreativoParam === 'true';
   const { width } = useWindowDimensions();
   const { alMedir, compacto } = useAltoDisponible();
   const [altoJuego, setAltoJuego] = useState(0);
   const [juego, setJuego] = useState<EstadoAhorcado | null>(null);
-  const [cargando, setCargando] = useState(() => Boolean(pedidoId));
+  const [cargando, setCargando] = useState(() => Boolean(pedidoId) && !recreativoInicial);
   const [bloqueado, setBloqueado] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
-  const [recreativo, setRecreativo] = useState(false);
-  const [partidaRec, setPartidaRec] = useState<PalabraAhorcado | null>(null);
+  const [recreativo, setRecreativo] = useState(recreativoInicial);
+  const [partidaRec, setPartidaRec] = useState<PalabraAhorcado | null>(() => recreativoInicial ? crearPartidaAhorcado() : null);
   const [letrasRec, setLetrasRec] = useState<string[]>([]);
   const [erroresRec, setErroresRec] = useState(0);
 
   useEffect(() => {
-    if (!pedidoId) return;
+    if (!pedidoId || recreativoInicial) return;
     void iniciarAhorcado(pedidoId)
       .then(setJuego)
       .catch((error: unknown) => {
@@ -58,7 +59,7 @@ export default function Ahorcado() {
         Vibration.vibrate(180);
       })
       .finally(() => setCargando(false));
-  }, [pedidoId]);
+  }, [pedidoId, recreativoInicial]);
 
   const palabra = recreativo && partidaRec ? revelarPalabraAhorcado(partidaRec.palabra, letrasRec) : juego?.palabra ?? [];
   const letrasIntentadas = recreativo ? letrasRec : juego?.letras_intentadas ?? [];
@@ -68,7 +69,7 @@ export default function Ahorcado() {
     ? ganoAhorcado(partidaRec.palabra, letrasRec) || erroresRec >= 6
     : juego ? juego.estado !== 'en_curso' : false;
   const gano = recreativo && partidaRec ? ganoAhorcado(partidaRec.palabra, letrasRec) : juego?.estado === 'ganado';
-  const mensajeError = aviso ?? (!pedidoId ? 'No encontramos el pedido para iniciar Ahorcado.' : null);
+  const mensajeError = aviso ?? (!pedidoId && !recreativo ? 'No encontramos el pedido para iniciar Ahorcado.' : null);
   const anchoTecla = Math.floor((width - 40 - 48) / 7);
   const altoTecla = compacto ? Math.max(32, Math.min(40, anchoTecla)) : Math.max(36, Math.min(48, anchoTecla));
   // El dibujo usa lo que queda del área de juego después de la palabra (48), el teclado (4 filas) y los márgenes.
@@ -109,7 +110,9 @@ export default function Ahorcado() {
 
   const mascota = gano ? require('../../../../assets/images/mascota-contenta-descuento.png') : require('../../../../assets/images/mascota-trsite-descuento.png');
   if (terminado) {
-    const palabraFinal = recreativo ? partidaRec?.palabra ?? '' : juego?.palabra_resuelta ?? '';
+    const palabraFinal = recreativo
+      ? partidaRec?.palabra ?? ''
+      : juego?.palabra_resuelta || juego?.palabra.map((letra) => letra ?? '').join('') || 'No pudimos recuperar la palabra.';
     return (
       <SafeAreaView className="flex-1 bg-chido-fondo" edges={['left', 'right', 'bottom']}>
         <Header userName="Cliente" role="Ahorcado" />
@@ -136,7 +139,7 @@ export default function Ahorcado() {
       <Header userName="Cliente" role="Ahorcado" />
       <View className="relative flex-1" onLayout={alMedir} style={{ paddingHorizontal: 20, paddingTop: compacto ? 12 : 16, paddingBottom: 16 }}>
         <Pressable onPress={() => router.back()} accessibilityRole="button" className="min-h-12 self-start flex-row items-center rounded-xl bg-chido-acento px-4"><Ionicons name="arrow-back" size={22} color={colores.textoSobreOscuro} /><Text className="ml-2 text-base font-bold text-chido-texto-sobre-oscuro">Volver a juegos</Text></Pressable>
-        <View className={`rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera ${compacto ? 'mt-3 px-4 py-2' : 'mt-4 p-4'}`}><Text className={`${compacto ? 'text-3xl' : 'text-5xl'} font-extrabold text-chido-texto-sobre-oscuro`}>Ahorcado</Text><Text className={`${compacto ? 'mt-1 text-lg' : 'mt-2 text-2xl'} text-chido-texto-secundario-sobre-oscuro`}>Categoría: {categoria || 'Restaurante mexicano'}</Text></View>
+          <View className={`rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera ${compacto ? 'mt-3 px-4 py-2' : 'mt-4 p-4'}`}><Text className={`${compacto ? 'text-3xl' : 'text-5xl'} font-extrabold text-chido-texto-sobre-oscuro`}>Ahorcado</Text><Text className={`${compacto ? 'mt-1 text-lg' : 'mt-2 text-2xl'} text-chido-texto-secundario-sobre-oscuro`}>Categoría: {categoria || 'Restaurante mexicano'}{recreativo ? ' · Partida recreativa sin descuento' : ''}</Text></View>
         {mensajeError && <View className="mt-3 rounded-2xl bg-chido-error p-3"><Text className="text-center font-bold text-chido-texto-sobre-oscuro">{mensajeError}</Text></View>}
         <View className="flex-1 justify-between py-3" onLayout={({ nativeEvent }) => setAltoJuego(Math.round(nativeEvent.layout.height))}>
           <FiguraAhorcado errores={errores} alto={altoFigura} />

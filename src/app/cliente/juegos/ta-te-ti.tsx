@@ -42,18 +42,19 @@ export default function Tateti() {
   const router = useRouter();
   const { height, width } = useWindowDimensions();
   const { alMedir, compacto } = useAltoDisponible();
-  const { pedidoId } = useLocalSearchParams<{ pedidoId: string }>();
+  const { pedidoId, recreativo: recreativoParam } = useLocalSearchParams<{ pedidoId: string; recreativo?: string }>();
+  const recreativoInicial = recreativoParam === 'true';
   const [intento, setIntento] = useState<IntentoJuego | null>(null);
   const [partida, setPartida] = useState<PartidaTateti>(nuevaPartida);
-  const [cargando, setCargando] = useState(() => Boolean(pedidoId));
+  const [cargando, setCargando] = useState(() => Boolean(pedidoId) && !recreativoInicial);
   const [guardando, setGuardando] = useState(false);
-  const [modoRecreativo, setModoRecreativo] = useState(false);
+  const [modoRecreativo, setModoRecreativo] = useState(recreativoInicial);
   const [mensajeRonda, setMensajeRonda] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [altoTableroDisponible, setAltoTableroDisponible] = useState(0);
 
   useEffect(() => {
-    if (!pedidoId) return;
+    if (!pedidoId || recreativoInicial) return;
     void iniciarTateti(pedidoId).then((respuesta) => {
       const partidaInicial = normalizarPartida(respuesta.partida);
       setIntento(respuesta);
@@ -63,7 +64,7 @@ export default function Tateti() {
       setAviso(error instanceof Error ? error.message : 'No se pudo preparar Ta-te-ti.');
       Vibration.vibrate(180);
     }).finally(() => setCargando(false));
-  }, [pedidoId]);
+  }, [pedidoId, recreativoInicial]);
 
   async function guardar(partidaActualizada: PartidaTateti) {
     if (!pedidoId || modoRecreativo) return null;
@@ -168,7 +169,7 @@ export default function Tateti() {
   const estadoSerie = resultadoSerieTateti(partida.ronda, partida.puntosCliente, partida.puntosAplicacion);
   const serieRecreativaFinalizada = Boolean(modoRecreativo && estadoSerie);
   const mostrarNuevaPartida = finalizado || serieRecreativaFinalizada;
-  const mensajeError = aviso ?? (!pedidoId ? 'No encontramos el pedido para iniciar el juego.' : null);
+  const mensajeError = aviso ?? (!pedidoId && !modoRecreativo ? 'No encontramos el pedido para iniciar el juego.' : null);
   const mensajeFinal = !modoRecreativo && intento?.estado === 'ganado'
     ? intento.descuento_otorgado === 10 ? 'Ganaste el mejor de cinco. Aplicamos 10% de descuento a tu cuenta.' : 'Ganaste, pero tu cuenta ya tenía un descuento aplicado.'
     : !modoRecreativo && intento?.estado === 'perdido' ? 'La aplicación ganó el mejor de cinco. Podés jugar nuevamente en modo recreativo.'
@@ -183,7 +184,7 @@ export default function Tateti() {
   const tieneDescuentoAplicado = intento?.descuento_otorgado === 10;
   const mensajePromocion = modoRecreativo && tieneDescuentoAplicado
     ? 'Ya tenés el 10% de descuento aplicado.'
-    : 'Ganando tres rondas obtenés 10% de descuento.';
+    : modoRecreativo ? 'Partida recreativa sin descuento.' : 'Ganando tres rondas obtenés 10% de descuento.';
   const mascotaFinal = estadoSerie === 'ganado'
     ? require('../../../../assets/images/mascota-contenta-descuento.png')
     : require('../../../../assets/images/mascota-trsite-descuento.png');
@@ -234,7 +235,7 @@ export default function Tateti() {
         </View>
         <View onLayout={({ nativeEvent }) => setAltoTableroDisponible(Math.floor(nativeEvent.layout.height))} className="relative my-2 flex-1 items-center justify-center">
           <View style={{ width: tableroSize, height: tableroSize }} className="flex-row flex-wrap overflow-hidden rounded-3xl border-4 border-chido-texto-secundario-alternativo bg-chido-cabecera">
-            {partida.tablero.map((marca, indice) => <Pressable key={indice} accessibilityRole="button" accessibilityLabel={`Casilla ${indice + 1}${marca ? `, ${marca}` : ''}`} disabled={!intento || finalizado || guardando || partida.estadoRonda !== 'en_curso' || marca !== null} onPress={() => void elegirCasilla(indice)} className="h-1/3 w-1/3 items-center justify-center border border-chido-borde-naranja">
+            {partida.tablero.map((marca, indice) => <Pressable key={indice} accessibilityRole="button" accessibilityLabel={`Casilla ${indice + 1}${marca ? `, ${marca}` : ''}`} disabled={(!modoRecreativo && !intento) || finalizado || guardando || partida.estadoRonda !== 'en_curso' || marca !== null} onPress={() => void elegirCasilla(indice)} className="h-1/3 w-1/3 items-center justify-center border border-chido-borde-naranja">
               <Text className={`text-7xl font-extrabold ${marca === 'X' ? 'text-chido-aviso' : 'text-chido-texto-secundario-alternativo'}`}>{marca ?? ''}</Text>
             </Pressable>)}
           </View>

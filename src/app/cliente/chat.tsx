@@ -10,6 +10,7 @@ import { colores } from '../../theme/colores';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCampoVisibleConTeclado } from '../../hooks/useCampoVisibleConTeclado';
 import { useAvisoResultado } from '../../hooks/useAvisoResultado';
+import { EstadoVacio } from '../../components/ui/EstadoVacio';
 
 export default function ChatCliente() {
   const router = useRouter();
@@ -154,6 +155,7 @@ export default function ChatCliente() {
           scrollEventThrottle={16}
           contentContainerStyle={{ paddingBottom: rellenoInferior }}
         >
+          {mensajes.length === 0 && <EstadoVacio />}
           {mensajes.map((msg) => {
             const isMe = !msg.es_mozo;
             return (

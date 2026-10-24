@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/Header';
 import ChidoLoader from '../../components/ui/ChidoLoader';
+import { EstadoVacio } from '../../components/ui/EstadoVacio';
 import { ResultadoModal } from '../../components/ui/ResultadoModal';
 import { supabase } from '../../../lib/supabase';
 import { colores } from '../../theme/colores';
@@ -185,10 +186,10 @@ export default function PedidosMozo() {
           data={pedidosVisibles}
           extraData={altoTarjeta}
           keyExtractor={p => p.id}
-          contentContainerStyle={{ padding: LIST_PADDING }}
+          contentContainerStyle={{ padding: LIST_PADDING, flexGrow: 1 }}
           ItemSeparatorComponent={() => <View style={{ height: ITEM_MARGIN }} />}
           showsVerticalScrollIndicator
-          ListEmptyComponent={<Text className="text-chido-texto-sobre-oscuro text-center mt-10 text-lg">No hay pedidos.</Text>}
+          ListEmptyComponent={<EstadoVacio />}
           renderItem={({ item }) => {
             const bgClass = getStatusBgColor(item.estado).split(' ')[0];
             const textClass = getStatusBgColor(item.estado).split(' ')[1];

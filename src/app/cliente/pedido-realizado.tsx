@@ -149,24 +149,24 @@ export default function PedidoRealizado() {
           </Pressable>
         )}
 
-        {!clienteAnonimoId && <Pressable
+        <Pressable
           accessibilityRole="button"
-          accessibilityLabel={juegosHabilitados ? 'Juegos con premios' : 'Juegos bloqueados hasta confirmar el pedido o solicitar la cuenta'}
-          accessibilityState={{ disabled: !juegosHabilitados }}
-          disabled={!juegosHabilitados}
-          className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera ${juegosHabilitados ? '' : 'opacity-60'}`}
+          accessibilityLabel={clienteAnonimoId ? 'Juegos recreativos sin descuento' : juegosHabilitados ? 'Juegos con premios' : 'Juegos bloqueados hasta confirmar el pedido o solicitar la cuenta'}
+          accessibilityState={{ disabled: !clienteAnonimoId && !juegosHabilitados }}
+          disabled={!clienteAnonimoId && !juegosHabilitados}
+          className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera ${clienteAnonimoId || juegosHabilitados ? '' : 'opacity-60'}`}
           style={tarjeta}
-          onPress={() => juegosHabilitados && router.push({ pathname: '/cliente/juegos', params: { pedidoId } })}
+          onPress={() => (clienteAnonimoId || juegosHabilitados) && router.push({ pathname: '/cliente/juegos', params: { pedidoId, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } })}
         >
           <View className="flex-row items-center">
-            <Ionicons name={juegosHabilitados ? 'game-controller-outline' : 'lock-closed-outline'} size={iconoTarjeta}color={colores.textoSobreOscuro} />
+            <Ionicons name={clienteAnonimoId || juegosHabilitados ? 'game-controller-outline' : 'lock-closed-outline'} size={iconoTarjeta}color={colores.textoSobreOscuro} />
             <View className="ml-4 flex-1">
               <Text className="font-extrabold text-chido-texto-sobre-oscuro" style={tituloTarjeta}>Jugar</Text>
-              <Text className="mt-1 text-base font-bold text-chido-texto-secundario-sobre-oscuro">{juegosHabilitados ? 'Ganá descuentos para tu cuenta' : 'Disponible al confirmar; se bloquea al pedir la cuenta'}</Text>
+              <Text className="mt-1 text-base font-bold text-chido-texto-secundario-sobre-oscuro">{clienteAnonimoId ? 'Partidas recreativas sin descuento' : juegosHabilitados ? 'Ganá descuentos para tu cuenta' : 'Disponible al confirmar; se bloquea al pedir la cuenta'}</Text>
             </View>
             <Ionicons name="chevron-forward" size={30} color={colores.textoSobreOscuro} />
           </View>
-        </Pressable>}
+        </Pressable>
 
         <Pressable
           accessibilityRole="button"

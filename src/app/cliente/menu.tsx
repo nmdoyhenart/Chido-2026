@@ -203,7 +203,7 @@ export default function MenuCliente() {
 
         <TouchableOpacity 
           className="flex-row items-center bg-chido-cabecera border-2 border-white/70 px-4 py-2 rounded-full"
-          onPress={() => router.push({ pathname: '/cliente/chat', params: { mesaId, numero: mesaNumero } })}
+          onPress={() => router.push({ pathname: '/cliente/chat', params: { mesaId, numero: mesaNumero, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } })}
         >
           <Ionicons name="chatbubbles-outline" size={20} color={colores.textoSobreOscuro} />
           <Text className="text-chido-texto-sobre-oscuro font-bold ml-2">Consultar al mozo</Text>

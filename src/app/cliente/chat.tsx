@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, ImageBackground } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { Header } from '../../components/Header';
 import { getMensajes, enviarMensaje, suscribirMensajes, Mensaje } from '../../services/chat.service';
@@ -13,7 +14,11 @@ import { useAvisoResultado } from '../../hooks/useAvisoResultado';
 export default function ChatCliente() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { mesaId: mesaIdParam, numero: numeroParam } = useLocalSearchParams<{ mesaId: string, numero: string }>();
+  const params = useLocalSearchParams<{ mesaId?: string; numero?: string; clienteAnonimoId?: string }>();
+  const mesaIdParam = params.mesaId;
+  const numeroParam = params.numero;
+  const clienteAnonimoIdParam = params.clienteAnonimoId;
+
   const { usuario } = useAppSession();
   const { mostrarAviso, modalAviso } = useAvisoResultado();
 
@@ -21,22 +26,48 @@ export default function ChatCliente() {
   const [numero, setNumero] = useState<string | null>(numeroParam || null);
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
   const [nuevoMensaje, setNuevoMensaje] = useState('');
+  const [enviando, setEnviando] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const { alDesplazar, alEnfocar, rellenoInferior } = useCampoVisibleConTeclado(scrollViewRef);
 
   useEffect(() => {
-    if (!mesaId && usuario) {
-      // Auto-resolve if missing (e.g. from push notification routing)
-      import('../../services/mesas').then(({ obtenerMesaAsignada }) => {
-        obtenerMesaAsignada(usuario.id).then((mesa) => {
-          if (mesa) {
-            setMesaId(mesa.id);
-            setNumero(mesa.numero.toString());
+    if (mesaId && numero) return;
+
+    if (!mesaId) {
+      if (usuario?.id) {
+        import('../../services/mesas').then(({ obtenerMesaAsignada }) => {
+          obtenerMesaAsignada(usuario.id).then((mesa) => {
+            if (mesa) {
+              setMesaId(mesa.id);
+              setNumero(mesa.numero.toString());
+            }
+          });
+        });
+      } else {
+        (async () => {
+          const identificador = clienteAnonimoIdParam || await AsyncStorage.getItem('cliente_anonimo_id');
+          if (identificador) {
+            const { obtenerClienteEnListaPorId } = await import('../../../lib/clientesAnonimos');
+            const cliente = await obtenerClienteEnListaPorId(identificador);
+            if (cliente?.mesa_id) {
+              setMesaId(cliente.mesa_id);
+              const { obtenerMesas } = await import('../../services/mesas');
+              const mesas = await obtenerMesas();
+              const m = mesas.find((x) => x.id === cliente.mesa_id);
+              if (m) setNumero(m.numero.toString());
+            }
           }
+        })();
+      }
+    } else if (mesaId && !numero) {
+      import('../../services/mesas').then(({ obtenerMesas }) => {
+        obtenerMesas().then((mesas) => {
+          const m = mesas.find((x) => x.id === mesaId);
+          if (m) setNumero(m.numero.toString());
         });
       });
     }
-  }, [mesaId, usuario]);
+  }, [mesaId, numero, usuario?.id, clienteAnonimoIdParam]);
 
   useEffect(() => {
     if (!mesaId) return;
@@ -49,17 +80,17 @@ export default function ChatCliente() {
         console.error(error);
       }
     };
-    cargarMensajes();
+    void cargarMensajes();
 
     const desuscribir = suscribirMensajes(mesaId, (nuevoMsg) => {
-      setMensajes(prev => [...prev, nuevoMsg]);
+      setMensajes((prev) => [...prev, nuevoMsg]);
     });
 
     return desuscribir;
   }, [mesaId]);
 
   const handleEnviar = async () => {
-    if (!nuevoMensaje.trim() || !usuario?.id) return;
+    if (!nuevoMensaje.trim() || enviando) return;
     if (!mesaId) {
       mostrarAviso('No hay una mesa asignada', 'No podés enviar mensajes porque todavía no estás asignado a una mesa.');
       return;
@@ -67,11 +98,16 @@ export default function ChatCliente() {
 
     const texto = nuevoMensaje.trim();
     setNuevoMensaje(''); 
+    setEnviando(true);
     
     try {
-      await enviarMensaje(mesaId, usuario.id, texto, false);
-    } catch {
+      await enviarMensaje(mesaId, usuario?.id || null, texto, false);
+    } catch (err) {
+      console.error('Error al enviar mensaje:', err);
       mostrarAviso('No se pudo enviar el mensaje', 'Revisá la conexión e intentá nuevamente.');
+      setNuevoMensaje(texto);
+    } finally {
+      setEnviando(false);
     }
   };
 
@@ -91,7 +127,7 @@ export default function ChatCliente() {
       className="flex-1"
       resizeMode="cover"
     >
-      <Header userName="Cliente" role={numero ? `Mesa ${numero}` : "Chat con Mozo"} />
+      <Header userName={usuario ? "Cliente" : "Invitado"} role={numero ? `Mesa ${numero}` : "Chat con Mozo"} />
 
       <View className="flex-row items-center px-4 py-2 bg-transparent">
         <TouchableOpacity
@@ -118,7 +154,7 @@ export default function ChatCliente() {
           scrollEventThrottle={16}
           contentContainerStyle={{ paddingBottom: rellenoInferior }}
         >
-          {mensajes.map(msg => {
+          {mensajes.map((msg) => {
             const isMe = !msg.es_mozo;
             return (
               <View 
@@ -153,8 +189,9 @@ export default function ChatCliente() {
             onSubmitEditing={handleEnviar}
           />
           <TouchableOpacity
-            className="w-12 h-12 bg-chido-botonPrincipal border-2 border-white/70 rounded-full items-center justify-center"
+            className={`w-12 h-12 bg-chido-botonPrincipal border-2 border-white/70 rounded-full items-center justify-center ${enviando || !nuevoMensaje.trim() ? 'opacity-50' : ''}`}
             onPress={handleEnviar}
+            disabled={enviando || !nuevoMensaje.trim()}
           >
             <Ionicons name="send" size={20} color={colores.textoSobreOscuro} />
           </TouchableOpacity>

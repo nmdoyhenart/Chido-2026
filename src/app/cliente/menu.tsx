@@ -220,7 +220,7 @@ export default function MenuCliente() {
           onPress={() => router.push({ pathname: '/cliente/chat', params: { mesaId, numero: mesaNumero, ...(clienteAnonimoId ? { clienteAnonimoId } : {}) } })}
         >
           <Ionicons name="chatbubbles-outline" size={20} color={colores.textoSobreOscuro} />
-          <Text className="text-chido-texto-sobre-oscuro font-bold ml-2">Consultar al mozo</Text>
+          <Text className="text-chido-texto-sobre-oscuro font-bold ml-2">Chat mozo</Text>
         </TouchableOpacity>
       </View>
 

@@ -1,5 +1,4 @@
 import { useCallback, useState } from 'react';
-import { Vibration } from 'react-native';
 import { ResultadoModal } from '../components/ui/ResultadoModal';
 
 type AvisoResultado = {
@@ -12,7 +11,6 @@ export function useAvisoResultado() {
   const [aviso, setAviso] = useState<AvisoResultado | null>(null);
 
   const mostrarAviso = useCallback((titulo: string, mensaje: string, tipo: AvisoResultado['tipo'] = 'error') => {
-    if (tipo === 'error') Vibration.vibrate(180);
     setAviso({ titulo, mensaje, tipo });
   }, []);
 

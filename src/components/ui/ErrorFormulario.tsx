@@ -1,7 +1,13 @@
+import { useEffect } from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { colores } from '../../theme/colores';
+import { vibrarError } from '../../utils/errorVibration';
 
 export default function ErrorFormulario({ mensaje }: { mensaje: string }) {
+  useEffect(() => {
+    if (mensaje) vibrarError();
+  }, [mensaje]);
+
   return <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={styles.mensaje}>{mensaje}</Text>;
 }
 

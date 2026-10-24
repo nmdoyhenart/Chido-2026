@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Feather } from '@expo/vector-icons';
 import {
   AppState, FlatList, Modal, ScrollView, StyleSheet, Text,
-  TouchableOpacity, Vibration, View,
+  TouchableOpacity, View,
 } from 'react-native';
 import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,6 +15,7 @@ import { SolicitudClienteCard, ConfirmacionCliente } from './SolicitudClienteCar
 
 import { clientesDemostracion } from '../../data/demostracion';
 import { useRestriccionSimulacion } from '../ui/RestriccionSimulacion';
+import { useVibrarError } from '../../hooks/useVibrarError';
 
 type Decision = { cliente: ClientePendiente; estado: 'aceptado' | 'rechazado' };
 
@@ -30,6 +31,7 @@ export default function SolicitudesClientes() {
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
+  useVibrarError(error);
   const [decision, setDecision] = useState<Decision | null>(null);
   const activa = useRef(false);
   const ocupado = useRef(false);
@@ -77,7 +79,6 @@ export default function SolicitudesClientes() {
     } catch (fallo) {
       if (activa.current && revision.current === actual) {
         setError(fallo instanceof Error ? fallo.message : 'No se pudieron cargar las solicitudes.');
-        if (!silenciosa) Vibration.vibrate(180);
       }
     } finally {
       consultas.current--;
@@ -135,7 +136,6 @@ export default function SolicitudesClientes() {
         : 'Solicitud rechazada. El cliente no podrá ingresar.');
     } catch (fallo) {
       falloDecision = fallo instanceof Error ? fallo.message : 'No se pudo confirmar la decisión. Actualizá la lista.';
-      Vibration.vibrate(180);
     } finally {
       if (activa.current) {
         await cargar(pagina);

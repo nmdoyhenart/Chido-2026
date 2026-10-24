@@ -11,6 +11,7 @@ import { useAppSession } from '../../contexts/AppSessionContext';
 import { useRestriccionSimulacion } from '../../components/ui/RestriccionSimulacion';
 import { useCampoVisibleConTeclado } from '../../hooks/useCampoVisibleConTeclado';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useVibrarError } from '../../hooks/useVibrarError';
 
 type CampoProps = TextInputProps & {
     label: string;
@@ -55,6 +56,7 @@ export default function AltaPlato() {
     const [tipo] = useState<TipoProducto>('plato');
     const [cargando, setCargando] = useState(false);
     const [error, setError] = useState('');
+    useVibrarError(error);
     const [fotos, setFotos] = useState<(string| null)[]>([null,null,null])
     const router = useRouter();
     const [selectorVisible, setSelectorVisible] = useState(false);

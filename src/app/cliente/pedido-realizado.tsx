@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, Text, Vibration, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '../../components/Header';
 import ChidoLoader from '../../components/ui/ChidoLoader';
@@ -97,7 +97,6 @@ export default function PedidoRealizado() {
       await confirmarRecepcionPedido(pedidoId, clienteAnonimoId);
       setEstadoPedido('recibido');
     } catch (error) {
-      Vibration.vibrate(180);
       setAviso(error instanceof Error ? error.message : 'No se pudo confirmar la recepción del pedido.');
     } finally {
       setConfirmandoRecepcion(false);

@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppSession } from '../contexts/AppSessionContext';
 import { colores } from '../theme/colores';
+import { useVibrarError } from '../hooks/useVibrarError';
 
 interface HeaderProps {
   userName: string;
@@ -17,6 +18,7 @@ export function Header({ userName, role }: HeaderProps) {
 
     const [saliendo, setSaliendo] = useState(false);
     const [error, setError] = useState('');
+    useVibrarError(error);
     const handleLogout = async () => {
         if (saliendo) return;
         setSaliendo(true);

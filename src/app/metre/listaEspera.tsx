@@ -10,6 +10,7 @@ import { obtenerListaEspera, suscribirseALista, eliminarDeLista, asignarMesaACli
 import { useMesas } from '../../hooks/useMesas';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { useAvisoResultado } from '../../hooks/useAvisoResultado';
+import { useVibrarError } from '../../hooks/useVibrarError';
 
 const CLIENTES_POR_PAGINA = 4;
 
@@ -27,6 +28,7 @@ export default function ListaEsperaMetre() {
     const [lista, setLista] = useState<ClienteEnEspera[]>([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState('');
+    useVibrarError(error);
     const [eliminando, setEliminando] = useState<string | null>(null);
     const [asignando, setAsignando] = useState<string | null>(null);
     const [clienteParaAsignar, setClienteParaAsignar] = useState<ClienteEnEspera | null>(null);

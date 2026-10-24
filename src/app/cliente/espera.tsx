@@ -7,6 +7,7 @@ import { Header } from '../../components/Header';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { obtenerEstadoListaEsperaCliente, type EstadoListaEsperaCliente } from '../../services/mesas';
 import { colores } from '../../theme/colores';
+import { useVibrarError } from '../../hooks/useVibrarError';
 
 export default function EsperaClienteRegistrado() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function EsperaClienteRegistrado() {
   const { usuario } = useAppSession();
   const [estado, setEstado] = useState<EstadoListaEsperaCliente | null>(null);
   const [error, setError] = useState('');
+  useVibrarError(error);
 
   useEffect(() => {
     let activo = true;

@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colores } from '../../theme/colores';
 import { obtenerClienteEnListaPorId, suscribirseAMiEstado } from '../../../lib/clientesAnonimos';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useVibrarError } from '../../hooks/useVibrarError';
 
 const CLIENTE_ANONIMO_ID_KEY = 'cliente_anonimo_id';
 const CLIENTE_ANONIMO_NOMBRE_KEY = 'cliente_anonimo_nombre';
@@ -18,13 +19,15 @@ export default function EsperaClienteAnonimo() {
     const [mesaAsignada, setMesaAsignada] = useState<string | null>(null);
     const [saliendo, setSaliendo] = useState(false);
     const [error, setError] = useState('');
+    useVibrarError(error);
 
     useEffect(() => {
+        let cancelado = false;
         let desuscribirse: (() => void) | undefined;
 
         (async () => {
             const identificador = await AsyncStorage.getItem(CLIENTE_ANONIMO_ID_KEY);
-            if (!identificador) return;
+            if (!identificador || cancelado) return;
 
             try {
                 const filaActual = await obtenerClienteEnListaPorId(identificador);
@@ -37,6 +40,8 @@ export default function EsperaClienteAnonimo() {
                 console.error('Error al chequear el estado inicial:', err);
             }
 
+            // La pantalla pudo desmontarse mientras se esperaba la consulta.
+            if (cancelado) return;
             desuscribirse = suscribirseAMiEstado(identificador, (fila) => {
                 if (fila.estado === 'eliminado') {
                     setFueEliminado(true);
@@ -47,6 +52,7 @@ export default function EsperaClienteAnonimo() {
         })();
 
         return () => {
+            cancelado = true;
             if (desuscribirse) desuscribirse();
         };
     }, []);

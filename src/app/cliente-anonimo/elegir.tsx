@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { colores } from '../../theme/colores';
 import { anotarseEnListaDeEspera, obtenerClienteEnListaPorId} from '../../../lib/clientesAnonimos';
+import { useVibrarError } from '../../hooks/useVibrarError';
 
 const CLIENTE_ANONIMO_ID_KEY = 'cliente_anonimo_id';
 const CLIENTE_ANONIMO_NOMBRE_KEY = 'cliente_anonimo_nombre';
@@ -14,6 +15,7 @@ const CLIENTE_ANONIMO_FOTO_KEY = 'cliente_anonimo_foto_url';
 export default function ElegirOpcion() {
     const [anotando, setAnotando] = useState(false);
     const [error, setError] = useState('');
+    useVibrarError(error);
     const insets = useSafeAreaInsets();
 
     const anotarme = async () => {

@@ -8,6 +8,8 @@ import type { DatosNotificacionPush } from '../types/notificaciones';
 const CANAL_ANDROID = 'chido-avisos';
 let registroEnCurso: Promise<boolean> | null = null;
 let moduloNotificaciones: typeof import('expo-notifications') | null | undefined;
+// A nivel de módulo para que sobreviva si el listener se vuelve a montar.
+let ultimoIdProcesado: string | null = null;
 
 function obtenerModuloNotificaciones() {
   if (moduloNotificaciones) return moduloNotificaciones;
@@ -142,7 +144,6 @@ export async function desvincularDispositivoPush() {
 export function escucharRespuestasPush(onDatos: (datos: DatosNotificacionPush) => void) {
   const notifications = obtenerModuloNotificaciones();
   if (!notifications) return () => undefined;
-  let ultimoIdProcesado: string | null = null;
   const procesar = (respuesta: unknown) => {
     const res = respuesta as { notification?: { request?: { identifier?: string; content?: { data?: unknown } } } } | null;
     const identifier = res?.notification?.request?.identifier;
@@ -153,6 +154,8 @@ export function escucharRespuestasPush(onDatos: (datos: DatosNotificacionPush) =
       if (ultimoIdProcesado === identifier) return;
       ultimoIdProcesado = identifier;
     }
+    // Sin esto, getLastNotificationResponseAsync devuelve la misma notificación en cada montaje.
+    notifications.clearLastNotificationResponse();
     onDatos(data as DatosNotificacionPush);
   };
   const suscripcionRespuesta = notifications.addNotificationResponseReceivedListener((respuesta) => {

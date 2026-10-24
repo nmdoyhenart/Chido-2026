@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, Text, Vibration, View } from 'react-native';
-import { router, usePathname } from 'expo-router';
+import { router } from 'expo-router';
 import type { Href } from 'expo-router';
 
 import { useAppSession } from '../../contexts/AppSessionContext';
@@ -19,7 +19,6 @@ import ChidoLoader from '../ui/ChidoLoader';
 const claveExplicacion = (usuarioId: string) => `chido:push:explicacion:v1:${usuarioId}`;
 
 export default function PushNotificationsBootstrap() {
-  const pathname = usePathname();
   const { mode, usuario, cargando } = useAppSession();
   const [mostrar, setMostrar] = useState(false);
   const [ocupado, setOcupado] = useState(false);
@@ -38,7 +37,7 @@ export default function PushNotificationsBootstrap() {
       }
     });
     return detener;
-  }, [pathname]);
+  }, []);
 
   // Escuchar eventos en tiempo real para disparar la notificación en el dispositivo
   useEffect(() => {

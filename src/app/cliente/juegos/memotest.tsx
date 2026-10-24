@@ -26,8 +26,9 @@ function obtenerImagenCarta(carta: CartaMemotest | null) {
 
 export default function Memotest() {
   const router = useRouter();
-  const { pedidoId } = useLocalSearchParams<{ pedidoId: string }>();
-  const { nombreCliente } = useNombreCliente();
+  const { pedidoId, recreativo: recreativoParam, clienteAnonimoId } = useLocalSearchParams<{ pedidoId: string; recreativo?: string; clienteAnonimoId?: string }>();
+  const recreativoInicial = recreativoParam === 'true';
+  const { nombreCliente } = useNombreCliente(clienteAnonimoId);
   const { width } = useWindowDimensions();
   const { alMedir, compacto } = useAltoDisponible();
   const [juego, setJuego] = useState<EstadoMemotest | null>(null);

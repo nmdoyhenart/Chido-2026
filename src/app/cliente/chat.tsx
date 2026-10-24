@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCampoVisibleConTeclado } from '../../hooks/useCampoVisibleConTeclado';
 import { useAvisoResultado } from '../../hooks/useAvisoResultado';
 import { useNombreCliente } from '../../hooks/useNombreCliente';
+import { EstadoVacio } from '../../components/ui/EstadoVacio';
 
 export default function ChatCliente() {
   const router = useRouter();

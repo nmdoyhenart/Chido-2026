@@ -142,15 +142,27 @@ export async function desvincularDispositivoPush() {
 export function escucharRespuestasPush(onDatos: (datos: DatosNotificacionPush) => void) {
   const notifications = obtenerModuloNotificaciones();
   if (!notifications) return () => undefined;
-  const procesar = (datos: unknown) => onDatos(datos as DatosNotificacionPush);
+  let ultimoIdProcesado: string | null = null;
+  const procesar = (respuesta: unknown) => {
+    const res = respuesta as { notification?: { request?: { identifier?: string; content?: { data?: unknown } } } } | null;
+    const identifier = res?.notification?.request?.identifier;
+    const data = res?.notification?.request?.content?.data;
+    if (!data) return;
+
+    if (identifier) {
+      if (ultimoIdProcesado === identifier) return;
+      ultimoIdProcesado = identifier;
+    }
+    onDatos(data as DatosNotificacionPush);
+  };
   const suscripcionRespuesta = notifications.addNotificationResponseReceivedListener((respuesta) => {
-    procesar(respuesta.notification.request.content.data);
+    procesar(respuesta);
   });
   const suscripcionToken = notifications.addPushTokenListener(() => {
     void registrarDispositivoPush().catch(() => undefined);
   });
   void notifications.getLastNotificationResponseAsync().then((respuesta) => {
-    if (respuesta) procesar(respuesta.notification.request.content.data);
+    if (respuesta) procesar(respuesta);
   }).catch(() => undefined);
   return () => {
     suscripcionRespuesta.remove();

@@ -14,6 +14,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Crypto from 'expo-crypto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAvisoResultado } from '../../hooks/useAvisoResultado';
+import { useNombreCliente } from '../../hooks/useNombreCliente';
+import { formatearRolMesa } from '../../utils/formatoMesa';
 
 const { width } = Dimensions.get('window');
 const ITEM_HEIGHT = 440;
@@ -27,10 +29,12 @@ export default function MenuCliente() {
   const { mostrarAviso, modalAviso } = useAvisoResultado();
   const [mesaId, setMesaId] = useState(mesaIdParametro ?? '');
   const [clienteAnonimoId, setClienteAnonimoId] = useState(usuario?.id ? '' : (clienteAnonimoIdParametro ?? ''));
+  const { nombreCliente } = useNombreCliente(clienteAnonimoId);
 
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
   const [mesaNumero, setMesaNumero] = useState<number | null>(null);
+  const [mesaTipo, setMesaTipo] = useState<string | null>(null);
   
   const [pedido, setPedido] = useState<Record<string, number>>({});
   const [cargandoPedido, setCargandoPedido] = useState(!!pedidoId);
@@ -64,8 +68,11 @@ export default function MenuCliente() {
     const cargaInicial = setTimeout(() => { void cargarProductos(); }, 0);
     let activo = true;
     const mostrarNumeroMesa = async (id: string) => {
-      const { data } = await supabase.from('mesas').select('numero').eq('id', id).single();
-      if (activo && data) setMesaNumero(data.numero);
+      const { data } = await supabase.from('mesas').select('numero, tipo').eq('id', id).single();
+      if (activo && data) {
+        setMesaNumero(data.numero);
+        setMesaTipo(data.tipo);
+      }
     };
     if (!usuario?.id) {
       void AsyncStorage.getItem('cliente_anonimo_id').then(id => {
@@ -182,7 +189,7 @@ export default function MenuCliente() {
 
   return (
     <View className="flex-1 bg-chido-fondo">
-      <Header userName="Cliente" role={mesaNumero ? `Mesa ${mesaNumero}` : "Mesa"} />
+      <Header userName={nombreCliente} role={formatearRolMesa(mesaNumero, mesaTipo, 'Mesa')} />
       {!!errorCargaPedido && <Text className="bg-chido-error p-3 text-center text-chido-texto-sobre-oscuro">{errorCargaPedido}</Text>}
       
       <View className="flex-row items-center p-4 bg-chido-acento">

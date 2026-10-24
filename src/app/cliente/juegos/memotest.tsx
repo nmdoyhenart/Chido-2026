@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Image, Pressable, Text, useWindowDimensions, Vibration, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '../../../components/Header';
+import { useNombreCliente } from '../../../hooks/useNombreCliente';
 import ChidoLoader from '../../../components/ui/ChidoLoader';
 import { useAltoDisponible } from '../../../hooks/useAltoDisponible';
 import { iniciarMemotest, voltearMemotest } from '../../../services/juegos';
@@ -26,6 +27,7 @@ function obtenerImagenCarta(carta: CartaMemotest | null) {
 export default function Memotest() {
   const router = useRouter();
   const { pedidoId } = useLocalSearchParams<{ pedidoId: string }>();
+  const { nombreCliente } = useNombreCliente();
   const { width } = useWindowDimensions();
   const { alMedir, compacto } = useAltoDisponible();
   const [juego, setJuego] = useState<EstadoMemotest | null>(null);
@@ -140,7 +142,7 @@ export default function Memotest() {
   if (terminado) {
     return (
       <SafeAreaView className="flex-1 bg-chido-fondo" edges={['left', 'right', 'bottom']}>
-        <Header userName="Cliente" role="Memotest" />
+        <Header userName={nombreCliente} role="Memotest" />
         <View className="flex-1" onLayout={alMedir} style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16 }}>
           <Pressable onPress={() => router.back()} accessibilityRole="button" className="min-h-12 self-start flex-row items-center rounded-xl bg-chido-acento px-4">
             <Ionicons name="arrow-back" size={22} color={colores.textoSobreOscuro} />
@@ -167,7 +169,7 @@ export default function Memotest() {
 
   return (
     <SafeAreaView className="flex-1 bg-chido-fondo" edges={['left', 'right', 'bottom']}>
-      <Header userName="Cliente" role="Memotest" />
+      <Header userName={nombreCliente} role="Memotest" />
       <View className="flex-1" onLayout={alMedir} style={{ paddingHorizontal: 20, paddingTop: compacto ? 12 : 16, paddingBottom: 16 }}>
         <Pressable onPress={() => router.back()} accessibilityRole="button" className="min-h-12 self-start flex-row items-center rounded-xl bg-chido-acento px-4">
           <Ionicons name="arrow-back" size={22} color={colores.textoSobreOscuro} />

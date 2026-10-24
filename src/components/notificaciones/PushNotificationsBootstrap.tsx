@@ -28,22 +28,32 @@ export default function PushNotificationsBootstrap() {
   useEffect(() => {
     const detener = escucharRespuestasPush((datos) => {
       const ruta = obtenerRutaNotificacion(datos);
-      if (ruta) router.push(ruta as Href);
+      if (ruta) {
+        try {
+          router.navigate(ruta as Href);
+        } catch {
+          router.push(ruta as Href);
+        }
+      }
     });
     return detener;
   }, []);
 
   // Escuchar eventos en tiempo real para disparar la notificación en el dispositivo
   useEffect(() => {
-    if (!autenticado || !usuario) return;
+    const esAutenticado = autenticado && !!usuario;
+    const esInvitado = mode === 'guest';
+    if (!esAutenticado && !esInvitado) return;
 
-    const canalNombre = `push_realtime_${usuario.id}_${Date.now()}`;
+    const identificadorCanal = usuario?.id || 'invitado';
+    const canalNombre = `push_realtime_${identificadorCanal}_${Date.now()}`;
     const canal = supabase
       .channel(canalNombre)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'pedidos' },
         async (payload) => {
+          if (!usuario) return;
           const nuevo = payload.new as any;
           const viejo = payload.old as any;
           if (!nuevo) return;
@@ -80,6 +90,7 @@ export default function PushNotificationsBootstrap() {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'mesas' },
         async (payload) => {
+          if (!usuario) return;
           const nuevaMesa = payload.new as any;
           const viejaMesa = payload.old as any;
           if (
@@ -95,12 +106,91 @@ export default function PushNotificationsBootstrap() {
           }
         }
       )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'chat_mensajes' },
+        async (payload) => {
+          const nuevo = payload.new as any;
+          if (!nuevo) return;
+
+          // Caso 1: Mensaje del cliente hacia el mozo
+          if (!nuevo.es_mozo && usuario?.perfil === 'mozo') {
+            try {
+              const { data: mesa } = await supabase
+                .from('mesas')
+                .select('numero')
+                .eq('id', nuevo.mesa_id)
+                .maybeSingle();
+
+              const numeroMesa = mesa?.numero != null ? String(mesa.numero) : '';
+              const titulo = numeroMesa ? `Mensaje de la Mesa ${numeroMesa}` : 'Nuevo mensaje de cliente';
+              const ruta = numeroMesa
+                ? `/mozo/chat-mesa?mesaId=${nuevo.mesa_id}&numero=${numeroMesa}`
+                : `/mozo/chat-mesa?mesaId=${nuevo.mesa_id}`;
+
+              await dispararNotificacionLocal(titulo, nuevo.texto || 'Tienes un nuevo mensaje.', {
+                ruta,
+                mesaId: nuevo.mesa_id,
+                numero: numeroMesa,
+                evento: 'chat_mozo',
+              });
+            } catch (err) {
+              console.log('Error al notificar mensaje de chat al mozo:', err);
+            }
+          }
+
+          // Caso 2: Mensaje del mozo hacia el cliente registrado
+          if (nuevo.es_mozo && usuario?.perfil === 'cliente registrado') {
+            try {
+              const { data: mesa } = await supabase
+                .from('mesas')
+                .select('id')
+                .eq('id', nuevo.mesa_id)
+                .eq('cliente_id', usuario.id)
+                .maybeSingle();
+
+              if (mesa) {
+                await dispararNotificacionLocal('Nuevo mensaje del mozo', nuevo.texto || 'Tienes un mensaje del mozo.', {
+                  ruta: '/cliente/chat',
+                  evento: 'chat_cliente',
+                });
+              }
+            } catch (err) {
+              console.log('Error al notificar mensaje de chat al cliente:', err);
+            }
+          }
+
+          // Caso 3: Mensaje del mozo hacia el cliente anónimo
+          if (nuevo.es_mozo && mode === 'guest') {
+            try {
+              const anonimoId = await AsyncStorage.getItem('cliente_anonimo_id');
+              if (anonimoId) {
+                const { data: espera } = await supabase
+                  .from('lista_espera')
+                  .select('mesa_id')
+                  .eq('identificador', anonimoId)
+                  .in('estado', ['esperando', 'asignado'])
+                  .maybeSingle();
+
+                if (espera?.mesa_id === nuevo.mesa_id) {
+                  await dispararNotificacionLocal('Nuevo mensaje del mozo', nuevo.texto || 'Tienes un mensaje del mozo.', {
+                    ruta: '/cliente/chat',
+                    evento: 'chat_cliente',
+                  });
+                }
+              }
+            } catch (err) {
+              console.log('Error al notificar mensaje de chat al cliente anónimo:', err);
+            }
+          }
+        }
+      )
       .subscribe();
 
     return () => {
       void supabase.removeChannel(canal);
     };
-  }, [autenticado, usuario]);
+  }, [autenticado, usuario, mode]);
 
   useEffect(() => {
     if (!autenticado || !usuario) {

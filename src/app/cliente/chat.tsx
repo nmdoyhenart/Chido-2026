@@ -10,17 +10,19 @@ import { colores } from '../../theme/colores';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCampoVisibleConTeclado } from '../../hooks/useCampoVisibleConTeclado';
 import { useAvisoResultado } from '../../hooks/useAvisoResultado';
+import { useNombreCliente } from '../../hooks/useNombreCliente';
 
 export default function ChatCliente() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ mesaId?: string; numero?: string; clienteAnonimoId?: string }>();
-  const mesaIdParam = params.mesaId;
-  const numeroParam = params.numero;
-  const clienteAnonimoIdParam = params.clienteAnonimoId;
+  const params = useLocalSearchParams<{ mesaId?: string | string[]; numero?: string | string[]; clienteAnonimoId?: string | string[] }>();
+  const mesaIdParam = Array.isArray(params.mesaId) ? params.mesaId[0] : params.mesaId;
+  const numeroParam = Array.isArray(params.numero) ? params.numero[0] : params.numero;
+  const clienteAnonimoIdParam = Array.isArray(params.clienteAnonimoId) ? params.clienteAnonimoId[0] : params.clienteAnonimoId;
 
   const { usuario } = useAppSession();
   const { mostrarAviso, modalAviso } = useAvisoResultado();
+  const { nombreCliente } = useNombreCliente(clienteAnonimoIdParam);
 
   const [mesaId, setMesaId] = useState<string | null>(mesaIdParam || null);
   const [numero, setNumero] = useState<string | null>(numeroParam || null);
@@ -29,6 +31,15 @@ export default function ChatCliente() {
   const [enviando, setEnviando] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const { alDesplazar, alEnfocar, rellenoInferior } = useCampoVisibleConTeclado(scrollViewRef);
+
+  useEffect(() => {
+    if (mesaIdParam && mesaIdParam !== mesaId) {
+      setMesaId(mesaIdParam);
+    }
+    if (numeroParam && numeroParam !== numero) {
+      setNumero(numeroParam);
+    }
+  }, [mesaIdParam, numeroParam]);
 
   useEffect(() => {
     if (mesaId && numero) return;
@@ -72,10 +83,13 @@ export default function ChatCliente() {
   useEffect(() => {
     if (!mesaId) return;
 
+    let cancelado = false;
     const cargarMensajes = async () => {
       try {
         const data = await getMensajes(mesaId);
-        setMensajes(data);
+        if (!cancelado) {
+          setMensajes(data);
+        }
       } catch (error) {
         console.error(error);
       }
@@ -83,10 +97,13 @@ export default function ChatCliente() {
     void cargarMensajes();
 
     const desuscribir = suscribirMensajes(mesaId, (nuevoMsg) => {
-      setMensajes((prev) => [...prev, nuevoMsg]);
+      setMensajes((prev) => (prev.some((m) => m.id === nuevoMsg.id) ? prev : [...prev, nuevoMsg]));
     });
 
-    return desuscribir;
+    return () => {
+      cancelado = true;
+      desuscribir();
+    };
   }, [mesaId]);
 
   const handleEnviar = async () => {
@@ -127,12 +144,18 @@ export default function ChatCliente() {
       className="flex-1"
       resizeMode="cover"
     >
-      <Header userName={usuario ? "Cliente" : "Invitado"} role={numero ? `Mesa ${numero}` : "Chat con Mozo"} />
+      <Header userName={nombreCliente} role={numero ? `Mesa ${numero}` : "Chat con Mozo"} />
 
       <View className="flex-row items-center px-4 py-2 bg-transparent">
         <TouchableOpacity
           className="flex-row items-center bg-chido-acento border-2 border-white/70 px-3 py-1 rounded-full mr-4"
-          onPress={() => router.back()}
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace(usuario ? '/cliente/home' : '/cliente-anonimo/espera');
+            }
+          }}
         >
           <Ionicons name="arrow-back" size={20} color={colores.textoSobreOscuro} />
           <Text className="text-chido-texto-sobre-oscuro font-bold ml-1">Volver</Text>

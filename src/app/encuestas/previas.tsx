@@ -6,12 +6,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colores } from '../../theme/colores';
 import { obtenerResultadosEncuestas, resumirEncuestas, ResultadoEncuesta } from '../../../lib/encuestas';
 import { Header } from '../../components/Header';
+import { useNombreCliente } from '../../hooks/useNombreCliente';
 
 type NombreIcono = ComponentProps<typeof Ionicons>['name'];
 
 export default function EncuestasPrevias() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { nombreCliente } = useNombreCliente();
   const [resultados, setResultados] = useState<ResultadoEncuesta[]>([]);
   const [cargando, setCargando] = useState(true);
 
@@ -39,7 +41,7 @@ export default function EncuestasPrevias() {
   return (
     <View className="flex-1 bg-chido-fondo">
       <Stack.Screen options={{ headerShown: false }} />
-      <Header userName="Cliente" role="Estadísticas" />
+      <Header userName={nombreCliente} role="Estadísticas" />
 
       <View
         className="flex-1"

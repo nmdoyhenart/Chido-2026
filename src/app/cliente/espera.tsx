@@ -8,11 +8,13 @@ import { useAppSession } from '../../contexts/AppSessionContext';
 import { obtenerEstadoListaEsperaCliente, type EstadoListaEsperaCliente } from '../../services/mesas';
 import { colores } from '../../theme/colores';
 import { useVibrarError } from '../../hooks/useVibrarError';
+import { useNombreCliente } from '../../hooks/useNombreCliente';
 
 export default function EsperaClienteRegistrado() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { usuario } = useAppSession();
+  const { nombreCliente } = useNombreCliente();
   const [estado, setEstado] = useState<EstadoListaEsperaCliente | null>(null);
   const [error, setError] = useState('');
   useVibrarError(error);
@@ -36,7 +38,7 @@ export default function EsperaClienteRegistrado() {
 
   return <View className="flex-1 bg-chido-fondo">
     <Stack.Screen options={{ headerShown: false }} />
-    <Header userName={[usuario?.nombres, usuario?.apellidos].filter(Boolean).join(' ') || 'Cliente'} role="Lista de espera" />
+    <Header userName={nombreCliente} role="Lista de espera" />
     <View
       className="flex-1"
       style={{ justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 16, paddingBottom: Math.max(insets.bottom, 16) }}

@@ -8,6 +8,7 @@ import ChidoLoader from '../../components/ui/ChidoLoader';
 import { QRScanner } from '../../components/ui/QRScanner';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { useAltoDisponible } from '../../hooks/useAltoDisponible';
+import { useNombreCliente } from '../../hooks/useNombreCliente';
 import { obtenerPedidoParaJuegos } from '../../services/juegos';
 import { obtenerPedidoActivoCliente } from '../../services/pedidos.service';
 import { confirmarMesaPorQr, consultarDisponibilidadMesaPorQr, solicitarMesa } from '../../services/mesas';
@@ -16,8 +17,9 @@ import { colores } from '../../theme/colores';
 export default function HomeCliente() {
   const router = useRouter();
   const { usuario } = useAppSession();
+  const { nombreCliente } = useNombreCliente();
   const clienteId = usuario?.id;
-  const primerNombre = usuario?.nombres.trim().split(/\s+/)[0] || 'Cliente';
+  const primerNombre = usuario?.nombres?.trim().split(/\s+/)[0] || nombreCliente.trim().split(/\s+/)[0] || 'Cliente';
   const [scannerVisible, setScannerVisible] = useState(false);
   const [solicitandoMesa, setSolicitandoMesa] = useState(false);
   const [avisoMesa, setAvisoMesa] = useState<string | null>(null);
@@ -94,7 +96,7 @@ export default function HomeCliente() {
 
   return (
     <View className="flex-1 bg-chido-fondo">
-      <Header userName="Cliente" role="Bienvenido" />
+      <Header userName={nombreCliente} role="Bienvenido" />
       <View
         className="flex-1"
         onLayout={alMedir}

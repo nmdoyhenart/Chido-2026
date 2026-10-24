@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,19 +10,30 @@ import {
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Header } from '../../components/Header';
 import ChidoLoader from '../../components/ui/ChidoLoader';
 import { QRScanner } from '../../components/ui/QRScanner';
 import { ResultadoModal } from '../../components/ui/ResultadoModal';
 import { colores } from '../../theme/colores';
 import { useAltoDisponible } from '../../hooks/useAltoDisponible';
+import { useNombreCliente } from '../../hooks/useNombreCliente';
+import { useAppSession } from '../../contexts/AppSessionContext';
+import { formatearRolMesa } from '../../utils/formatoMesa';
+import { supabase } from '../../lib/supabase';
 import {
   obtenerCuentaPedido,
   registrarPropinaPorQr,
   informarPago,
+  verificarEstadoPago,
   CuentaCompleta,
   DetalleProductoCuenta,
 } from '../../services/cuenta.service';
+import {
+  getEstadoPedido,
+  getEstadoPedidoAnonimo,
+  suscribirEstadoPedido,
+} from '../../services/pedidos.service';
 
 const SATISFACCION_LABEL: Record<number, string> = {
   0: '0% · Sin propina',
@@ -35,20 +46,26 @@ const SATISFACCION_LABEL: Record<number, string> = {
 export default function PedirCuenta() {
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
+  const { usuario, cerrarSesion } = useAppSession();
 
   const params = useLocalSearchParams();
   const pedidoId = Array.isArray(params.pedidoId) ? params.pedidoId[0] : params.pedidoId;
   const rawClienteAnonimoId = Array.isArray(params.clienteAnonimoId) ? params.clienteAnonimoId[0] : params.clienteAnonimoId;
   const clienteAnonimoId = rawClienteAnonimoId || undefined;
 
+  const { nombreCliente } = useNombreCliente(clienteAnonimoId);
   const [cuenta, setCuenta] = useState<CuentaCompleta | null>(null);
+  const [mesaTipo, setMesaTipo] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
   const [scannerVisible, setScannerVisible] = useState(false);
   const [procesandoPago, setProcesandoPago] = useState(false);
   const [pagoInformado, setPagoInformado] = useState(false);
+  const [pagoConfirmadoVisible, setPagoConfirmadoVisible] = useState(false);
   const [aviso, setAviso] = useState<{ titulo: string; mensaje: string } | null>(null);
   const [detalleContainerWidth, setDetalleContainerWidth] = useState(0);
   const [paginaActual, setPaginaActual] = useState(0);
+  const confirmacionProcesadaRef = useRef(false);
+
   // En pantallas bajas se achican márgenes y textos para que detalle, resumen y botón no se pisen.
   const { alMedir, compacto } = useAltoDisponible();
   const filaResumen = `flex-row justify-between ${compacto ? 'py-0.5' : 'py-1.5'} items-center`;
@@ -71,8 +88,24 @@ export default function PedirCuenta() {
     try {
       const data = await obtenerCuentaPedido(pedidoId, clienteAnonimoId);
       setCuenta(data);
-      if (data.estado === 'pago_informado' || data.estado === 'pagado') {
+      if (data.mesaTipo) {
+        setMesaTipo(data.mesaTipo);
+      } else if (data.mesaId) {
+        try {
+          const { data: mData } = await supabase.from('mesas').select('tipo').eq('id', data.mesaId).maybeSingle();
+          if (mData?.tipo) setMesaTipo(mData.tipo);
+        } catch {
+          // ignore
+        }
+      }
+      if (data.estado === 'pago_informado') {
         setPagoInformado(true);
+      } else if (data.estado === 'pagado') {
+        setPagoInformado(true);
+        if (!confirmacionProcesadaRef.current) {
+          confirmacionProcesadaRef.current = true;
+          setPagoConfirmadoVisible(true);
+        }
       }
     } catch (error: any) {
       setAviso({ titulo: 'No pudimos cargar la cuenta', mensaje: error.message || 'Intentá nuevamente.' });
@@ -85,6 +118,54 @@ export default function PedirCuenta() {
     const inicio = setTimeout(() => { void cargarDatos(); }, 0);
     return () => clearTimeout(inicio);
   }, [cargarDatos]);
+
+  // Escucha activa y polling para detectar cuando el mozo confirma el pago
+  useEffect(() => {
+    if (!pedidoId || !pagoInformado) return;
+
+    let activo = true;
+
+    const chequearConfirmacion = async () => {
+      try {
+        const estadoActual = clienteAnonimoId
+          ? await getEstadoPedidoAnonimo(clienteAnonimoId, pedidoId)
+          : await getEstadoPedido(pedidoId);
+
+        if (activo && estadoActual === 'pagado' && !confirmacionProcesadaRef.current) {
+          confirmacionProcesadaRef.current = true;
+          setPagoConfirmadoVisible(true);
+        }
+      } catch {
+        try {
+          const estadoPago = await verificarEstadoPago(pedidoId, clienteAnonimoId);
+          if (activo && estadoPago === 'pagado' && !confirmacionProcesadaRef.current) {
+            confirmacionProcesadaRef.current = true;
+            setPagoConfirmadoVisible(true);
+          }
+        } catch {
+          // ignore
+        }
+      }
+    };
+
+    void chequearConfirmacion();
+    const intervalo = setInterval(() => { void chequearConfirmacion(); }, 2500);
+
+    const desuscribir = clienteAnonimoId
+      ? () => {}
+      : suscribirEstadoPedido(pedidoId, (nuevoEstado) => {
+          if (activo && nuevoEstado === 'pagado' && !confirmacionProcesadaRef.current) {
+            confirmacionProcesadaRef.current = true;
+            setPagoConfirmadoVisible(true);
+          }
+        });
+
+    return () => {
+      activo = false;
+      clearInterval(intervalo);
+      desuscribir();
+    };
+  }, [clienteAnonimoId, pagoInformado, pedidoId]);
 
   const handleEscaneoQr = async (data: string) => {
     if (!pedidoId) {
@@ -106,6 +187,26 @@ export default function PedirCuenta() {
       setAviso({ titulo: 'No pudimos informar el pago', mensaje: error.message || 'Intentá nuevamente.' });
     } finally {
       setProcesandoPago(false);
+    }
+  };
+
+  const handleConfirmacionPago = async () => {
+    setPagoConfirmadoVisible(false);
+    const esAnonimo = Boolean(clienteAnonimoId) || !usuario?.id;
+    if (esAnonimo) {
+      try {
+        await cerrarSesion();
+      } catch {
+        // ignore
+      }
+      await AsyncStorage.multiRemove([
+        'cliente_anonimo_id',
+        'cliente_anonimo_nombre',
+        'cliente_anonimo_foto_url',
+      ]).catch(() => undefined);
+      router.replace('/(auth)/login');
+    } else {
+      router.replace('/cliente/home');
     }
   };
 
@@ -140,8 +241,8 @@ export default function PedirCuenta() {
     <View className="flex-1 bg-chido-fondo">
       <Stack.Screen options={{ headerShown: false }} />
       <Header
-        userName="Cliente"
-        role={cuenta.mesaNumero ? `Cuenta · Mesa ${cuenta.mesaNumero}` : 'Tu Cuenta'}
+        userName={nombreCliente}
+        role={formatearRolMesa(cuenta.mesaNumero, mesaTipo || cuenta.mesaTipo, 'Tu Cuenta')}
       />
 
       {!tienePropina ? (
@@ -208,13 +309,13 @@ export default function PedirCuenta() {
           >
             <View className="flex-row items-center justify-between pb-2.5 mb-2.5 border-b border-white/20">
               <View className="flex-row items-center">
-                <Ionicons name="receipt-outline" size={22} color={colores.textoSobreOscuro} />
-                <Text className="text-xl font-black text-chido-texto-sobre-oscuro ml-2">
+                <Ionicons name="receipt-outline" size={24} color={colores.textoSobreOscuro} />
+                <Text className="text-2xl font-black text-chido-texto-sobre-oscuro ml-2">
                   Detalle del Pedido
                 </Text>
               </View>
               <View className="bg-white/15 px-3 py-1 rounded-full border border-white/30">
-                <Text className="text-xs font-extrabold text-chido-texto-sobre-oscuro">
+                <Text className="text-sm font-extrabold text-chido-texto-sobre-oscuro">
                   {cuenta.detalles.length} {cuenta.detalles.length === 1 ? 'producto' : 'productos'}
                   {detallesEnPares.length > 1 ? ` · ${paginaActual + 1}/${detallesEnPares.length}` : ''}
                 </Text>
@@ -260,24 +361,24 @@ export default function PedirCuenta() {
                             </View>
                           )}
                           <View className="bg-white/20 px-2.5 py-1 rounded-md">
-                            <Text className="text-chido-texto-sobre-oscuro font-black text-xs">
+                            <Text className="text-chido-texto-sobre-oscuro font-black text-sm">
                               x{item.cantidad}
                             </Text>
                           </View>
                         </View>
                         <Text
-                          className="text-chido-texto-sobre-oscuro font-black text-base leading-snug mb-1"
+                          className="text-chido-texto-sobre-oscuro font-black text-lg leading-snug mb-1"
                           numberOfLines={2}
                         >
                           {item.producto.nombre}
                         </Text>
-                        <Text className="text-chido-texto-secundario-sobre-oscuro font-bold text-xs">
+                        <Text className="text-chido-texto-secundario-sobre-oscuro font-bold text-sm">
                           ${item.precio_unitario.toLocaleString('es-AR')} c/u
                         </Text>
                       </View>
                       <View className="flex-row justify-between items-baseline pt-2 mt-2 border-t border-white/15">
-                        <Text className="text-chido-texto-secundario-sobre-oscuro text-xs font-bold">Subtotal</Text>
-                        <Text className="text-chido-texto-sobre-oscuro font-black text-base">
+                        <Text className="text-chido-texto-secundario-sobre-oscuro text-sm font-bold">Subtotal</Text>
+                        <Text className="text-chido-texto-sobre-oscuro font-black text-lg">
                           ${item.subtotal.toLocaleString('es-AR')}
                         </Text>
                       </View>
@@ -306,15 +407,15 @@ export default function PedirCuenta() {
           <View className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera flex-1 justify-between shadow-md ${compacto ? 'p-3 my-2' : 'p-4 my-3'}`}>
             <View>
               <View className="flex-row items-center justify-between pb-2.5 mb-2 border-b border-white/20">
-                <Text className="text-xl font-black text-chido-texto-sobre-oscuro">
+                <Text className="text-2xl font-black text-chido-texto-sobre-oscuro">
                   Resumen del Pago
                 </Text>
                 <TouchableOpacity
                   onPress={() => setScannerVisible(true)}
                   className="flex-row items-center bg-white/15 px-3 py-1.5 rounded-xl border border-white/30 active:opacity-80"
                 >
-                  <Ionicons name="qr-code-outline" size={15} color={colores.textoSobreOscuro} />
-                  <Text className="text-chido-texto-sobre-oscuro font-extrabold text-xs ml-1.5">
+                  <Ionicons name="qr-code-outline" size={16} color={colores.textoSobreOscuro} />
+                  <Text className="text-chido-texto-sobre-oscuro font-extrabold text-sm ml-1.5">
                     Cambiar propina
                   </Text>
                 </TouchableOpacity>
@@ -322,10 +423,10 @@ export default function PedirCuenta() {
 
               {/* Subtotal */}
               <View className={filaResumen}>
-                <Text className="text-chido-texto-secundario-sobre-oscuro font-bold text-base">
+                <Text className="text-chido-texto-secundario-sobre-oscuro font-bold text-lg">
                   Subtotal productos:
                 </Text>
-                <Text className="text-chido-texto-sobre-oscuro font-extrabold text-lg">
+                <Text className="text-chido-texto-sobre-oscuro font-extrabold text-xl">
                   ${cuenta.subtotal.toLocaleString('es-AR')}
                 </Text>
               </View>
@@ -334,24 +435,24 @@ export default function PedirCuenta() {
               {cuenta.descuentoPorcentaje > 0 ? (
                 <View className={filaResumen}>
                   <View className="flex-row items-center">
-                    <Ionicons name="game-controller" size={18} color="#9be27a" />
-                    <Text className="text-[#9be27a] font-bold text-base ml-1.5">
+                    <Ionicons name="game-controller" size={20} color="#9be27a" />
+                    <Text className="text-[#9be27a] font-bold text-lg ml-1.5">
                       Descuento juegos ({cuenta.descuentoPorcentaje}%):
                     </Text>
                   </View>
-                  <Text className="text-[#9be27a] font-black text-lg">
+                  <Text className="text-[#9be27a] font-black text-xl">
                     -${cuenta.descuentoMonto.toLocaleString('es-AR')}
                   </Text>
                 </View>
               ) : (
                 <View className={filaResumen}>
                   <View className="flex-row items-center">
-                    <Ionicons name="game-controller-outline" size={18} color={colores.textoSecundarioSobreOscuro} />
-                    <Text className="text-chido-texto-secundario-sobre-oscuro font-bold text-base ml-1.5">
+                    <Ionicons name="game-controller-outline" size={20} color={colores.textoSecundarioSobreOscuro} />
+                    <Text className="text-chido-texto-secundario-sobre-oscuro font-bold text-lg ml-1.5">
                       Descuento juegos (0%):
                     </Text>
                   </View>
-                  <Text className="text-chido-texto-secundario-sobre-oscuro font-bold text-base">
+                  <Text className="text-chido-texto-secundario-sobre-oscuro font-bold text-lg">
                     $0
                   </Text>
                 </View>
@@ -360,17 +461,17 @@ export default function PedirCuenta() {
               {/* Propina */}
               <View className={filaResumen}>
                 <View className="flex-row items-center">
-                  <Ionicons name="heart" size={18} color={colores.textoSobreOscuro} />
-                  <Text className="text-chido-texto-secundario-sobre-oscuro font-bold text-base ml-1.5">
+                  <Ionicons name="heart" size={20} color={colores.textoSobreOscuro} />
+                  <Text className="text-chido-texto-secundario-sobre-oscuro font-bold text-lg ml-1.5">
                     Propina ({cuenta.propinaPorcentaje}%):
                   </Text>
                 </View>
-                <Text className="text-chido-texto-sobre-oscuro font-black text-lg">
+                <Text className="text-chido-texto-sobre-oscuro font-black text-xl">
                   +${cuenta.propinaMonto.toLocaleString('es-AR')}
                 </Text>
               </View>
 
-              <Text className="text-chido-texto-secundario-sobre-oscuro text-xs font-semibold mt-0.5">
+              <Text className="text-chido-texto-secundario-sobre-oscuro text-sm font-semibold mt-0.5">
                 Servicio: {SATISFACCION_LABEL[cuenta.propinaPorcentaje ?? 0]}
               </Text>
             </View>
@@ -378,14 +479,14 @@ export default function PedirCuenta() {
             {/* Total a pagar */}
             <View className={`border-t-2 border-white/20 ${compacto ? 'pt-2' : 'pt-3'} flex-row justify-between items-baseline`}>
               <View>
-                <Text className="text-chido-texto-secundario-sobre-oscuro font-extrabold text-sm uppercase tracking-wider">
+                <Text className="text-chido-texto-secundario-sobre-oscuro font-extrabold text-base uppercase tracking-wider">
                   TOTAL A PAGAR
                 </Text>
-                <Text className="text-chido-texto-secundario-sobre-oscuro/80 text-xs">
+                <Text className="text-chido-texto-secundario-sobre-oscuro/80 text-sm">
                   Impuestos y propina incluidos
                 </Text>
               </View>
-              <Text className={`text-chido-texto-sobre-oscuro font-black ${compacto ? 'text-3xl' : 'text-4xl'}`}>
+              <Text className={`text-chido-texto-sobre-oscuro font-black ${compacto ? 'text-4xl' : 'text-5xl'}`}>
                 ${cuenta.totalFinal.toLocaleString('es-AR')}
               </Text>
             </View>
@@ -395,20 +496,12 @@ export default function PedirCuenta() {
           {pagoInformado ? (
             <View key="banner-pago-informado" className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera ${compacto ? 'p-3' : 'p-4'} items-center shadow-lg`}>
               <View className="flex-row items-center mb-1">
-                <Ionicons name="checkmark-circle" size={32} color={colores.activo} />
-                <Text className="text-chido-texto-sobre-oscuro font-black text-xl ml-2">
+                <Ionicons name="checkmark-circle" size={34} color={colores.activo} />
+                <Text className="text-chido-texto-sobre-oscuro font-black text-2xl ml-2">
                   Pago informado
                 </Text>
               </View>
-              <Text className={`text-chido-texto-secundario-sobre-oscuro text-sm font-bold text-center ${compacto ? 'mb-2' : 'mb-3'}`}>
-                El mozo debe confirmar el pago para liberar la mesa.
-              </Text>
-              <TouchableOpacity
-                className={`bg-chido-fondo border-2 border-white/70 px-6 ${compacto ? 'py-2.5' : 'py-3.5'} rounded-xl w-full items-center active:opacity-90`}
-                onPress={() => router.replace(clienteAnonimoId ? '/cliente-anonimo/escanear-mesa' : '/cliente/home')}
-              >
-                <Text className="text-chido-texto-sobre-oscuro font-black text-lg">Volver al inicio</Text>
-              </TouchableOpacity>
+              <ChidoLoader compacto mensaje="Aguardando confirmación del mozo…" />
             </View>
           ) : (
             <TouchableOpacity
@@ -416,15 +509,15 @@ export default function PedirCuenta() {
               accessibilityRole="button"
               accessibilityLabel="Pagar cuenta"
               disabled={procesandoPago}
-              className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera ${compacto ? 'py-3.5' : 'py-5'} px-6 flex-row items-center justify-center shadow-lg active:opacity-90`}
+              className={`rounded-2xl border-2 border-white/70 bg-chido-cabecera ${compacto ? 'py-4' : 'py-5'} px-6 flex-row items-center justify-center shadow-lg active:opacity-90`}
               onPress={handleRealizarPago}
             >
               {procesandoPago ? (
                 <ChidoLoader compacto mensaje="Informando pago…" />
               ) : (
                 <View className="flex-row items-center">
-                  <Ionicons name="card-outline" size={32} color={colores.textoSobreOscuro} />
-                  <Text className="text-chido-texto-sobre-oscuro font-black text-2xl ml-3">
+                  <Ionicons name="card-outline" size={36} color={colores.textoSobreOscuro} />
+                  <Text className="text-chido-texto-sobre-oscuro font-black text-3xl ml-3">
                     Pagar ${cuenta.totalFinal.toLocaleString('es-AR')}
                   </Text>
                 </View>
@@ -449,6 +542,15 @@ export default function PedirCuenta() {
         mensaje={aviso?.mensaje ?? ''}
         accion="Entendido"
         onClose={() => setAviso(null)}
+      />
+
+      <ResultadoModal
+        visible={pagoConfirmadoVisible}
+        tipo="exito"
+        titulo="¡Pago confirmado!"
+        mensaje="El mozo confirmó tu pago. ¡Muchas gracias por tu visita!"
+        accion="Aceptar"
+        onClose={() => void handleConfirmacionPago()}
       />
     </View>
   );

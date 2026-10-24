@@ -7,6 +7,9 @@ import { useAppSession } from '../../contexts/AppSessionContext';
 import { confirmarRecepcionPedido, getEstadoPedido, getEstadoPedidoAnonimo, suscribirEstadoPedido } from '../../services/pedidos.service';
 import { colores } from '../../theme/colores';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNombreCliente } from '../../hooks/useNombreCliente';
+import { formatearRolMesa } from '../../utils/formatoMesa';
+import { supabase } from '../../../lib/supabase';
 
 const textosEstado: Record<string, string> = {
   pendiente_mozo: 'Esperando confirmación del mozo.',
@@ -26,10 +29,30 @@ export default function EstadoPedido() {
   const rawAnonimoId = Array.isArray(params.clienteAnonimoId) ? params.clienteAnonimoId[0] : params.clienteAnonimoId;
   const clienteAnonimoId = !usuario?.id && rawAnonimoId ? rawAnonimoId : undefined;
   const manualView = Array.isArray(params.manualView) ? params.manualView[0] : params.manualView;
+  const { nombreCliente } = useNombreCliente(clienteAnonimoId);
+  const [mesaNumero, setMesaNumero] = useState<number | null>(null);
+  const [mesaTipo, setMesaTipo] = useState<string | null>(null);
   const [estado, setEstado] = useState<string>('pendiente_mozo');
   const [cargandoAccion, setCargandoAccion] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const haRedirigidoRef = useRef(false);
+
+  useEffect(() => {
+    if (!pedidoId) return;
+    let activo = true;
+    void supabase
+      .from('pedidos')
+      .select('mesas(numero, tipo)')
+      .eq('id', pedidoId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!activo || !data?.mesas) return;
+        const m = data.mesas as unknown as { numero: number; tipo: string };
+        setMesaNumero(m.numero);
+        setMesaTipo(m.tipo);
+      });
+    return () => { activo = false; };
+  }, [pedidoId]);
 
   useEffect(() => {
     if (!pedidoId) return;
@@ -82,7 +105,7 @@ export default function EstadoPedido() {
 
   return (
     <View className="flex-1 bg-chido-fondo">
-      <Header userName="Cliente" role="Tu Pedido" />
+      <Header userName={nombreCliente} role={formatearRolMesa(mesaNumero, mesaTipo, 'Tu Pedido')} />
       {estado === 'rechazado' ? (
         <View className="flex-1 justify-center px-5" style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
           <View className="w-full self-center rounded-3xl border-2 border-white/60 bg-chido-cabecera p-6" style={{ maxWidth: 560 }}>
@@ -107,31 +130,34 @@ export default function EstadoPedido() {
             </TouchableOpacity>}
           </View>
         </View>
-      ) : <View className="flex-1" style={{ padding: 16, paddingBottom: Math.max(insets.bottom, 16) }}>
-        {/* La imagen toma solo el alto que sobra; textos y botones siempre quedan visibles. */}
-        <View className="flex-1 items-center justify-center" style={{ minHeight: 0 }}>
-        {estado === 'pendiente_mozo' || estado === 'confirmado' ? (
-          <Image source={require('../../../assets/images/mascota-espera.png')} style={{ width: '100%', height: '100%', maxHeight: 350 }} resizeMode="contain" />
-        ) : (
-          <Ionicons name="restaurant-outline" size={80} color={colores.textoSobreOscuro} />
-        )}
+      ) : (
+        <View className="flex-1 justify-center" style={{ padding: 16, paddingBottom: Math.max(insets.bottom, 16) }}>
+          <View className="items-center">
+            {estado === 'pendiente_mozo' || estado === 'confirmado' ? (
+              <Image
+                source={require('../../../assets/images/mascota-espera.png')}
+                style={{ width: '100%', height: '100%', maxHeight: 350 }}
+                resizeMode="contain"
+              />
+            ) : (
+              <Ionicons name="restaurant-outline" size={80} color={colores.textoSobreOscuro} />
+            )}
+            <Text className="mb-2 mt-3 text-center text-3xl font-bold text-chido-texto-sobre-oscuro">Estado del Pedido</Text>
+            <Text className="mt-1 text-center text-xl font-bold text-chido-texto-secundario-sobre-oscuro">{textosEstado[estado] ?? 'Actualizando el estado del pedido.'}</Text>
+            {error && <View className="mt-4 w-full rounded-2xl bg-chido-error p-4"><Text className="text-center font-bold text-chido-texto-sobre-oscuro">{error}</Text></View>}
+            {estado === 'entregado' && (
+              <TouchableOpacity className="mt-5 w-full rounded-xl border-2 border-white/70 bg-chido-exito p-4" onPress={() => void confirmarRecepcion()} disabled={cargandoAccion}>
+                <Text className="text-center text-lg font-bold text-chido-texto-sobre-oscuro">{cargandoAccion ? 'Confirmando recepción…' : 'Confirmar recepción del pedido'}</Text>
+              </TouchableOpacity>
+            )}
+            {manualView === 'true' && (
+              <TouchableOpacity className="mt-5 w-full rounded-xl bg-chido-cabecera p-4" onPress={() => router.back()}>
+                <Text className="text-center text-lg font-bold text-chido-texto-sobre-oscuro">Volver</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
-        <View className="items-center">
-        <Text className="mb-2 mt-4 text-center text-3xl font-bold text-chido-texto-sobre-oscuro">Estado del Pedido</Text>
-        <Text className="mt-2 text-center text-xl font-bold text-chido-texto-secundario-sobre-oscuro">{textosEstado[estado] ?? 'Actualizando el estado del pedido.'}</Text>
-        {error && <View className="mt-4 rounded-2xl bg-chido-error p-4"><Text className="text-center font-bold text-chido-texto-sobre-oscuro">{error}</Text></View>}
-        {estado === 'entregado' && (
-          <TouchableOpacity className="mt-5 w-full rounded-xl border-2 border-white/70 bg-chido-exito p-4" onPress={() => void confirmarRecepcion()} disabled={cargandoAccion}>
-            <Text className="text-center text-lg font-bold text-chido-texto-sobre-oscuro">{cargandoAccion ? 'Confirmando recepción…' : 'Confirmar recepción del pedido'}</Text>
-          </TouchableOpacity>
-        )}
-        {manualView === 'true' && (
-          <TouchableOpacity className="mt-5 w-full rounded-xl bg-chido-cabecera p-4" onPress={() => router.back()}>
-            <Text className="text-center text-lg font-bold text-chido-texto-sobre-oscuro">Volver</Text>
-          </TouchableOpacity>
-        )}
-        </View>
-      </View>}
+      )}
     </View>
   );
 }

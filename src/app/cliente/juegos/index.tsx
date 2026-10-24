@@ -5,18 +5,18 @@ import { Pressable, Text, View } from 'react-native';
 import { Header } from '../../../components/Header';
 import { JuegoPromoCard } from '../../../components/juegos/JuegoPromoCard';
 import { useAltoDisponible } from '../../../hooks/useAltoDisponible';
+import { useNombreCliente } from '../../../hooks/useNombreCliente';
 import { colores } from '../../../theme/colores';
 
 export default function JuegosCliente() {
   const router = useRouter();
   const { pedidoId, clienteAnonimoId } = useLocalSearchParams<{ pedidoId: string; clienteAnonimoId?: string }>();
   const { alMedir, compacto } = useAltoDisponible();
-  const recreativo = Boolean(clienteAnonimoId);
-  const parametros = `pedidoId=${encodeURIComponent(pedidoId ?? '')}${recreativo ? '&recreativo=true' : ''}`;
+  const { nombreCliente } = useNombreCliente();
 
   return (
     <SafeAreaView className="flex-1 bg-chido-fondo" edges={['left', 'right', 'bottom']}>
-      <Header userName="Cliente" role={recreativo ? 'Juegos recreativos' : 'Juegos y descuentos'} />
+      <Header userName={nombreCliente} role="Juegos y descuentos" />
       <View className="flex-1 px-5" onLayout={alMedir} style={{ paddingVertical: compacto ? 12 : 20, gap: compacto ? 12 : 24 }}>
         <Pressable onPress={() => router.back()} accessibilityRole="button" className="min-h-12 self-start flex-row items-center rounded-xl bg-chido-acento px-4">
           <Ionicons name="arrow-back" size={22} color={colores.textoSobreOscuro} />

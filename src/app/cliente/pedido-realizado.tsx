@@ -13,6 +13,9 @@ import { verificarEncuesta } from '../../services/encuestas.service';
 import { puedeJugarPedido } from '../../services/juegos';
 import { confirmarRecepcionPedido, getEstadoPedido, getEstadoPedidoAnonimo, suscribirEstadoPedido } from '../../services/pedidos.service';
 import { colores } from '../../theme/colores';
+import { useNombreCliente } from '../../hooks/useNombreCliente';
+import { formatearRolMesa } from '../../utils/formatoMesa';
+import { supabase } from '../../../lib/supabase';
 
 export default function PedidoRealizado() {
   const router = useRouter();
@@ -22,6 +25,9 @@ export default function PedidoRealizado() {
   const pedidoId = Array.isArray(params.pedidoId) ? params.pedidoId[0] : params.pedidoId;
   const rawAnonimoId = Array.isArray(params.clienteAnonimoId) ? params.clienteAnonimoId[0] : params.clienteAnonimoId;
   const clienteAnonimoId = !usuario?.id && rawAnonimoId ? rawAnonimoId : undefined;
+  const { nombreCliente } = useNombreCliente(clienteAnonimoId);
+  const [mesaNumero, setMesaNumero] = useState<number | null>(null);
+  const [mesaTipo, setMesaTipo] = useState<string | null>(null);
   const [cargando, setCargando] = useState(() => Boolean(pedidoId));
   const [encuestaCompletada, setEncuestaCompletada] = useState(false);
   const [estadoPedido, setEstadoPedido] = useState<string | null>(null);
@@ -51,6 +57,23 @@ export default function PedidoRealizado() {
       else void verificarEncuesta(pedidoId).then(setEncuestaCompletada).catch(() => setEncuestaCompletada(false));
     });
   }, [pedidoId]));
+
+  useEffect(() => {
+    if (!pedidoId) return;
+    let activo = true;
+    void supabase
+      .from('pedidos')
+      .select('mesas(numero, tipo)')
+      .eq('id', pedidoId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!activo || !data?.mesas) return;
+        const m = data.mesas as unknown as { numero: number; tipo: string };
+        setMesaNumero(m.numero);
+        setMesaTipo(m.tipo);
+      });
+    return () => { activo = false; };
+  }, [pedidoId]);
 
   useEffect(() => {
     if (!pedidoId) return;
@@ -107,7 +130,7 @@ export default function PedidoRealizado() {
 
   return (
     <View className="flex-1 bg-chido-fondo">
-      <Header userName="Cliente" role="Tu Mesa" />
+      <Header userName={nombreCliente} role={formatearRolMesa(mesaNumero, mesaTipo, 'Tu Mesa')} />
       <View
         className="flex-1"
         onLayout={alMedir}

@@ -1,14 +1,16 @@
 import { Text, TouchableOpacity, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Header } from '../../components/Header';
+import { useNombreCliente } from '../../hooks/useNombreCliente';
 
 export default function Encuestas() {
   const router = useRouter();
+  const { nombreCliente } = useNombreCliente();
 
   return (
     <View className="flex-1 bg-chido-fondo">
       <Stack.Screen options={{ headerShown: false }} />
-      <Header userName="Cliente" role="Encuestas" />
+      <Header userName={nombreCliente} role="Encuestas" />
       <View className="flex-1 items-center justify-center p-6">
         <Text className="text-center text-lg text-chido-texto-sobre-oscuro">
           Sección de encuestas de prueba.

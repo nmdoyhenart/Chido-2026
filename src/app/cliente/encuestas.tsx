@@ -6,6 +6,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Header } from '../../components/Header';
 import { useAltoDisponible } from '../../hooks/useAltoDisponible';
+import { useNombreCliente } from '../../hooks/useNombreCliente';
 import { colores } from '../../theme/colores';
 import { verificarEncuesta } from '../../services/encuestas.service';
 import { getEstadoPedido, getEstadoPedidoAnonimo } from '../../services/pedidos.service';
@@ -16,6 +17,7 @@ export default function EncuestasCliente() {
   const pedidoId = Array.isArray(params.pedidoId) ? params.pedidoId[0] : params.pedidoId;
   const clienteAnonimoId = Array.isArray(params.clienteAnonimoId) ? params.clienteAnonimoId[0] : params.clienteAnonimoId;
   const rawEstado = Array.isArray(params.estadoPedido) ? params.estadoPedido[0] : params.estadoPedido;
+  const { nombreCliente } = useNombreCliente(clienteAnonimoId);
 
   const [estadoPedido, setEstadoPedido] = useState<string | null>(() => rawEstado || null);
   const [encuestaCompletada, setEncuestaCompletada] = useState(false);
@@ -95,7 +97,7 @@ export default function EncuestasCliente() {
   return (
     <View className="flex-1 bg-chido-fondo">
       <Stack.Screen options={{ headerShown: false }} />
-      <Header userName={clienteAnonimoId ? 'Invitado' : 'Cliente'} role="Encuestas" />
+      <Header userName={nombreCliente} role="Encuestas" />
 
       <SafeAreaView
         edges={['left', 'right', 'bottom']}

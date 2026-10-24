@@ -8,12 +8,14 @@ import ChidoLoader from '../../components/ui/ChidoLoader';
 import { QRScanner } from '../../components/ui/QRScanner';
 import { useAppSession } from '../../contexts/AppSessionContext';
 import { useAltoDisponible } from '../../hooks/useAltoDisponible';
+import { useNombreCliente } from '../../hooks/useNombreCliente';
 import { confirmarMesaPorQr, obtenerEstadoSolicitudMesa, type EstadoSolicitudMesa } from '../../services/mesas';
 import { colores } from '../../theme/colores';
 
 export default function EsperaMesaCliente() {
   const router = useRouter();
   const { usuario } = useAppSession();
+  const { nombreCliente } = useNombreCliente();
   const clienteId = usuario?.id;
   const [estado, setEstado] = useState<EstadoSolicitudMesa | null>(null);
   const [cargando, setCargando] = useState(true);
@@ -70,7 +72,7 @@ export default function EsperaMesaCliente() {
       : 'Estás en la lista de espera. En cuanto el metre te asigne una mesa, vas a poder ingresar.';
   return (
     <SafeAreaView className="flex-1 bg-chido-fondo" edges={['left', 'right', 'bottom']}>
-      <Header userName="Cliente" role="Mesa" />
+      <Header userName={nombreCliente} role="Mesa" />
       {/* SafeAreaView ya reserva el área inferior (botones de Android / barra de inicio de iPhone). */}
       <View className="flex-1" onLayout={alMedir} style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16 }}>
         {/* La mascota se adapta al alto que sobra para que textos y botones nunca se pisen. */}

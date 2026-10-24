@@ -5,6 +5,7 @@ import { Image, Pressable, Text, useWindowDimensions, Vibration, View } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Line } from 'react-native-svg';
 import { Header } from '../../../components/Header';
+import { useNombreCliente } from '../../../hooks/useNombreCliente';
 import ChidoLoader from '../../../components/ui/ChidoLoader';
 import ChidoLoaderOverlay from '../../../components/ui/ChidoLoaderOverlay';
 import { useAltoDisponible } from '../../../hooks/useAltoDisponible';
@@ -36,8 +37,8 @@ function FiguraAhorcado({ errores, alto = 142 }: { errores: number; alto?: numbe
 
 export default function Ahorcado() {
   const router = useRouter();
-  const { pedidoId, recreativo: recreativoParam } = useLocalSearchParams<{ pedidoId: string; recreativo?: string }>();
-  const recreativoInicial = recreativoParam === 'true';
+  const { pedidoId } = useLocalSearchParams<{ pedidoId: string }>();
+  const { nombreCliente } = useNombreCliente();
   const { width } = useWindowDimensions();
   const { alMedir, compacto } = useAltoDisponible();
   const [altoJuego, setAltoJuego] = useState(0);
@@ -115,7 +116,7 @@ export default function Ahorcado() {
       : juego?.palabra_resuelta || juego?.palabra.map((letra) => letra ?? '').join('') || 'No pudimos recuperar la palabra.';
     return (
       <SafeAreaView className="flex-1 bg-chido-fondo" edges={['left', 'right', 'bottom']}>
-        <Header userName="Cliente" role="Ahorcado" />
+        <Header userName={nombreCliente} role="Ahorcado" />
         <View className="flex-1" onLayout={alMedir} style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16 }}>
           <Pressable onPress={() => router.back()} accessibilityRole="button" className="min-h-12 self-start flex-row items-center rounded-xl bg-chido-acento px-4"><Ionicons name="arrow-back" size={22} color={colores.textoSobreOscuro} /><Text className="ml-2 text-base font-bold text-chido-texto-sobre-oscuro">Volver a juegos</Text></Pressable>
           {/* La mascota usa solo el espacio libre; la tarjeta de resultado y el botón siempre quedan visibles. */}
@@ -136,7 +137,7 @@ export default function Ahorcado() {
 
   return (
     <SafeAreaView className="flex-1 bg-chido-fondo" edges={['left', 'right', 'bottom']}>
-      <Header userName="Cliente" role="Ahorcado" />
+      <Header userName={nombreCliente} role="Ahorcado" />
       <View className="relative flex-1" onLayout={alMedir} style={{ paddingHorizontal: 20, paddingTop: compacto ? 12 : 16, paddingBottom: 16 }}>
         <Pressable onPress={() => router.back()} accessibilityRole="button" className="min-h-12 self-start flex-row items-center rounded-xl bg-chido-acento px-4"><Ionicons name="arrow-back" size={22} color={colores.textoSobreOscuro} /><Text className="ml-2 text-base font-bold text-chido-texto-sobre-oscuro">Volver a juegos</Text></Pressable>
           <View className={`rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera ${compacto ? 'mt-3 px-4 py-2' : 'mt-4 p-4'}`}><Text className={`${compacto ? 'text-3xl' : 'text-5xl'} font-extrabold text-chido-texto-sobre-oscuro`}>Ahorcado</Text><Text className={`${compacto ? 'mt-1 text-lg' : 'mt-2 text-2xl'} text-chido-texto-secundario-sobre-oscuro`}>Categoría: {categoria || 'Restaurante mexicano'}{recreativo ? ' · Partida recreativa sin descuento' : ''}</Text></View>

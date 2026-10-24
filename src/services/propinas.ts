@@ -13,5 +13,6 @@ export async function seleccionarPropinaPorQr(
   }
 
   if (!usuarioId) throw new Error('No se pudo validar tu cuenta de cliente.');
-  return registrarPropinaPorQr(pedidoId, rawQr);
+  await registrarPropinaPorQr(pedidoId, rawQr);
+  return payload.porcentaje;
 }

@@ -6,6 +6,9 @@ const RUTA_LISTA_ESPERA_METRE: RutaNotificacion = '/metre/listaEspera';
 const RUTA_PEDIDOS_CLIENTE: RutaNotificacion = '/cliente/estado-pedido';
 const RUTA_MESA_ASIGNADA_CLIENTE: RutaNotificacion = '/cliente/espera-mesa';
 const RUTA_PEDIDOS_MOZO: RutaNotificacion = '/mozo/pedidos';
+const RUTA_CHAT_CLIENTE: RutaNotificacion = '/cliente/chat';
+const RUTA_CHAT_MOZO: RutaNotificacion = '/mozo/chat-mesa';
+
 const RUTAS_VALIDAS = new Set<string>([
   RUTA_CLIENTES_PENDIENTES,
   RUTA_LISTA_ESPERA_METRE,
@@ -15,6 +18,8 @@ const RUTAS_VALIDAS = new Set<string>([
   '/bar/pedidos',
   RUTA_PEDIDOS_MOZO,
   '/mesas/gestion',
+  RUTA_CHAT_CLIENTE,
+  RUTA_CHAT_MOZO,
 ]);
 
 export function crearAvisoClienteRegistrado(): NotificacionPush {
@@ -28,23 +33,73 @@ export function crearAvisoClienteRegistrado(): NotificacionPush {
 }
 
 export function crearAvisoClienteEnEspera(): NotificacionPush {
-    return {
-        evento: 'cliente_en_espera',
-        destinatarios: ['metre'],
-        titulo: 'Nuevo cliente en espera',
-        cuerpo: 'Un cliente se anotó a la lista de espera.',
-        datos: { ruta: RUTA_LISTA_ESPERA_METRE },
-    };
+  return {
+    evento: 'cliente_en_espera',
+    destinatarios: ['metre'],
+    titulo: 'Nuevo cliente en espera',
+    cuerpo: 'Un cliente se anotó a la lista de espera.',
+    datos: { ruta: RUTA_LISTA_ESPERA_METRE },
+  };
 }
 
 export function obtenerRutaNotificacion(datos: unknown): Href | null {
-    if (!datos || typeof datos !== 'object' || Array.isArray(datos)) return null;
-    const ruta = (datos as Record<string, unknown>).ruta;
-    if (typeof ruta !== 'string' || !RUTAS_VALIDAS.has(ruta)) return null;
-    if (ruta === RUTA_PEDIDOS_CLIENTE) {
-        const pedidoId = (datos as Record<string, unknown>).pedidoId;
-        if (typeof pedidoId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(pedidoId)) return null;
-        return `${ruta}?pedidoId=${pedidoId}` as RutaNotificacion;
+  if (!datos || typeof datos !== 'object' || Array.isArray(datos)) return null;
+  const payload = datos as Record<string, unknown>;
+
+  let rutaCompleta = typeof payload.ruta === 'string' ? payload.ruta : '';
+  if (!rutaCompleta) {
+    if (payload.evento === 'chat_cliente') {
+      rutaCompleta = RUTA_CHAT_CLIENTE;
+    } else if (payload.evento === 'chat_mozo') {
+      rutaCompleta = RUTA_CHAT_MOZO;
     }
-    return ruta as RutaNotificacion;
+  }
+
+  if (!rutaCompleta || !rutaCompleta.startsWith('/')) return null;
+
+  const [baseRuta, queryString] = rutaCompleta.split('?');
+  if (!RUTAS_VALIDAS.has(baseRuta)) return null;
+
+  if (baseRuta === RUTA_PEDIDOS_CLIENTE) {
+    let pedidoId = payload.pedidoId;
+    if (!pedidoId && queryString) {
+      const match = queryString.match(/(?:^|&)pedidoId=([^&]+)/);
+      if (match) pedidoId = decodeURIComponent(match[1]);
+    }
+    if (
+      typeof pedidoId !== 'string' ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(pedidoId)
+    ) {
+      return null;
+    }
+    return `${baseRuta}?pedidoId=${pedidoId}` as RutaNotificacion;
+  }
+
+  if (baseRuta === RUTA_CHAT_MOZO) {
+    let mesaId = payload.mesaId;
+    let numero = payload.numero;
+
+    if (queryString) {
+      const matchMesa = queryString.match(/(?:^|&)mesaId=([^&]+)/);
+      if (matchMesa && !mesaId) mesaId = decodeURIComponent(matchMesa[1]);
+
+      const matchNum = queryString.match(/(?:^|&)numero=([^&]+)/);
+      if (matchNum && !numero) numero = decodeURIComponent(matchNum[1]);
+    }
+
+    if (typeof mesaId === 'string' && mesaId.length > 0) {
+      const numStr =
+        numero !== undefined && numero !== null && String(numero).length > 0
+          ? `&numero=${encodeURIComponent(String(numero))}`
+          : '';
+      return `${baseRuta}?mesaId=${encodeURIComponent(mesaId)}${numStr}` as RutaNotificacion;
+    }
+    return baseRuta as RutaNotificacion;
+  }
+
+  if (baseRuta === RUTA_CHAT_CLIENTE) {
+    return RUTA_CHAT_CLIENTE;
+  }
+
+  return baseRuta as RutaNotificacion;
 }

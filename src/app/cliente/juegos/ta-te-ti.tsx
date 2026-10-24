@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Image, Pressable, Text, useWindowDimensions, Vibration, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '../../../components/Header';
+import { useNombreCliente } from '../../../hooks/useNombreCliente';
 import ChidoLoader from '../../../components/ui/ChidoLoader';
 import ChidoLoaderOverlay from '../../../components/ui/ChidoLoaderOverlay';
 import { useAltoDisponible } from '../../../hooks/useAltoDisponible';
@@ -42,8 +43,8 @@ export default function Tateti() {
   const router = useRouter();
   const { height, width } = useWindowDimensions();
   const { alMedir, compacto } = useAltoDisponible();
-  const { pedidoId, recreativo: recreativoParam } = useLocalSearchParams<{ pedidoId: string; recreativo?: string }>();
-  const recreativoInicial = recreativoParam === 'true';
+  const { pedidoId } = useLocalSearchParams<{ pedidoId: string }>();
+  const { nombreCliente } = useNombreCliente();
   const [intento, setIntento] = useState<IntentoJuego | null>(null);
   const [partida, setPartida] = useState<PartidaTateti>(nuevaPartida);
   const [cargando, setCargando] = useState(() => Boolean(pedidoId) && !recreativoInicial);
@@ -195,7 +196,7 @@ export default function Tateti() {
 
     return (
       <SafeAreaView className="flex-1 bg-chido-fondo" edges={['left', 'right', 'bottom']}>
-        <Header userName="Cliente" role="Ta-te-ti" />
+        <Header userName={nombreCliente} role="Ta-te-ti" />
         <View className="flex-1" onLayout={alMedir} style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16 }}>
           <Pressable onPress={() => router.back()} accessibilityRole="button" className="min-h-12 self-start flex-row items-center rounded-xl bg-chido-acento px-4"><Ionicons name="arrow-back" size={22} color={colores.textoSobreOscuro} /><Text className="ml-2 text-base font-bold text-chido-texto-sobre-oscuro">Volver a juegos</Text></Pressable>
           <View className="relative flex-1 mb-3">
@@ -221,7 +222,7 @@ export default function Tateti() {
 
   return (
     <SafeAreaView className="flex-1 bg-chido-fondo" edges={['left', 'right', 'bottom']}>
-      <Header userName="Cliente" role="Ta-te-ti" />
+      <Header userName={nombreCliente} role="Ta-te-ti" />
       <View className="flex-1" onLayout={alMedir} style={{ paddingHorizontal: 20, paddingTop: compacto ? 12 : 16, paddingBottom: 16 }}>
         <Pressable onPress={() => router.back()} accessibilityRole="button" className="min-h-12 self-start flex-row items-center rounded-xl bg-chido-acento px-4"><Ionicons name="arrow-back" size={22} color={colores.textoSobreOscuro} /><Text className="ml-2 text-base font-bold text-chido-texto-sobre-oscuro">Volver a juegos</Text></Pressable>
         <View className={`rounded-3xl border-2 border-chido-texto-secundario-alternativo bg-chido-cabecera ${compacto ? 'mt-3 px-4 py-2' : 'mt-4 p-4'}`}>

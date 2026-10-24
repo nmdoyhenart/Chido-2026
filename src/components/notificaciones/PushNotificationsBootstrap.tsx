@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, Text, Vibration, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import type { Href } from 'expo-router';
 
 import { useAppSession } from '../../contexts/AppSessionContext';
@@ -19,6 +19,7 @@ import ChidoLoader from '../ui/ChidoLoader';
 const claveExplicacion = (usuarioId: string) => `chido:push:explicacion:v1:${usuarioId}`;
 
 export default function PushNotificationsBootstrap() {
+  const pathname = usePathname();
   const { mode, usuario, cargando } = useAppSession();
   const [mostrar, setMostrar] = useState(false);
   const [ocupado, setOcupado] = useState(false);
@@ -28,10 +29,14 @@ export default function PushNotificationsBootstrap() {
   useEffect(() => {
     const detener = escucharRespuestasPush((datos) => {
       const ruta = obtenerRutaNotificacion(datos);
-      if (ruta) router.push(ruta as Href);
+      if (!ruta) return;
+      const rutaTexto = ruta as string;
+      const destino = rutaTexto.split('?')[0];
+      if (pathname === destino) return;
+      router.replace(rutaTexto as Href);
     });
     return detener;
-  }, []);
+  }, [pathname]);
 
   // Escuchar eventos en tiempo real para disparar la notificación en el dispositivo
   useEffect(() => {
@@ -48,20 +53,7 @@ export default function PushNotificationsBootstrap() {
           const viejo = payload.old as any;
           if (!nuevo) return;
 
-          // 1. Punto 12: Nuevo pedido para el mozo
-          if (
-            (payload.eventType === 'INSERT' || nuevo.estado === 'pendiente_mozo') &&
-            viejo?.estado !== 'pendiente_mozo' &&
-            usuario.perfil === 'mozo'
-          ) {
-            await dispararNotificacionLocal(
-              'Nuevo pedido recibido',
-              'Hay un pedido pendiente de confirmación en una mesa.',
-              { ruta: '/mozo/pedidos', pedidoId: nuevo.id }
-            );
-          }
-
-          // 2. Punto 21: Pago realizado para mozo, dueño y supervisor
+          // Punto 21: Pago realizado para mozo, dueño y supervisor
           if (
             nuevo.estado === 'pagado' &&
             (!viejo || viejo.estado !== 'pagado') &&

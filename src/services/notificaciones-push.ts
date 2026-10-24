@@ -142,15 +142,23 @@ export async function desvincularDispositivoPush() {
 export function escucharRespuestasPush(onDatos: (datos: DatosNotificacionPush) => void) {
   const notifications = obtenerModuloNotificaciones();
   if (!notifications) return () => undefined;
-  const procesar = (datos: unknown) => onDatos(datos as DatosNotificacionPush);
+  const respuestasProcesadas = new Set<string>();
+  const procesar = (respuesta: import('expo-notifications').NotificationResponse) => {
+    const identificador = respuesta.notification.request.identifier;
+    if (respuestasProcesadas.has(identificador)) return;
+    respuestasProcesadas.add(identificador);
+    onDatos(respuesta.notification.request.content.data as DatosNotificacionPush);
+  };
   const suscripcionRespuesta = notifications.addNotificationResponseReceivedListener((respuesta) => {
-    procesar(respuesta.notification.request.content.data);
+    procesar(respuesta);
   });
   const suscripcionToken = notifications.addPushTokenListener(() => {
     void registrarDispositivoPush().catch(() => undefined);
   });
   void notifications.getLastNotificationResponseAsync().then((respuesta) => {
-    if (respuesta) procesar(respuesta.notification.request.content.data);
+    if (!respuesta) return;
+    procesar(respuesta);
+    void notifications.clearLastNotificationResponseAsync();
   }).catch(() => undefined);
   return () => {
     suscripcionRespuesta.remove();

@@ -39,7 +39,7 @@ export default function MenuCliente() {
   const enviandoRef = useRef(false);
   const solicitudId = useRef(Crypto.randomUUID());
   
-  const [filtro, setFiltro] = useState<'todos' | 'plato' | 'bebida' >('todos');
+  const [filtro, setFiltro] = useState<'todos' | 'plato' | 'postre' | 'bebida'>('todos');
 
   // Cada tarjeta entra completa en el espacio de la lista (entre filtros y barra del total).
   const { height: altoVentana } = useWindowDimensions();
@@ -51,7 +51,7 @@ export default function MenuCliente() {
   const cargarProductos = useCallback(async () => {
     try {
       const data = await getProductos();
-      setProductos(data.filter(producto => producto.tipo === 'plato' || producto.tipo === 'bebida'));
+      setProductos(data.filter(producto => producto.tipo === 'plato' || producto.tipo === 'postre' || producto.tipo === 'bebida'));
     } catch (err: unknown) {
       console.log('Error fetching productos:', err);
       mostrarAviso('No se pudo cargar la carta', 'No se pudieron cargar los productos. Revisá la conexión e intentá nuevamente.');
@@ -198,6 +198,12 @@ export default function MenuCliente() {
             onPress={() => setFiltro(filtro === 'bebida' ? 'todos' : 'bebida')}
           >
             <Text className={`font-bold ${filtro === 'bebida' ? 'text-chido-cabecera' : 'text-chido-texto-secundario-sobre-oscuro'}`}>Bebida</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className={`px-4 py-2 rounded-full border-2 ${filtro === 'postre' ? 'bg-chido-texto-secundario-sobre-oscuro border-chido-texto-secundario-sobre-oscuro' : 'bg-chido-acento border-chido-texto-secundario-sobre-oscuro'}`}
+            onPress={() => setFiltro(filtro === 'postre' ? 'todos' : 'postre')}
+          >
+            <Text className={`font-bold ${filtro === 'postre' ? 'text-chido-cabecera' : 'text-chido-texto-secundario-sobre-oscuro'}`}>Postre</Text>
           </TouchableOpacity>
         </ScrollView>
 

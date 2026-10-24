@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { View, Text, Pressable, ActivityIndicator, ScrollView, Image, Modal, KeyboardAvoidingView, Platform, TextInput, TextInputProps, useWindowDimensions } from 'react-native';
 import { crearProducto, TipoProducto, subirFotos, existeProducto } from '../../../lib/productos';
 import { Header } from '../../components/Header';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
@@ -43,6 +43,9 @@ function Campo({ label, error, compacto = false, containerClassName = '', inputC
 
 
 export default function AltaPlato() {
+    const { tipoProducto: tipoParametro } = useLocalSearchParams<{ tipoProducto?: string }>();
+    const tipo: TipoProducto = tipoParametro === 'postre' ? 'postre' : 'plato';
+    const nombreTipo = tipo === 'postre' ? 'postre' : 'plato';
     const { usuario, role } = useAppSession();
     // También la usan Dueño y Supervisor desde "Gestionar carta": se muestra el rol real.
     const rolVisible = role ? role.charAt(0).toUpperCase() + role.slice(1) : 'Cocinero';
@@ -53,7 +56,6 @@ export default function AltaPlato() {
     const [descripcion, setDescripcion] = useState('');
     const [tiempoElaboracion, setTiempoElaboracion] = useState('');
     const [precio, setPrecio] = useState('');
-    const [tipo] = useState<TipoProducto>('plato');
     const [cargando, setCargando] = useState(false);
     const [error, setError] = useState('');
     useVibrarError(error);
@@ -77,7 +79,7 @@ export default function AltaPlato() {
         const nuevosErrores: Record<string, string> = {};
 
         if (!nombre.trim()) {
-            nuevosErrores.nombre = 'Ingresá el nombre del plato.';
+            nuevosErrores.nombre = `Ingresá el nombre del ${nombreTipo}.`;
         }
 
         if (!descripcion.trim()) {
@@ -97,7 +99,7 @@ export default function AltaPlato() {
         }
 
         if (fotos.some((foto) => foto === null)) {
-            nuevosErrores.fotos = 'Elegí las 3 fotos del plato.';
+            nuevosErrores.fotos = `Elegí las 3 fotos del ${nombreTipo}.`;
         }
 
         setErrores(nuevosErrores);
@@ -105,7 +107,7 @@ export default function AltaPlato() {
     }
 
     async function handleGuardar() {
-        if (bloquear('agregar platos')) return;
+        if (bloquear(`agregar ${nombreTipo}s`)) return;
         setError('');
         setExito(false);
 
@@ -118,7 +120,7 @@ export default function AltaPlato() {
         try {
             const yaExiste = await existeProducto(nombre);
             if (yaExiste) {
-                setError('Ya existe un plato con ese nombre en la carta.');
+                setError(`Ya existe un ${nombreTipo} con ese nombre en la carta.`);
                 return;
             }
 
@@ -234,12 +236,12 @@ export default function AltaPlato() {
                         >
                         <Ionicons name="arrow-back" size={26} color={colores.textoSobreOscuro} />
                         </Pressable>}
-                        <Text className={`font-bold text-chido-texto-sobre-oscuro text-center flex-1 ${compacto ? 'text-2xl' : 'text-3xl'}`}>Alta de plato</Text>
+                        <Text className={`font-bold text-chido-texto-sobre-oscuro text-center flex-1 ${compacto ? 'text-2xl' : 'text-3xl'}`}>Alta de {nombreTipo}</Text>
                     </View>
 
                     {/* Las fotos crecen con el espacio libre hasta quedar cuadradas; lo que sobra después lo toma la descripción */}
                     <View className={`flex-1 ${compacto ? 'mb-3' : 'mb-5'}`} style={{ maxHeight: anchoFoto + (compacto ? 28 : 36) + (errores.fotos ? 28 : 0) }}>
-                        <Text className={`text-chido-texto-sobre-oscuro font-semibold ml-1 ${compacto ? 'text-base mb-1' : 'text-lg mb-2'}`}>Fotos del plato</Text>
+                        <Text className={`text-chido-texto-sobre-oscuro font-semibold ml-1 ${compacto ? 'text-base mb-1' : 'text-lg mb-2'}`}>Fotos del {nombreTipo}</Text>
                         <View className="flex-row gap-3 flex-1" style={{ minHeight: 80 }}>
                             <Pressable
                                 onPress={() => abrirSelector(0)}
@@ -321,7 +323,7 @@ export default function AltaPlato() {
                     </View>
 
                     {error !== '' && <Text className="text-chido-error text-lg font-bold mb-2">{error}</Text>}
-                    {exito && <Text className="text-chido-exito text-lg font-bold mb-2">¡Plato guardado con éxito!</Text>}
+                    {exito && <Text className="text-chido-exito text-lg font-bold mb-2">¡{nombreTipo === 'postre' ? 'Postre' : 'Plato'} guardado con éxito!</Text>}
 
                     {cargando && <ActivityIndicator size="large" color={colores.textoSobreOscuro} />}
 

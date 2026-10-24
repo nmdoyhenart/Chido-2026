@@ -11,18 +11,19 @@ import { Header } from '../Header';
 import { getProductos } from '../../services/productos.service';
 import { useCampoVisibleConTeclado } from '../../hooks/useCampoVisibleConTeclado';
 
-type TipoProducto = 'plato' | 'bebida';
+type TipoProducto = 'plato' | 'postre' | 'bebida';
+type FiltroTipoProducto = TipoProducto | 'cocina';
 type Producto = {
   id: string; nombre: string; descripcion: string; precio: number; minutos: number;
   foto?: string; tipoProducto: TipoProducto; icono: keyof typeof Ionicons.glyphMap;
 };
 type Accion = { tipo: 'agregar'; tipoProducto: TipoProducto } | { tipo: 'editar' | 'eliminar'; plato: Producto };
-const tipos = ['Todos', 'Platos', 'Bebidas'] as const;
+const tipos = ['Todos', 'Platos', 'Postres', 'Bebidas'] as const;
 const MAX_PRODUCTOS_POR_PAGINA = 3;
 const ALTO_LINEA_DESCRIPCION = 19;
 const normalizar = (texto: string) => texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
-export default function CartaAdministracion({ soloLectura = false, soloTipoProducto }: { soloLectura?: boolean; soloTipoProducto?: TipoProducto }) {
+export default function CartaAdministracion({ soloLectura = false, soloTipoProducto }: { soloLectura?: boolean; soloTipoProducto?: FiltroTipoProducto }) {
   const router = useRouter();
   const { role, mode, cargando, usuario } = useAppSession();
   const rolVisible = role ? role.charAt(0).toUpperCase() + role.slice(1) : '';
@@ -43,9 +44,9 @@ export default function CartaAdministracion({ soloLectura = false, soloTipoProdu
       setProductosReales(datos.map((p): Producto => ({
         id: p.id, nombre: p.nombre, descripcion: p.descripcion ?? '',
         precio: Number(p.precio), minutos: Number(p.tiempo_elaboracion),
-        tipoProducto: p.tipo === 'bebida' ? 'bebida' : 'plato',
+        tipoProducto: p.tipo === 'bebida' ? 'bebida' : p.tipo === 'postre' ? 'postre' : 'plato',
         foto: p.fotos?.find(foto => typeof foto === 'string' && foto.length > 0),
-        icono: p.tipo === 'bebida' ? 'wine-outline' : 'restaurant-outline',
+        icono: p.tipo === 'bebida' ? 'wine-outline' : p.tipo === 'postre' ? 'ice-cream-outline' : 'restaurant-outline',
       })).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es') || a.id.localeCompare(b.id)));
     }).catch(() => {
       if (activo) {
@@ -66,11 +67,16 @@ export default function CartaAdministracion({ soloLectura = false, soloTipoProdu
   const [altoControles, setAltoControles] = useState(0);
   const formulario = useRef<ScrollView>(null);
   const tecladoFormulario = useCampoVisibleConTeclado(formulario);
+  const coincideFiltro = (producto: Pick<Producto, 'tipoProducto'>, filtro: FiltroTipoProducto) => filtro === 'cocina'
+    ? producto.tipoProducto === 'plato' || producto.tipoProducto === 'postre'
+    : producto.tipoProducto === filtro;
   const visibles = productos.filter(p => normalizar(p.nombre + ' ' + p.descripcion).includes(normalizar(busqueda.trim()))
-    && (!soloTipoProducto || p.tipoProducto === soloTipoProducto)
-    && (tipo === 'Todos' || p.tipoProducto === (tipo === 'Platos' ? 'plato' : 'bebida')));
-  const bebida = (accion?.tipo === 'agregar' ? accion.tipoProducto : accion?.plato.tipoProducto) === 'bebida';
-  const nombreTipo = bebida ? 'bebida' : 'plato';
+    && (!soloTipoProducto || coincideFiltro(p, soloTipoProducto))
+    && (tipo === 'Todos' || p.tipoProducto === (tipo === 'Platos' ? 'plato' : tipo === 'Postres' ? 'postre' : 'bebida')));
+  const tipoAccion = accion?.tipo === 'agregar' ? accion.tipoProducto : accion?.plato.tipoProducto;
+  const bebida = tipoAccion === 'bebida';
+  const postre = tipoAccion === 'postre';
+  const nombreTipo = bebida ? 'bebida' : postre ? 'postre' : 'plato';
   const productosEnPortada = soloLectura ? 2 : 1;
   // Sin scroll: entran tantos productos por página como permita el alto (hasta tres),
   // sin que una tarjeta quede por debajo de lo necesario para nombre, precio y botones.
@@ -123,8 +129,9 @@ export default function CartaAdministracion({ soloLectura = false, soloTipoProdu
         {soloLectura && <View style={s.resumen}>
           {([
             { titulo: 'Platos', icono: 'restaurant-outline', tipoProducto: 'plato', cantidad: productos.filter(p => p.tipoProducto === 'plato').length },
+            { titulo: 'Postres', icono: 'ice-cream-outline', tipoProducto: 'postre', cantidad: productos.filter(p => p.tipoProducto === 'postre').length },
             { titulo: 'Bebidas', icono: 'wine-outline', tipoProducto: 'bebida', cantidad: productos.filter(p => p.tipoProducto === 'bebida').length },
-          ] as const).filter(item => !soloTipoProducto || item.tipoProducto === soloTipoProducto).map(item => <View key={item.titulo} style={s.contador} accessible accessibilityLabel={`${item.cantidad} ${item.titulo.toLowerCase()}`}>
+          ] as const).filter(item => !soloTipoProducto || coincideFiltro(item, soloTipoProducto)).map(item => <View key={item.titulo} style={s.contador} accessible accessibilityLabel={`${item.cantidad} ${item.titulo.toLowerCase()}`}>
             <View style={s.contadorNumero}><Ionicons name={item.icono} size={18} color={c.textoSobreOscuro} /><Text style={s.numero}>{item.cantidad}</Text></View>
             <Text style={s.resumenTexto}>{item.titulo}</Text>
           </View>)}
@@ -134,13 +141,16 @@ export default function CartaAdministracion({ soloLectura = false, soloTipoProdu
           <TouchableOpacity accessibilityRole="button" onPress={() => router.push('/productos/alta')} activeOpacity={0.8} style={[s.agregar, s.alta]}>
             <Ionicons name="add" size={20} color={c.textoSobreOscuro} /><Text style={[s.botonTexto, s.textoAlta]}>Agregar plato</Text>
           </TouchableOpacity>
+          <TouchableOpacity accessibilityRole="button" onPress={() => router.push({ pathname: '/productos/alta', params: { tipoProducto: 'postre' } })} activeOpacity={0.8} style={[s.agregar, s.alta]}>
+            <Ionicons name="add" size={20} color={c.textoSobreOscuro} /><Text style={[s.botonTexto, s.textoAlta]}>Agregar postre</Text>
+          </TouchableOpacity>
           <TouchableOpacity accessibilityRole="button" onPress={() => router.push('/productos/alta-bebida')} activeOpacity={0.8} style={[s.agregar, s.alta]}>
             <Ionicons name="add" size={20} color={c.textoSobreOscuro} /><Text style={[s.botonTexto, s.textoAlta]}>Agregar bebida</Text>
           </TouchableOpacity>
         </View>}
         <View style={s.buscador}>
           <Ionicons name="search-outline" size={22} color={c.textoSecundarioSobreOscuro} />
-          <TextInput accessibilityLabel="Buscar platos o bebidas" placeholder="Buscar platos o bebidas…" placeholderTextColor={c.textoSecundarioSobreOscuro} value={busqueda} onChangeText={texto => { setBusqueda(texto); setPagina(0); }} style={s.busqueda} returnKeyType="search" />
+          <TextInput accessibilityLabel="Buscar platos, postres o bebidas" placeholder="Buscar platos, postres o bebidas…" placeholderTextColor={c.textoSecundarioSobreOscuro} value={busqueda} onChangeText={texto => { setBusqueda(texto); setPagina(0); }} style={s.busqueda} returnKeyType="search" />
           {!!busqueda && <TouchableOpacity accessibilityRole="button" accessibilityLabel="Limpiar búsqueda" onPress={() => { setBusqueda(''); setPagina(0); }} style={s.limpiar}><Ionicons name="close-circle" size={22} color={c.textoSecundarioSobreOscuro} /></TouchableOpacity>}
         </View>
         {!soloTipoProducto && <View style={s.tipos}>{tipos.map(item => <TouchableOpacity key={item} accessibilityRole="button" accessibilityLabel={`Mostrar ${item.toLowerCase()}`} accessibilityState={{ selected: tipo === item }} onPress={() => { setTipo(item); setPagina(0); }} style={[s.tipo, tipo === item && s.tipoActivo]}><Text style={[s.filtroTexto, tipo === item && s.filtroTextoActivo]}>{item}</Text></TouchableOpacity>)}</View>}
@@ -151,7 +161,7 @@ export default function CartaAdministracion({ soloLectura = false, soloTipoProdu
         {(!cargandoProductos && !errorProductos) && productosPagina.map(plato => <View key={plato.id} style={[s.tarjeta, { height: altoTarjeta, overflow: 'hidden' }, portadaExpandida && s.tarjetaPortada, portadaLectura && s.tarjetaLectura]}>
           <View style={s.fila}>
             <View style={[s.ilustracion, portadaExpandida && { width: fotoPortada, height: fotoPortada }]}>{plato.foto ? <Image source={{ uri: plato.foto }} accessibilityLabel={plato.nombre} style={{ width: portadaExpandida ? fotoPortada : 36, height: portadaExpandida ? fotoPortada : 36, borderRadius: 8 }} resizeMode="cover" /> : <Ionicons name={plato.icono} size={portadaExpandida ? 36 : 26} color={c.textoSobreOscuro} />}</View>
-            <View style={s.flex}><Text style={s.categoria}>{plato.tipoProducto === 'bebida' ? 'Bebida' : 'Plato'}</Text><Text style={s.nombreTarjeta} numberOfLines={2}>{plato.nombre}</Text></View>
+            <View style={s.flex}><Text style={s.categoria}>{plato.tipoProducto === 'bebida' ? 'Bebida' : plato.tipoProducto === 'postre' ? 'Postre' : 'Plato'}</Text><Text style={s.nombreTarjeta} numberOfLines={2}>{plato.nombre}</Text></View>
           </View>
           {lineasDescripcion > 0 && <Text style={s.descripcionTarjeta} numberOfLines={lineasDescripcion}>{plato.descripcion}</Text>}
           <View style={s.datos}>
@@ -177,12 +187,12 @@ export default function CartaAdministracion({ soloLectura = false, soloTipoProdu
       <SafeAreaView style={s.fondoModal}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.modalContenedor}>
           <View style={s.modal} accessibilityViewIsModal>
-            <View style={s.fila}><Text style={[s.nombre, s.flex]}>{accion?.tipo === 'agregar' ? (bebida ? 'Nueva bebida' : 'Nuevo plato') : `${accion?.tipo === 'editar' ? 'Editar' : 'Eliminar'} ${nombreTipo}`}</Text><TouchableOpacity accessibilityRole="button" accessibilityLabel="Cerrar vista previa" onPress={() => setAccion(null)} style={s.limpiar}><Ionicons name="close" size={26} color={c.textoSobreOscuro} /></TouchableOpacity></View>
+            <View style={s.fila}><Text style={[s.nombre, s.flex]}>{accion?.tipo === 'agregar' ? `Nuevo ${nombreTipo}` : `${accion?.tipo === 'editar' ? 'Editar' : 'Eliminar'} ${nombreTipo}`}</Text><TouchableOpacity accessibilityRole="button" accessibilityLabel="Cerrar vista previa" onPress={() => setAccion(null)} style={s.limpiar}><Ionicons name="close" size={26} color={c.textoSobreOscuro} /></TouchableOpacity></View>
             <ScrollView ref={formulario} keyboardShouldPersistTaps="handled" onScroll={tecladoFormulario.alDesplazar} scrollEventThrottle={16} contentContainerStyle={{ gap: 14, paddingBottom: 16 + tecladoFormulario.rellenoInferior }}>
               <Text style={s.descripcion}>Vista previa del diseño. Los cambios todavía no se guardan.</Text>
-              {accion?.tipo === 'eliminar' ? <><View style={s.iconoEliminar}><Ionicons name="trash-outline" size={36} color={c.textoSobreOscuro} /></View><Text style={s.nombre}>{accion.plato.nombre}</Text><Text style={s.descripcion}>Aquí podrás confirmar la eliminación de {bebida ? 'esta bebida' : 'este plato'} de la carta.</Text></> : accion && <>
-                <View style={s.foto}><Ionicons name="camera-outline" size={32} color={c.textoSobreOscuro} /><Text style={s.descripcion}>Fotos {bebida ? 'de la bebida' : 'del plato'}</Text><Text style={s.ayuda}>Vista previa del espacio para imágenes</Text></View>
-                <Campo key={accion.tipo + ('plato' in accion ? accion.plato.id : nombreTipo) + 'nombre'} titulo={`Nombre ${bebida ? 'de la bebida' : 'del plato'}`} valor={'plato' in accion ? accion.plato.nombre : ''} placeholder={bebida ? 'Ej. Limonada con menta' : 'Ej. Tacos al pastor'} onFocus={tecladoFormulario.alEnfocar} />
+              {accion?.tipo === 'eliminar' ? <><View style={s.iconoEliminar}><Ionicons name="trash-outline" size={36} color={c.textoSobreOscuro} /></View><Text style={s.nombre}>{accion.plato.nombre}</Text><Text style={s.descripcion}>Aquí podrás confirmar la eliminación de {bebida ? 'esta bebida' : postre ? 'este postre' : 'este plato'} de la carta.</Text></> : accion && <>
+                <View style={s.foto}><Ionicons name="camera-outline" size={32} color={c.textoSobreOscuro} /><Text style={s.descripcion}>Fotos {bebida ? 'de la bebida' : postre ? 'del postre' : 'del plato'}</Text><Text style={s.ayuda}>Vista previa del espacio para imágenes</Text></View>
+                <Campo key={accion.tipo + ('plato' in accion ? accion.plato.id : nombreTipo) + 'nombre'} titulo={`Nombre ${nombreTipo === 'bebida' ? 'de la bebida' : nombreTipo === 'postre' ? 'del postre' : 'del plato'}`} valor={'plato' in accion ? accion.plato.nombre : ''} placeholder={bebida ? 'Ej. Limonada con menta' : postre ? 'Ej. Pastel de chocolate' : 'Ej. Tacos al pastor'} onFocus={tecladoFormulario.alEnfocar} />
                 <Campo key={accion.tipo + 'descripcion'} titulo="Descripción" valor={'plato' in accion ? accion.plato.descripcion : ''} placeholder="Ingredientes y presentación" multilinea onFocus={tecladoFormulario.alEnfocar} />
                 <Campo key={accion.tipo + 'precio'} titulo="Precio ($)" valor={'plato' in accion ? String(accion.plato.precio) : ''} placeholder="0" numerico onFocus={tecladoFormulario.alEnfocar} />
                 <Campo key={accion.tipo + 'minutos'} titulo="Tiempo de preparación (min)" valor={'plato' in accion ? String(accion.plato.minutos) : ''} placeholder="20" numerico onFocus={tecladoFormulario.alEnfocar} />

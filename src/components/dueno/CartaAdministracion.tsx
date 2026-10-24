@@ -19,6 +19,7 @@ type Producto = {
 };
 type Accion = { tipo: 'agregar'; tipoProducto: TipoProducto } | { tipo: 'editar' | 'eliminar'; plato: Producto };
 const tipos = ['Todos', 'Platos', 'Postres', 'Bebidas'] as const;
+const tiposCocina = ['Platos', 'Postres'] as const;
 const MAX_PRODUCTOS_POR_PAGINA = 3;
 const ALTO_LINEA_DESCRIPCION = 19;
 const normalizar = (texto: string) => texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -59,8 +60,11 @@ export default function CartaAdministracion({ soloLectura = false, soloTipoProdu
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autorizado, cargando, mode, revision]));
   const productos = productosReales;
+  const tiposVisibles: readonly (typeof tipos[number])[] = soloTipoProducto === 'cocina'
+    ? tiposCocina
+    : soloTipoProducto ? [] : tipos;
   const [busqueda, setBusqueda] = useState('');
-  const [tipo, setTipo] = useState<typeof tipos[number]>(soloTipoProducto === 'bebida' ? 'Bebidas' : 'Todos');
+  const [tipo, setTipo] = useState<typeof tipos[number]>(soloTipoProducto === 'cocina' ? 'Platos' : soloTipoProducto === 'bebida' ? 'Bebidas' : 'Todos');
   const [accion, setAccion] = useState<Accion | null>(null);
   const [pagina, setPagina] = useState(0);
   const [altoLista, setAltoLista] = useState(0);
@@ -153,7 +157,7 @@ export default function CartaAdministracion({ soloLectura = false, soloTipoProdu
           <TextInput accessibilityLabel="Buscar platos, postres o bebidas" placeholder="Buscar platos, postres o bebidas…" placeholderTextColor={c.textoSecundarioSobreOscuro} value={busqueda} onChangeText={texto => { setBusqueda(texto); setPagina(0); }} style={s.busqueda} returnKeyType="search" />
           {!!busqueda && <TouchableOpacity accessibilityRole="button" accessibilityLabel="Limpiar búsqueda" onPress={() => { setBusqueda(''); setPagina(0); }} style={s.limpiar}><Ionicons name="close-circle" size={22} color={c.textoSecundarioSobreOscuro} /></TouchableOpacity>}
         </View>
-        {!soloTipoProducto && <View style={s.tipos}>{tipos.map(item => <TouchableOpacity key={item} accessibilityRole="button" accessibilityLabel={`Mostrar ${item.toLowerCase()}`} accessibilityState={{ selected: tipo === item }} onPress={() => { setTipo(item); setPagina(0); }} style={[s.tipo, tipo === item && s.tipoActivo]}><Text style={[s.filtroTexto, tipo === item && s.filtroTextoActivo]}>{item}</Text></TouchableOpacity>)}</View>}
+        {!!tiposVisibles.length && <View style={s.tipos}>{tiposVisibles.map(item => <TouchableOpacity key={item} accessibilityRole="button" accessibilityLabel={`Mostrar ${item.toLowerCase()}`} accessibilityState={{ selected: tipo === item }} onPress={() => { setTipo(item); setPagina(0); }} style={[s.tipo, tipo === item && s.tipoActivo]}><Text style={[s.filtroTexto, tipo === item && s.filtroTextoActivo]}>{item}</Text></TouchableOpacity>)}</View>}
 
         </View>}
         {cargandoProductos && <ChidoLoader mensaje="Cargando productos…" />}

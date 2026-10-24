@@ -57,6 +57,12 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 - Emma: Punto 15 completo y refinación juegos
 - Juan: Inicialización punto 20 y 21
 
+### Sprint 5 (17/10 | 24/10)
+- Silvi: Arreglo errores varios: Clientes, push notifications, etc..
+- Nico: Finalización del trabajo con puntos varios (Cocinero, Clientes, etc..)
+- Emma: Depuración Supabase (usuarios, mesas, platos, estadisticas, etc..)
+- Juan: Correción estetica puntos varios (Mozo, Clientes, Registros, etc..)
+
 ## QR's de la aplicación
 
 ### Acceso
@@ -93,15 +99,21 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 | :---: |
 | <img width="240" alt="Splash screen" src="https://github.com/user-attachments/assets/1e2be373-be36-498c-88f7-5f908a73f44f" /> |
 
+### Home
+
+| Home |
+| :---: |
+| <img width="240" alt="Home" src="https://github.com/user-attachments/assets/d507c9ea-db95-4268-97b6-d64a6f8b9126" /> |
+
 ### Dueño
 
 | Home | Alta de empleado | Alta de mesa |
 | :---: | :---: | :---: |
-| <img width="240" alt="Home Dueño" src="https://github.com/user-attachments/assets/03889fe2-8472-4af8-be04-4a1918c455e5" /> | <img width="240" alt="Alta de Empleado" src="https://github.com/user-attachments/assets/1cd0dff9-6a5b-4979-942b-d054dc896905" /> | <img width="240" alt="Alta de Mesa" src="https://github.com/user-attachments/assets/7ddd4695-ec68-41b9-bf54-4518029f36bb" /> |
+| <img width="240" alt="Home Dueño" src="https://github.com/user-attachments/assets/d3f86e12-eba0-4a33-bdfd-000a2f540c92" /> | <img width="240" alt="Alta de Empleado" src="https://github.com/user-attachments/assets/12dfc057-05d4-43b8-a269-e20793859b6e" /> | <img width="240" alt="Alta de Mesa" src="https://github.com/user-attachments/assets/afaf9bcc-9640-4967-9c68-83c28f05bcea" /> |
 
 | Gestión de mesas | Clientes pendientes | Gestionar la carta |
 | :---: | :---: | :---: |
-| <img width="240" alt="Gestión de Mesas" src="https://github.com/user-attachments/assets/dd4d41f9-a3ad-4913-9085-b2dd0b169be4" /> | <img width="240" alt="Clientes Pendientes" src="https://github.com/user-attachments/assets/8c3ec34a-03df-4c89-aaef-5c64c1072817" /> | <img width="240" alt="Gestionar la Carta" src="https://github.com/user-attachments/assets/f0cce5bc-62d7-4863-b155-4abb65feb9a5" /> |
+| <img width="240" alt="Gestión de Mesas" src="https://github.com/user-attachments/assets/f96a2d88-1eea-4f9f-b840-f196315029d0" /> | <img width="240" alt="Clientes Pendientes" src="https://github.com/user-attachments/assets/b5def71a-b36c-40d7-94ce-dfbc20f05e5e" /> | <img width="240" alt="Gestionar la Carta" src="https://github.com/user-attachments/assets/da8ea67e-3f22-4f17-87f2-f31da1d2509a" /> |
 
 ---
 
@@ -109,11 +121,11 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 
 | Home | Alta de empleado | Alta de mesa |
 | :---: | :---: | :---: |
-| <img width="240" alt="Home Supervisor" src="https://github.com/user-attachments/assets/fa04b3bc-92bf-4f2b-9949-d5c53fd254d0" /> | <img width="240" alt="Alta de Empleado" src="https://github.com/user-attachments/assets/fd38b56f-e9a1-4247-9548-58f8b3a7d588" /> | <img width="240" alt="Alta de Mesa" src="https://github.com/user-attachments/assets/8dfaf113-d302-42e3-92f8-b6da3fd7dad1" /> |
+| <img width="240" alt="Home Supervisor" src="https://github.com/user-attachments/assets/8fa6944a-d5e2-45b9-8a2f-4da7cfd99330" /> | <img width="240" alt="Alta de Empleado" src="https://github.com/user-attachments/assets/94249444-21e3-43e3-a982-9096d1400f52" /> | <img width="240" alt="Alta de Mesa" src="https://github.com/user-attachments/assets/4720e008-9ba6-426b-9713-f4490dfdf746" /> |
 
 | Gestión de mesas | Clientes pendientes | Gestionar la carta |
 | :---: | :---: | :---: |
-| <img width="240" alt="Gestión de Mesas" src="https://github.com/user-attachments/assets/dd4d41f9-a3ad-4913-9085-b2dd0b169be4" /> | <img width="240" alt="Clientes Pendientes" src="https://github.com/user-attachments/assets/3ad22f6f-bdef-4418-89a7-f5d9a3381e2c" /> | <img width="240" alt="Gestionar la Carta" src="https://github.com/user-attachments/assets/0206936c-e608-489b-9759-bcf519a77c45" /> |
+| <img width="240" alt="Gestión de Mesas" src="https://github.com/user-attachments/assets/294172c1-2ff3-4150-9fc2-ee9bfad35e1d" /> | <img width="240" alt="Clientes Pendientes" src="https://github.com/user-attachments/assets/54b9fad7-f782-403d-bb15-56d52007861e" /> | <img width="240" alt="Gestionar la Carta" src="https://github.com/user-attachments/assets/9802d60d-7bcc-4f55-9a29-bbe7e7f2a435" /> |
 
 ---
 
@@ -121,7 +133,7 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 
 | Home | Gestión de pedidos | Consultas de Mesas |
 | :---: | :---: | :---: |
-| <img width="240" alt="Home Mozo" src="https://github.com/user-attachments/assets/1e4e3914-d0eb-4a80-b7b8-4761c8cf61aa" /> | <img width="240" alt="Gestión pedidos" src="https://github.com/user-attachments/assets/2f459935-62e8-46bb-9b34-0923b0f9ed04" /> | <img width="240" alt="Consulta mesas" src="https://github.com/user-attachments/assets/04337b2d-34c2-4894-9eb1-8b8b5deb260f" /> |
+| <img width="240" alt="Home Mozo" src="https://github.com/user-attachments/assets/9b775404-283d-4cd9-952b-207dbbf0d30c" /> | <img width="240" alt="Gestión pedidos" src="https://github.com/user-attachments/assets/fc6c02f5-539c-4719-97f4-3fae5107703c" /> | <img width="240" alt="Consulta mesas" src="https://github.com/user-attachments/assets/8a30c77c-b7c8-4ab4-aa7b-5edd16ce501b" /> |
 
 ---
 
@@ -129,7 +141,7 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 
 | Home | Alta de plato | Pedidos entrantes | Ver carta |
 | :---: | :---: | :---: | :---: |
-| <img width="240" alt="Home Cocinero" src="https://github.com/user-attachments/assets/3491b890-1d6c-4076-b723-46b8b807924d" /> | <img width="240" alt="Alta de Plato" src="https://github.com/user-attachments/assets/2da0f6e9-fb80-469c-83c4-05f2247a62fa" /> | <img width="240" alt="Pedidos Entrantes" src="https://github.com/user-attachments/assets/73836955-0559-4214-873a-0820790684b7" /> | <img width="240" alt="Ver Carta" src="https://github.com/user-attachments/assets/7ef673b0-11a6-4980-a7e9-fd12ec1b4892" /> |
+| <img width="240" alt="Home Cocinero" src="https://github.com/user-attachments/assets/dabb9638-9c9e-451b-97e6-b00f71838d13" /> | <img width="240" alt="Alta de Plato" src="https://github.com/user-attachments/assets/1e90df74-b906-42c0-9576-7dc469a4fae5" /> | <img width="240" alt="Pedidos Entrantes" src="https://github.com/user-attachments/assets/2444daf0-63a5-4aff-80ce-2cc98682a675" /> | <img width="240" alt="Ver Carta" src="https://github.com/user-attachments/assets/bf33e7c7-aef7-4dc6-9924-b6ac118e2c20" /> |
 
 ---
 
@@ -137,33 +149,49 @@ Aplicación mobile para la gestión integral de un restaurante, enfocada en la e
 
 | Home | Lista de espera | Registrar cliente |
 | :---: | :---: | :---: |
-| <img width="240" alt="Home Metre" src="https://github.com/user-attachments/assets/9d636513-52a6-4206-80e0-ceb125a92d3d" /> | <img width="240" alt="Lista de Espera" src="https://github.com/user-attachments/assets/4f80f445-e08f-4d4a-8d92-588bfb96edcb" /> | <img width="240" alt="Registrar Cliente" src="https://github.com/user-attachments/assets/82b8661d-07d9-4156-8e01-32713ba7d4cd" /> |
+| <img width="240" alt="Home Metre" src="https://github.com/user-attachments/assets/4e281f75-7fe3-4b9b-90f7-1b4621c06fa1" /> | <img width="240" alt="Lista de Espera" src="https://github.com/user-attachments/assets/3e7e9fa1-9fdd-482a-9c28-809feecac3cc" /> | <img width="240" alt="Registrar Cliente" src="https://github.com/user-attachments/assets/631917b9-d0f1-45c8-97fb-6a4d83c4ecea" /> |
 ---
 
 ### Cantinero
 
 | Home | Alta de bebida | Bebidas entrantes | Ver carta |
 | :---: | :---: | :---: | :---: |
-| <img width="200" alt="Home Cantinero" src="https://github.com/user-attachments/assets/be86f032-0d62-43a4-8985-510324f1cb2e" /> | <img width="200" alt="Alta de Bebida" src="https://github.com/user-attachments/assets/2eea65b9-9658-4b4e-badd-e5fb23a6a419" /> | <img width="200" alt="Bebidas Entrantes" src="https://github.com/user-attachments/assets/d78ca99b-d136-4d8c-940b-0dc93f498bde" /> | <img width="200" alt="Ver Carta" src="https://github.com/user-attachments/assets/720ddbc6-fc72-4ffb-881c-4b19e8b3dad8" /> |
+| <img width="200" alt="Home Cantinero" src="https://github.com/user-attachments/assets/be86f032-0d62-43a4-8985-510324f1cb2e" /> | <img width="200" alt="Alta de Bebida" src="https://github.com/user-attachments/assets/bac1023d-4d3c-4d9d-885a-c78ff67a7b0d" /> | <img width="200" alt="Bebidas Entrantes" src="https://github.com/user-attachments/assets/d78ca99b-d136-4d8c-940b-0dc93f498bde" /> | <img width="200" alt="Ver Carta" src="https://github.com/user-attachments/assets/720ddbc6-fc72-4ffb-881c-4b19e8b3dad8" /> |
 ---
 
 ### Cliente
 
-| Home | Menú | Lista espera | Mesa asignada | Chat con mozo |
-| :---: | :---: | :---: | :---: | :---: |
-| <img width="200" alt="Home cliente" src="https://github.com/user-attachments/assets/a41af226-4896-4726-96b6-242f92901540" /> | <img width="200" alt="Menú" src="https://github.com/user-attachments/assets/b8708b44-0e34-467d-ad79-e03b0191c5cd" /> | <img width="200" alt="Lista espera" src="https://github.com/user-attachments/assets/e4eff57f-ab31-430a-bb13-2a37a5c879b3" /> | <img width="200" alt="Mesa asignada" src="https://github.com/user-attachments/assets/24e20cc7-4e1e-4a24-b856-560529d9072a" /> | <img width="200" alt="Chat con mozo" src="https://github.com/user-attachments/assets/8c0089d2-9ccf-4190-b037-25143b6a9858" /> |
+| Home | Escanear QR | Confirmación Anotado | Mesa asignada |
+| :---: | :---: | :---: | :---: |
+| <img width="200" alt="Home cliente registrado" src="https://github.com/user-attachments/assets/cc664eb1-abfc-4fbd-b3f0-be3743b892d5" /> | <img width="200" alt="Escanear QR" src="https://github.com/user-attachments/assets/a8fc294e-8959-4d3f-bc5a-3c2f95edfb09" /> | <img width="200" alt="Anotado a la lista" src="https://github.com/user-attachments/assets/2bb66c95-615a-4a83-a5c0-784aa6c9d2fc" /> | <img width="200" alt="Mesa asignada" src="https://github.com/user-attachments/assets/dc319008-0721-4be9-b536-a296cd29cecb" /> |
+
+| Consulta al mozo | Menú | Esperando mozo (estado del pedido) | Pedido confirmado |
+| :---: | :---: | :---: | :---: |
+| <img width="200" alt="Consulta mozo" src="https://github.com/user-attachments/assets/3c24eca4-91e4-4702-8cbe-071923b7af8f" /> | <img width="200" alt="Menú" src="https://github.com/user-attachments/assets/e2b01f76-6450-4f73-b00c-59f2d58e7a7a" /> | <img width="200" alt="Esperando mozo estado pedido" src="https://github.com/user-attachments/assets/248e08f9-a1ff-46d2-8b6d-2947a41ead39" /> | <img width="200" alt="Pedido confirmado - Home" src="https://github.com/user-attachments/assets/437cd1d2-7da7-463c-a36f-4a742a2be360" /> |
+
+| Juegos | Encuestas | QR Propina |
+| :---: | :---: | :---: |
+| <img width="200" alt="Juegos home" src="https://github.com/user-attachments/assets/a89425c4-6360-4a31-87a9-5ebf007b6216" /> | <img width="200" alt="Encuestas" src="https://github.com/user-attachments/assets/14102fae-b979-4ef4-b076-0023181d685c" /> | <img width="200" alt="QR Propina" src="https://github.com/user-attachments/assets/27102843-f289-41fc-9e0b-1f8878ce8983" /> |
 
 ### Cliente anonimo
 
-| Home | Registro | Anotarse en la fila | Confirmación | Encuestas |
-| :---: | :---: | :---: | :---: | :---: |
-| <img width="200" alt="Home" src="https://github.com/user-attachments/assets/083f1fb9-9010-47b0-9713-9469dea0951d" /> | <img width="200" alt="Registro" src="https://github.com/user-attachments/assets/2c829c14-4ade-4d19-84e9-58f2cb5924a7" /> | <img width="200" alt="Anotarse fila" src="https://github.com/user-attachments/assets/e0610cd5-8b7c-4cf2-8534-ccbdd840a204" /> | <img width="200" alt="Anotado Anon" src="https://github.com/user-attachments/assets/3a250564-dcc4-4ccc-b78f-9ea5ca35c457" /> | <img width="200" alt="Encuestas" src="https://github.com/user-attachments/assets/e2a22561-9f14-4e7e-9e0e-bb612fb738cf" /> |
+| Registro cliente | Escanear QR entrada | Home (luego de escanear QR) | Anotado a la lista |
+| :---: | :---: | :---: | :---: |
+| <img width="200" alt="Registro" src="https://github.com/user-attachments/assets/2508f153-69cc-4747-b5fd-b48256a7995b" /> | <img width="200" alt="Escanear QR Entrada" src="https://github.com/user-attachments/assets/d526c91c-f7e3-49ac-b100-59c57325cdd4" /> | <img width="200" alt="Home" src="https://github.com/user-attachments/assets/67fcfd76-8f38-43f8-b200-9543921bccfb" /> | <img width="200" alt="Anotado a la lista" src="https://github.com/user-attachments/assets/2b7a445b-a512-4129-9dbf-9c4e3fb4476a" /> |
+
+| Opiniones de clientes anteriores | Mesa asignada | Menú | Esperando mozo (estado del pedido) |
+| :---: | :---: | :---: | :---: |
+| <img width="200" alt="Opciones clientes" src="https://github.com/user-attachments/assets/1e8d664c-81a0-4827-892a-757ab4a5c397" /> | <img width="200" alt="Te asignaron mesa" src="https://github.com/user-attachments/assets/73ff6672-e1d7-4de2-832c-8eb4b84fe2cf" /> | <img width="200" alt="Menú" src="https://github.com/user-attachments/assets/90c80e1a-eb28-422e-91c9-263fdb44f23e" /> | <img width="200" alt="Esperando mozo estado pedido" src="https://github.com/user-attachments/assets/d64239bd-7813-4bea-9747-a2888549f619" /> |
+
+| Pedido confirmado | Juegos | Encuestas | QR Propina |
+| :---: | :---: | :---: | :---: |
+| <img width="200" alt="Pedido confirmado - Home" src="https://github.com/user-attachments/assets/870a1867-cc4e-48d5-b99c-eb6802b5774d" /> | <img width="200" alt="Juegos home" src="https://github.com/user-attachments/assets/244aba49-e0d8-4181-bd4f-b6d6db61392c" /> | <img width="200" alt="Encuestas" src="https://github.com/user-attachments/assets/8305b317-89f2-4600-b997-27c41f9f95d4" /> | <img width="200" alt="QR Propina" src="https://github.com/user-attachments/assets/27102843-f289-41fc-9e0b-1f8878ce8983" /> |
 
 ### Registro
 
 | Formulario de registro | Pendiente a confirmación (Dueño/Supervisor) |
 | :---: | :---: |
-| <img width="200" alt="Formulario de registro" src="https://github.com/user-attachments/assets/bbcd8df7-a333-421a-b58e-69d547d3a257" /> | <img width="200" alt="Confirmación" src="https://github.com/user-attachments/assets/dd71e098-b639-408c-8357-328638df9803" /> |
+| <img width="200" alt="Formulario de registro" src="https://github.com/user-attachments/assets/f1a8fdd5-89e0-4847-b187-6e92de7fae5b" /> | <img width="200" alt="Confirmación" src="https://github.com/user-attachments/assets/dd71e098-b639-408c-8357-328638df9803" /> |
 
 ## Profesores
 

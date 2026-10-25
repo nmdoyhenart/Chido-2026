@@ -8,6 +8,15 @@
   Trabajo Final Integrador — Aplicación de gestión de restaurante (mobile)
 </p>
 
+<p align="center">
+  <img src="https://img.shields.io/badge/NOTA%20FINAL-7%2F10-E8590C?style=for-the-badge" alt="Nota final 7/10" />
+  <img src="https://img.shields.io/badge/ESTADO-PROMOCIONADO-2EA043?style=for-the-badge" alt="Promoción" />
+</p>
+
+<p align="center">
+  🌮🌮🌮🌮🌮🌮🌮⬜⬜⬜
+</p>
+
 ## Integrantes
 | Apellidos y Nombres | Rol | Branch |
 | :---: | :---: | :---: |
